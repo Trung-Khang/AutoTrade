@@ -20,6 +20,18 @@
 
 .footer-left {
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-logo-img {
+  height: 38px;
+  width: auto;
+  object-fit: contain;
+}
+
+.footer-text-group {
+  display: flex;
   flex-direction: column;
 }
 

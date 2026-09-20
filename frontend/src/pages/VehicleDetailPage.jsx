@@ -17,10 +17,11 @@ const VehicleDetailPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await vehicleApi.getVehicleById(id);
+      // Gọi API GET /api/v1/listings/{id} từ Backend TV1
+      const data = await vehicleApi.getListingById(id);
       setVehicle(data);
     } catch (err) {
-      setError(err.message || `Không thể tải thông tin xe #${id}. Vui lòng thử lại sau.`);
+      setError(err.message || `Không thể tải thông tin tin đăng #${id}. Vui lòng thử lại sau.`);
     } finally {
       setIsLoading(false);
     }
@@ -36,7 +37,7 @@ const VehicleDetailPage = () => {
         <Link to="/vehicles" className="btn btn-secondary back-btn">
           <FaArrowLeft /> Quay lại danh sách xe
         </Link>
-        <Loading message={`Đang tải thông tin xe #${id}...`} />
+        <Loading message={`Đang tải thông tin chi tiết tin đăng #${id}...`} />
       </div>
     );
   }
@@ -48,12 +49,15 @@ const VehicleDetailPage = () => {
           <FaArrowLeft /> Quay lại danh sách xe
         </Link>
         <ErrorMessage
-          message={error || `Không tìm thấy thông tin cho xe mã #${id}.`}
+          message={error || `Không tìm thấy thông tin cho tin đăng mã #${id}.`}
           onRetry={fetchVehicleDetail}
         />
       </div>
     );
   }
+
+  const brand = vehicle.brand || '';
+  const model = vehicle.model || '';
 
   return (
     <div className="vehicle-detail-page">
@@ -62,7 +66,7 @@ const VehicleDetailPage = () => {
           <FaArrowLeft /> Quay lại danh sách xe
         </Link>
         <span className="breadcrumb-text">
-          Danh sách xe / {vehicle.brand} / {vehicle.model}
+          Danh sách xe / {brand} / {model}
         </span>
       </div>
 

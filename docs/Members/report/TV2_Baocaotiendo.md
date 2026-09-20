@@ -317,3 +317,90 @@
     - Khối **4 bước quy trình mô hình** (Thu thập dữ liệu, Làm sạch & chuẩn hóa, Mô hình định giá, Gợi ý & độ tin cậy).
   - Tinh chỉnh các trang `VehicleListPage.jsx` và `VehicleDetailPage.jsx` đồng bộ phong cách tối giản, sang trọng.
   - Kiểm tra build thành công 100% không phát sinh lỗi.
+
+---
+
+## INCREMENT 2 — MARKET DATA & FILTERING (19/09/2026)
+
+### Báo cáo: Tích hợp API Market Data, Bộ Lọc Đa Tiêu Chí & Phân Trang
+
+- **Việc đã hoàn thành:**
+  - **Tích hợp API chính thức từ TV1 Backend:**
+    - Cập nhật service layer `src/services/vehicleApi.js` kết nối trực tiếp với endpoint `GET /api/v1/listings` (tìm kiếm, lọc, phân trang, sắp xếp) và `GET /api/v1/listings/{id}` (chi tiết tin đăng phẳng `ListingResponseDto`).
+    - Xử lý cấu trúc bọc phân trang của Spring Data `PageResponse`: `{ content, page, size, totalElements, totalPages, isFirst, isLast }`.
+    - Bảo toàn cơ chế fallback an toàn tự động lọc trên `MOCK_VEHICLES` khi Backend chưa khởi động, đảm bảo trải nghiệm người dùng liên tục.
+  - **Xây dựng Component Bộ lọc Tìm kiếm `FilterPanel` (`src/components/filter/FilterPanel.jsx` & `FilterPanel.css`):**
+    - Ô tìm kiếm từ khóa đa năng (`keyword`): tìm kiếm theo tên xe, dòng xe, phiên bản hoặc địa điểm.
+    - Bộ chọn Hãng xe (`brand`): Toyota, Mazda, Honda, Hyundai, Kia, Ford, Mitsubishi...
+    - Bộ chọn Khoảng giá (`minPrice`, `maxPrice`): Dưới 500 triệu, 500 - 700 triệu, 700 triệu - 1 tỷ, Trên 1 tỷ.
+    - Bộ chọn Nhiên liệu (`fuelType`): Xăng, Dầu, Hybrid, Điện.
+    - Bộ chọn Hộp số (`transmission`): Tự động, Số sàn.
+    - Tùy chọn Sắp xếp (`sort`): Mới nhất, Giá tăng dần, Giá giảm dần, Năm sản xuất mới nhất, ODO ít nhất.
+    - Nút "Đặt lại" (`onReset`) giúp đưa bộ lọc về trạng thái ban đầu chỉ với 1 click.
+  - **Nâng cấp Giao diện Danh sách xe `VehicleListPage.jsx`:**
+    - Kết nối `FilterPanel` đồng bộ với query params gọi API bất đồng bộ.
+    - Tự động reset về trang 1 khi người dùng thay đổi tiêu chí lọc để tránh lỗi lệch trang.
+    - Tích hợp thanh điều khiển phân trang (`pagination-wrapper`) gồm nút "Trang trước", "Trang sau" (tự động disable khi ở đầu/cuối trang) và hiển thị trang hiện tại / tổng số trang.
+    - Badge hiển thị số lượng tin đăng tìm thấy theo thời gian thực.
+  - **Nâng cấp Hiển thị Dữ liệu Xe `VehicleCard` & `VehicleInfo`:**
+    - Bổ sung hiển thị đầy đủ các trường dữ liệu được bổ sung từ Emergency Mission (DDL Schema v2.0.1 và Data Contract 17 trường):
+      - `seatCount`: Số chỗ ngồi (vd: 5 chỗ, 7 chỗ).
+      - `engineSize`: Dung tích động cơ (vd: 1.5L, 2.0L).
+      - `origin`: Xuất xứ (Lắp ráp trong nước / Nhập khẩu).
+      - `color`: Màu sắc ngoại thất.
+      - `sourceName`: Tên sàn giao dịch nguồn (Chợ Tốt / Bốn Bánh) với badge trực quan trên ảnh card.
+      - `sourceUrl`: Nút liên kết chuyển hướng sang tin đăng gốc của sàn.
+    - Xử lý linh hoạt cả 2 quy ước đặt tên `camelCase` (JPA DTO) và `snake_case` (JSON Alias).
+    - Xử lý an toàn trường hợp các thông số kỹ thuật tùy chọn bị `null`.
+  - **Kiểm thử & Build:**
+    - Chạy `npm run build` thành công 100%, 0 warning, 0 error.
+
+- **Sinh ra file/module gì:**
+  - `frontend/src/components/filter/FilterPanel.jsx` & `FilterPanel.css` (Component bộ lọc tìm kiếm mới)
+  - Cập nhật `frontend/src/services/vehicleApi.js` (Kết nối `GET /api/v1/listings`)
+  - Cập nhật `frontend/src/utils/mockVehicles.js` (Bổ sung 17 trường dữ liệu chuẩn)
+  - Cập nhật `frontend/src/components/vehicle/VehicleCard.jsx` & `VehicleCard.css`
+  - Cập nhật `frontend/src/components/vehicle/VehicleInfo.jsx` & `VehicleInfo.css`
+  - Cập nhật `frontend/src/pages/VehicleListPage.jsx` & `VehicleListPage.css`
+  - Cập nhật `frontend/src/pages/VehicleDetailPage.jsx`
+
+- **Để làm gì:**
+  - Hoàn thành đầy đủ mục tiêu của **Increment 2 — Market Data** theo sự điều phối của Emergency Mission và bàn giao từ TV1.
+  - Giúp người dùng dễ dàng tìm kiếm, sàng lọc và xem chi tiết các mẫu xe trên thị trường theo nhiều tiêu chí đa dạng.
+
+- **Bàn giao lại cho ai:**
+  - **TV1 (Backend):** Frontend đã sẵn sàng tiêu thụ toàn bộ các query params và response DTO của endpoint `GET /api/v1/listings`.
+  - **TV5 (Database & Testing):** Bàn giao giao diện và bộ lọc để TV5 thực hiện các Test Case kiểm thử tích hợp (End-to-End Test) giữa UI và Database thật.
+  - **TV4 (Machine Learning):** Sẵn sàng bước vào Increment 3 — Tích hợp Form định giá xe tự động.
+
+- **Còn thiếu hay cần bổ sung gì:**
+  - Increment 2 cho phần Frontend đã hoàn thiện đầy đủ.
+  - Chuẩn bị sẵn sàng cho Increment 3 (Form nhập thông số định giá tự động và hiển thị khoảng giá dự đoán từ mô hình R Plumber).
+
+- **Cách thức và thao tác Run/Debug hoặc test thử:**
+  1. Di chuyển vào thư mục frontend: `cd frontend`
+  2. Khởi chạy dev server: `npm run dev`
+  3. Mở trình duyệt tại `http://localhost:5173/vehicles`
+  4. Thử nghiệm các tính năng:
+     - Gõ từ khóa vào ô tìm kiếm (vd: "Toyota", "Mazda", "Đà Nẵng").
+     - Chọn hãng xe trong dropdown.
+     - Chọn khoảng giá và nhiên liệu.
+     - Thử bấm nút "Đặt lại" để xem bộ lọc khôi phục.
+     - Bấm vào một tin đăng để xem bảng thông số kỹ thuật chi tiết (có số chỗ, dung tích động cơ, xuất xứ, màu sắc, sàn đăng tin).
+  5. Kiểm tra build: `npm run build`
+
+- **Chú ý/ Ghi chú:**
+  - Mã nguồn đã được kiểm tra kỹ lưỡng ở local, **chưa commit và chưa push lên remote Git** theo đúng yêu cầu của người dùng để chờ review.
+
+---
+
+### Bổ sung: Tích hợp Logo Nhận Diện Chính Thức & Hoàn Thiện Layout
+
+- **Việc đã hoàn thành:**
+  - Khắc phục triệt để tình trạng hiển thị lặp văn bản và logo ở Header (`Navbar.jsx`) và Footer (`Footer.jsx`).
+  - Tích hợp bộ nhận diện thương hiệu chính thức từ file thiết kế `logo.svg` của nhóm:
+    - Hiển thị logo SVG sắc nét trên thanh điều hướng `Navbar`.
+    - Hiển thị logo SVG đồng bộ tại chân trang `Footer`.
+    - Cập nhật biểu tượng Favicon tab trình duyệt (`index.html`) trỏ đến `logo.svg`.
+  - Di chuyển và lưu trữ tài nguyên logo an toàn tại `frontend/src/assets/icons/logo.svg` và `frontend/public/logo.svg`, dọn dẹp thư mục tạm `logo/`.
+  - Kiểm tra build production thành công 100% không phát sinh cảnh báo.

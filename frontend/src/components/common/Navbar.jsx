@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { FaCar, FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes } from 'react-icons/fa';
+import logoImg from '../../assets/icons/logo.svg';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -18,9 +19,7 @@ const Navbar = () => {
     <header className="navbar-header">
       <div className="navbar-container">
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <div className="logo-car-icon">
-            <FaCar />
-          </div>
+          <img src={logoImg} alt="Used Car Smart System Logo" className="navbar-brand-logo-img" />
           <div className="logo-text-group">
             <span className="logo-brand">USED CAR</span>
             <span className="logo-sub">Smart Decision System</span>

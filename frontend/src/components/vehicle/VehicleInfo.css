@@ -29,6 +29,13 @@
   gap: 24px;
 }
 
+.header-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .info-brand-badge {
   display: inline-block;
   background-color: var(--accent-gold-light);
@@ -40,7 +47,17 @@
   border-radius: var(--radius-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 8px;
+}
+
+.info-source-tag {
+  display: inline-block;
+  background-color: #f1f5f9;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--border-light);
 }
 
 .info-title {

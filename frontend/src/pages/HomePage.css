@@ -31,8 +31,10 @@
 }
 
 .hero-headline {
+  font-size: 42px;
   font-size: 38px;
   font-weight: 800;
+  line-height: 1.2;
   line-height: 1.25;
   letter-spacing: -0.5px;
   margin-bottom: 20px;
@@ -40,6 +42,7 @@
 }
 
 .hero-lead {
+  font-size: 16px;
   font-size: 15px;
   color: #a0aec0;
   line-height: 1.7;
@@ -144,6 +147,7 @@
 }
 
 .estimate-price-range {
+  font-size: 28px;
   font-size: 26px;
   font-weight: 800;
   color: var(--text-primary);
@@ -212,6 +216,7 @@
 }
 
 .stat-number {
+  font-size: 24px;
   font-size: 22px;
   font-weight: 800;
   color: #ffffff;
@@ -250,6 +255,7 @@
 }
 
 .showcase-title {
+  font-size: 30px;
   font-size: 28px;
   font-weight: 800;
   color: var(--text-primary);
@@ -322,6 +328,7 @@
 
 @media (max-width: 600px) {
   .hero-headline {
+    font-size: 30px;
     font-size: 28px;
   }
 
