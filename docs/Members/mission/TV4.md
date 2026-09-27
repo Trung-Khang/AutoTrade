@@ -1,5 +1,7 @@
 # TV4.md — Machine Learning, Regression & R Plumber
 
+> **Cập nhật phạm vi ngày 27/09/2026:** Mục 14 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Chức năng định giá bằng Machine Learning tiếp tục được giữ và bổ sung vai trò hỗ trợ kiểm duyệt.
+
 ## 1. Vai trò
 
 **Vai trò:** Machine Learning Engineer / R Developer
@@ -472,3 +474,48 @@ Không xây:
 - Recommendation Deep Learning.
 - Payment/chat.
 - Kubernetes.
+
+---
+
+# 14. Nhiệm vụ bổ sung sau thay đổi phạm vi - Định giá và hỗ trợ kiểm duyệt
+
+Model định giá vẫn là chức năng cốt lõi và phục vụ hai use case: valuation trực tiếp và hỗ trợ Admin kiểm duyệt tin. TV4 chỉ cung cấp prediction; Backend TV1 sở hữu risk rule và moderation decision.
+
+## Việc đầu tiên
+
+1. Xác minh dataset canonical/checksum TV3; chạy lại EDA nếu snapshot thay đổi.
+2. Cài hoặc chuẩn bị R runtime và chạy fixture smoke trước candidate evaluation.
+3. Chốt protocol split, preprocessing và metric trước khi train.
+
+## Tuần 1 - Candidate evaluation và model decision
+
+- Đánh giá A complete-case, B reduced-feature, C missing-aware trên split không leakage.
+- Fit imputation/encoding trên train only; ưu tiên group split `brand + model + manufacture_year` hoặc giải thích rõ random split.
+- Báo R2, MAE, RMSE, MAPE kèm hạn chế, coverage và residual theo price band/fuel/vehicle age.
+- Chọn candidate dựa trên metric, coverage, tính phù hợp với prediction form và khả năng giải thích.
+- Ghi dataset checksum, seed, feature list và exclusion/missing strategy.
+
+## Tuần 2 - regression_v1 và Plumber
+
+- Chỉ sau khi candidate được chốt mới tạo `regression_v1.rds` và official metrics.
+- Plumber `/health`, `/predict`, structured 400/503 errors.
+- Response contract: `predicted_price`, `model_version`, `preprocessing_version`, `predicted_at`.
+- Contract không bắt user nhập field mà model chưa xử lý đáng tin cậy.
+- Test input hợp lệ, missing, category/range sai và trường hợp thiếu model artifact.
+
+## Tuần 3 - Integration và monitoring
+
+- Hỗ trợ TV1 test timeout, malformed payload và version mismatch.
+- Bàn giao model limitations và monitoring fields: request count, success/error, latency, model version.
+- Kiểm tra prediction bất thường và regression test; freeze model trước final system test.
+- Cung cấp metrics và biểu đồ thật cho TV5 đưa vào báo cáo/UML/slide.
+
+**Bàn giao:** versioned artifact, preprocessing contract, metrics/evaluation, Plumber runbook, test evidence.
+
+**Nghiệm thu:** Backend gọi được API; metric từ untouched test set; model version truy vết được dataset; không dùng fixture metric trong báo cáo.
+
+## Quy tắc phối hợp
+
+- `listing_price < predicted_price * 0.5` do TV1 tính; TV4 không nhúng moderation rule vào model.
+- Khi AI lỗi, Backend cho Admin review thủ công; TV4 trả error có cấu trúc.
+- Không train lại sau freeze trừ khi có bug P0 và đã thông báo cả nhóm.

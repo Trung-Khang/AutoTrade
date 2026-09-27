@@ -1,5 +1,7 @@
 # TV3.md — Data Engineering, Crawler & Data Cleaning
 
+> **Cập nhật phạm vi ngày 27/09/2026:** Mục 13 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Dataset 17 trường vẫn được giữ làm nguồn dữ liệu chuẩn cho tìm kiếm và Machine Learning.
+
 ## 1. Vai trò
 
 **Vai trò:** Data Engineer / Data Pipeline Developer
@@ -409,3 +411,45 @@ Không xây:
 - Deep Learning.
 - Recommendation engine.
 - Payment/chat.
+
+---
+
+# 13. Nhiệm vụ bổ sung sau thay đổi phạm vi - Dữ liệu và tin đăng nhập từ nguồn
+
+TV3 giữ ranh giới Data Pipeline. TV3 không xây auth/payment, nhưng phải bảo đảm dữ liệu crawl cùng tồn tại an toàn với listing do user tạo.
+
+## Việc đầu tiên
+
+1. Chốt **một** canonical dataset version/checksum thống nhất trong CSV, JSON, lock report và mapping report.
+2. Đóng Gate I2 bằng bằng chứng import/re-import theo schema v2.0.1.
+3. Review schema delta TV5 để chốt mapping listing crawl, không tự sửa database schema.
+
+## Tuần 1 - Canonical và mapping mới
+
+- Công bố commit hash, record count, 17 fields, checksum và quality report thống nhất.
+- Mapping tin crawl: `listing_origin = CRAWLED`, `seller_id = NULL`, `status = PUBLISHED`.
+- Xác nhận import không cần user giả và không tạo dữ liệu enrich giả.
+- Cập nhật validator/import tests nếu schema import thay đổi.
+
+## Tuần 2 - Import/re-import và demo seed
+
+- Import theo migration đã chốt; báo cáo insert/update/reject.
+- Re-import cùng batch: 0 duplicate `source_url`, user listing không bị sửa hoặc xóa.
+- Cung cấp lệnh seed/reset dữ liệu thị trường cho demo.
+- Bảo toàn `image_url`, `listed_at_raw`, `crawled_at`, NULL và provenance.
+
+## Tuần 3 - Freeze và hỗ trợ integration
+
+- Đóng băng canonical dataset/import trước integration freeze.
+- Kiểm tra FK/constraint cùng TV5, search result cùng TV1/TV2.
+- Nếu có data bug P0, sửa bằng version/checksum mới và thông báo TV4; không sửa âm thầm.
+
+**Bàn giao:** canonical checksum và commit, import command, import/re-import report, known data limitations.
+
+**Nghiệm thu:** 10.813 URL unique; imported listing đúng origin/status; pipeline không chạm vào user listing.
+
+## Không làm trong scope mới
+
+- Tài khoản, moderation business logic, payment/deposit và dashboard.
+- Training model hoặc tự điền missing để giúp model.
+- Crawl realtime trong demo.

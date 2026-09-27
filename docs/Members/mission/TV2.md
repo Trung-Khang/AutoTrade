@@ -1,5 +1,7 @@
 # TV2.md — Frontend & UI/UX
 
+> **Cập nhật phạm vi ngày 27/09/2026:** Mục 12 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Khi có mâu thuẫn, nội dung mới thay thế phần Recommendation/Comparison cũ.
+
 ## 1. Vai trò
 
 **Vai trò:** Frontend Developer & UI/UX
@@ -474,3 +476,55 @@ Bàn giao:
 frontend/
 docs/UML/Use_Case/
 ```
+
+---
+
+# 12. Nhiệm vụ bổ sung sau thay đổi phạm vi - Luồng nghiệp vụ Frontend
+
+Phần này thay thế nhiệm vụ Recommendation/Comparison chưa triển khai. TV2 tập trung vào luồng đăng nhập, đăng tin, kiểm duyệt và đặt cọc giả lập.
+
+## Việc đầu tiên
+
+1. Đóng Gate I2: kết nối list/detail/filter với API TV1 và loại mock khỏi luồng nghiệm thu.
+2. Đọc API/state contract TV5-TV1; liệt kê màn hình, request/response và error state.
+3. Dựng UI skeleton theo contract frozen, không tự đặt status hoặc business rule.
+
+## Tuần 1 - Auth và Seller UI
+
+- Login/register và auth context/token handling.
+- Route guard cho user/admin, đồng thời xử lý 401/403 từ server.
+- My Listings: list, create, edit, submit review và withdraw.
+- Hiển thị status và rejection reason rõ ràng.
+- Có loading, empty, validation và server error state.
+
+**Phụ thuộc:** Auth/Listing API TV1, API contract TV5.
+
+**Bàn giao:** danh sách request mismatch cho TV1 trong ngày, demo seller flow cho leader.
+
+## Tuần 2 - Moderation và Valuation UI
+
+- Admin moderation queue/detail/approve/reject.
+- Hiển thị listing price, predicted price, model version và AI warning.
+- Valuation form/result cho người dùng.
+- Hiển thị `AI_UNAVAILABLE` để Admin review thủ công; không hiện lỗi thô.
+- Không chỉ dùng màu sắc để truyền đạt risk/status.
+
+**Phụ thuộc:** moderation APIs TV1, prediction contract TV4.
+
+**Bàn giao:** UI integration evidence và danh sách API/error chưa xử lý.
+
+## Tuần 3 - Deposit và Admin dashboard
+
+- Deposit confirmation, simulator result và lịch sử deposit của user.
+- Admin ledger, lọc status, refund/release action có confirmation.
+- Dashboard tối thiểu: listing theo status, deposit amount theo status, giao dịch theo thời gian, top brand/model, price bands và model request/error count.
+- Chạy hai golden flows và negative cases với TV5.
+
+**Nghiệm thu:** reload không mất auth hợp lệ; 401/403/404/409/422/503 có UI state; không duplicate submit khi bấm nút nhiều lần.
+
+## Không làm trong scope mới
+
+- Lịch xem xe/lái thử, chat, yêu thích và notification.
+- Giỏ hàng và checkout toàn bộ giá xe.
+- Recommendation/Comparison mới nếu chưa có sẵn.
+- Dashboard realtime; chỉ cần aggregate API và chart cơ bản.

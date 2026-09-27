@@ -1,5 +1,7 @@
 # TV1.md — Backend & System Integration
 
+> **Cập nhật phạm vi ngày 27/09/2026:** Mục 14 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Khi có mâu thuẫn, nội dung mới thay thế phần Recommendation/Comparison cũ.
+
 ## 1. Vai trò
 
 **Vai trò:** Backend Developer & System Integration Lead
@@ -660,3 +662,65 @@ TV1 không tự phát triển:
 - Payment.
 - Chat.
 - Kafka/Kubernetes.
+
+---
+
+# 14. Nhiệm vụ bổ sung sau thay đổi phạm vi - Nghiệp vụ Backend cốt lõi
+
+Phần này thay thế các chỉ dẫn cũ về Recommendation/Comparison và việc loại bỏ toàn bộ Payment. TV1 không tích hợp cổng thanh toán production, nhưng phải xây **deposit/payment simulator** để kiểm thử quy trình kinh doanh.
+
+## Việc đầu tiên
+
+1. Đọc `docs/Project/Workflow_4_Increment.md` và scope change mission.
+2. Đóng Gate I2: `ddl-auto=validate`, smoke test search/filter/detail trên PostgreSQL.
+3. Review schema/API delta của TV5 trong tối đa nửa ngày; chốt state, HTTP code và error schema trước khi code.
+4. Tạo branch/PR nhỏ theo thứ tự Auth -> Listing workflow -> ML moderation -> Deposit -> Dashboard.
+
+## Tuần 1 - Auth và Listing ownership
+
+- Thêm Spring Security, password hash và JWT cho role `USER`, `ADMIN`.
+- API register/login/me; duplicate email và credential sai phải trả 4xx có cấu trúc.
+- User listing CRUD; chỉ owner được sửa, rút hoặc gửi duyệt.
+- State transition theo workflow v2; không nhận status tùy ý từ request.
+- Tin crawl có `seller_id = NULL`, `CRAWLED`, `PUBLISHED`; tin user bắt đầu ở `DRAFT`.
+- Unit test role, ownership, transition và validation.
+
+**Phụ thuộc:** migration/API draft của TV5.
+
+**Bàn giao:** API contract đã chốt cho TV2, test result cho TV5.
+
+**Gate:** user A không đọc/sửa dữ liệu riêng của user B; USER không gọi được Admin endpoint.
+
+## Tuần 2 - Moderation và ML integration
+
+- Admin moderation queue/detail/approve/reject; reject bắt buộc có lý do.
+- R Model client có connect/read timeout và kiểm tra response.
+- Lưu prediction metadata và model request status.
+- Backend tính risk flag: `listing_price < predicted_price * 0.5`.
+- Nếu R API lỗi, giữ tin `PENDING_REVIEW` và đánh dấu `AI_UNAVAILABLE`.
+- Test biên 49,99%, 50%, 50,01% và model timeout/malformed response.
+
+**Phụ thuộc:** prediction contract và Plumber của TV4.
+
+**Bàn giao:** moderation/valuation APIs cho TV2; integration evidence cho TV4/TV5.
+
+## Tuần 3 - Deposit, dashboard và hardening
+
+- Deposit intent và callback simulator có unique idempotency key.
+- Transaction/lock để một listing chỉ có một deposit `HELD`.
+- Cấm self-deposit; validate amount; chỉ Admin được refund/release.
+- Trạng thái kết thúc không được đảo ngược; rollback nếu cập nhật listing/deposit thất bại.
+- Admin ledger, dashboard aggregate và AI monitoring count.
+- Sửa bug P0/P1 theo test matrix TV5; bảo toàn search/filter cũ.
+
+**Phụ thuộc:** migration deposit TV5, UI contract TV2.
+
+**Bàn giao:** OpenAPI/endpoint list, automated tests, demo evidence.
+
+**Nghiệm thu:** callback lặp không tạo giao dịch thứ hai; hai request đồng thời chỉ một `HELD`; transition sai trả 4xx thay vì 500.
+
+## Không làm trong scope mới
+
+- VNPay/MoMo production, thanh toán toàn bộ giá xe, escrow pháp lý.
+- Lịch xem xe/lái thử, chat, notification và complaint workflow.
+- Recommendation/Comparison mới.

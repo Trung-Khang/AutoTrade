@@ -1,5 +1,7 @@
 # TV5.md — Database, Decision Support & Testing
 
+> **Cập nhật phạm vi ngày 27/09/2026:** Mục 15 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Khi có mâu thuẫn, nhiệm vụ Database, UML và kiểm thử mới thay thế Recommendation/Comparison cũ.
+
 ## 1. Vai trò
 
 **Vai trò:** Database Developer + Decision Support + Testing Lead
@@ -571,3 +573,51 @@ Không xây:
 - Payment.
 - Chat.
 - Kafka/Kubernetes.
+
+---
+
+# 15. Nhiệm vụ bổ sung sau thay đổi phạm vi - Cơ sở dữ liệu, UML và điều phối kiểm thử
+
+Phần này thay thế Recommendation/Comparison làm trọng tâm Increment 4. TV5 chủ trì thiết kế delta, UML và test; không xây Backend thay TV1.
+
+## Việc đầu tiên - Scope Transition Gate
+
+1. Đọc workflow v2 và lập delta giữa schema/API/UML cũ với scope mới.
+2. Trong Ngày 1, đề xuất ERD và state diagrams cho User, Listing, Moderation, Prediction Log và Deposit.
+3. Trong Ngày 2, chốt migration/API contract với TV1 và review field cùng TV2/TV3/TV4.
+4. Đánh dấu `CONTRACT FROZEN FOR IMPLEMENTATION`; thay đổi sau đó phải có migration/version và impact note.
+
+## Tuần 1 - Schema/API/UML foundation
+
+- Tạo migration phiên bản mới, giữ schema v2.0.1 và dữ liệu cũ.
+- Thành phần tối thiểu: users; listing owner/origin/status/moderation/version; listing status history; prediction/model request log; deposit và deposit status/audit.
+- Unique/check/FK/index cho email, idempotency key, status và truy vấn Admin.
+- Thiết kế transaction/constraint để một listing chỉ có một deposit `HELD`.
+- API specification và error/status matrix.
+- Draft Use Case, ERD, Class, Listing State và Deposit State diagrams.
+
+## Tuần 2 - Database và integration tests
+
+- Chạy migration/smoke test trên PostgreSQL thật.
+- Hibernate validate với TV1; import/re-import với TV3.
+- Test auth, listing, moderation và ML contract.
+- Cập nhật Sequence diagrams cho seller submit/moderation và valuation.
+- Lập requirement-test traceability matrix P0/P1.
+
+## Tuần 3 - Deposit tests, UML và báo cáo
+
+- Test callback lặp, đặt cọc đồng thời, rollback, refund/release terminal, self-deposit và ownership.
+- Test dashboard aggregate và search/filter regression.
+- Điều phối hai golden flows Frontend-Backend-DB-ML.
+- Hoàn thiện Activity, Sequence, Component, Deployment diagrams; cập nhật SRS, tên đề tài và scope.
+- Tổng hợp Integration/System Test Report với command, expected, actual và evidence.
+
+**Bàn giao:** migration và thứ tự chạy/rollback, ERD/Data Dictionary/API spec, bộ UML, test matrix, test report, known limitations.
+
+**Nghiệm thu:** SQL=JPA=Import; state/constraint đúng; P0 pass; tài liệu và code cùng một scope.
+
+## Không làm trong scope mới
+
+- Recommendation/Comparison mới.
+- Production payment gateway hoặc escrow pháp lý.
+- Backend service/controller thay TV1, React thay TV2, model training thay TV4.
