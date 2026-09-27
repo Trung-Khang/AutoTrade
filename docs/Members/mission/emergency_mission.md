@@ -1,6 +1,8 @@
 # Emergency Mission - Thống nhất Database cho Increment 2
 
-Ngày giao nhiệm vụ: 14/09/2026. Trạng thái: **ĐANG THỰC HIỆN**.
+> **Cập nhật sau thay đổi phạm vi:** nhiệm vụ trong file này tiếp tục được dùng để đóng Gate I2 về Data Contract, Database, Import và JPA. Nhiệm vụ ưu tiên hiện tại của cả nhóm là `scope_change_mission.md`, được triển khai theo `docs/Project/Workflow_4_Increment.md`. Không mở rộng thêm chức năng mới vào Increment 2.
+
+Ngày giao nhiệm vụ: 14/09/2026. Trạng thái: **GATE I2 - CẦN NGHIỆM THU RUNTIME HOẶC GHI RÕ PENDING**.
 
 Tài liệu này ghi các nhiệm vụ cấp thiết do leader điều phối. Nhiệm vụ hiện tại là thống nhất Data Contract, PostgreSQL schema, seed/import và JPA trước khi tích hợp dữ liệu thị trường vào Increment 2. Các thành viên cập nhật tiến độ và bằng chứng hoàn thành trong báo cáo cá nhân; leader cập nhật trạng thái tại đây sau khi nghiệm thu.
 
