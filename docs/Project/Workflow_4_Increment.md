@@ -1,310 +1,200 @@
-# PROJECT WORKFLOW V2 - HỆ THỐNG QUẢN LÝ KINH DOANH Ô TÔ ĐÃ QUA SỬ DỤNG
+# Workflow 4 Increment - Hệ thống quản lý kinh doanh ô tô đã qua sử dụng
 
-## 1. Mục đích và thay đổi phạm vi
+## 1. Nguồn ưu tiên và mục tiêu
 
-Tên đề tài mới: **Xây dựng hệ thống quản lý kinh doanh ô tô đã qua sử dụng**.
+Tên đề tài: **Xây dựng hệ thống quản lý kinh doanh ô tô đã qua sử dụng**.
 
-Workflow này là nguồn điều phối chính sau khi nhóm mở rộng từ hệ thống tra cứu và định giá sang quy trình đăng bán, kiểm duyệt và đặt cọc giữ xe. Increment 1 và phần lớn Increment 2 đã hoàn thành, vì vậy nhóm không làm lại nền tảng cũ. Ba tuần còn lại tập trung vào một luồng kinh doanh có thể demo và kiểm thử:
+Workflow này áp dụng kế hoạch ba ngày đã được nhóm chốt trong `docs/Project/Ke_hoach_3_ngay_phan_cong_nhiem_vu.docx`. Khi có mâu thuẫn, kế hoạch DOCX và workflow này được ưu tiên hơn các mission/report cũ.
 
-```text
-Người bán tạo tin
-  -> Gửi kiểm duyệt
-  -> ML dự đoán giá, Backend gắn cờ nếu giá rao < 50% giá dự đoán
-  -> Admin duyệt hoặc từ chối
-  -> Tin PUBLISHED xuất hiện trong showroom
-  -> Người mua đặt cọc qua cổng thanh toán giả lập
-  -> Tin RESERVED
-  -> Admin ghi nhận REFUNDED hoặc RELEASED
-  -> Tin SOLD khi giao dịch hoàn tất
-```
+Mục tiêu nộp: hệ thống Spring Boot + React + PostgreSQL chạy được một quy trình quản lý xe cũ có xác thực, phân quyền, quản lý xe, đặt cọc giả lập, lịch hẹn và kiểm thử có bằng chứng.
 
-ML định giá trực tiếp cho người dùng vẫn là chức năng cốt lõi. Giá dự đoán chỉ mang tính tham khảo; AI chỉ gắn cờ để Admin xem xét, không tự động từ chối tin.
+## 2. Quyết định kỹ thuật đã khóa
 
-## 2. Scope freeze cho bản demo
+- Giữ stack hiện có: Spring Boot, React, PostgreSQL và JPA.
+- Không viết lại dự án theo Servlet/JSP, SQL Server hoặc MySQL trong giai đoạn ba ngày.
+- Không có Machine Learning, hồi quy tuyến tính, R Plumber, định giá tự động, Recommendation hoặc Comparison trong phạm vi nộp.
+- Không có giỏ hàng, thanh toán 100% giá xe, cổng VNPay/MoMo thật hoặc escrow pháp lý.
+- Đặt cọc chỉ là giao dịch giả lập bằng QR/reference; không phát sinh tiền thật.
+- Lái thử là checkbox tùy chọn của lịch hẹn, không phải module hoặc Use Case riêng.
+- `crawler/` và dữ liệu crawler là dữ liệu hiện có, không sửa hoặc xóa trong kế hoạch này.
 
-### 2.1. Chức năng bắt buộc
+## 3. Phạm vi ưu tiên
 
-- Showroom: danh sách, chi tiết, tìm kiếm, lọc, phân trang và sắp xếp.
-- Đăng ký, đăng nhập và phân quyền `USER`, `ADMIN`.
-- `USER` có thể vừa là người mua vừa là người bán tùy từng giao dịch.
-- Người bán tạo, sửa, gửi duyệt và rút tin của mình.
-- Admin duyệt hoặc từ chối tin; bắt buộc có lý do khi từ chối.
-- Định giá xe bằng `regression_v1` qua R Plumber.
-- AI risk flag khi `listing_price < predicted_price * 0.5`; bằng đúng 50% thì không gắn cờ.
-- Đặt cọc giữ xe bằng payment simulator/sandbox, có idempotency key.
-- Admin xem dòng tiền cọc và ghi nhận `REFUNDED` hoặc `RELEASED`.
-- Dashboard tổng hợp từ listing, deposit và prediction log.
-- Kiểm thử trạng thái, ownership, phân quyền, callback lặp và đặt cọc đồng thời.
-
-### 2.2. Loại khỏi MVP
-
-- Đặt lịch xem xe và lái thử.
-- Giỏ hàng, thanh toán 100% giá xe, công chứng và chuyển quyền sở hữu.
-- Escrow pháp lý thật, ví nội bộ và chia hoa hồng.
-- Chat, thông báo SMS/email và khiếu nại nhiều cấp.
-- Yêu thích xe.
-- Recommendation Score và Recommendation Engine.
-- So sánh 2-3 xe nếu chưa có sẵn khi scope freeze.
-- VNPay/MoMo production; chỉ dùng simulator hoặc sandbox.
-- AI gian lận phức tạp; chỉ định giá và risk flag theo quy tắc rõ ràng.
-
-Không thành viên nào tự bổ sung chức năng ngoài danh sách bắt buộc trong ba tuần còn lại. Muốn thêm chức năng phải bỏ hoặc giảm một hạng mục khác và được leader chấp nhận.
-
-## 3. Vai trò và ranh giới sở hữu
-
-| Thành viên | Sở hữu chính sau scope change | Không sở hữu |
+| Mức | Phạm vi | Quyết định khi trễ |
 |---|---|---|
-| TV1 | Spring Boot, auth/RBAC, state machine, moderation, deposit simulator, ML client, dashboard API | Schema DB chính thức, model training, React UI |
-| TV2 | React, auth UI, seller flow, admin flow, deposit UI, dashboard UI | Business rule và phân quyền phía server |
-| TV3 | Canonical dataset, import pipeline, imported-listing mapping, dữ liệu demo tái lập | User listing CRUD, payment, schema DB |
-| TV4 | EDA, candidate evaluation, `regression_v1`, Plumber contract, model metrics/version | Moderation decision, payment, risk rule nghiệp vụ |
-| TV5 | Database migration, ERD/UML, API/test specification, điều phối integration/system test | Backend implementation, React UI, model training |
+| P0 | Đăng nhập/phân quyền; showroom; tìm kiếm/lọc/chi tiết xe; Admin CRUD xe; đặt cọc giả lập; lịch hẹn; khóa xe; chống cọc trùng; test/UML cho luồng chính | Bắt buộc hoàn thành trước Gate 2 |
+| P1 | Đăng ký, quên mật khẩu OTP, yêu thích, lịch sử cọc, Staff cập nhật lịch hẹn, Admin ledger/tài khoản/thống kê cơ bản | Chỉ làm khi P0 ổn định |
+| P2 | QR đẹp, hợp đồng/biên lai tải về, contact link, gallery nhiều ảnh, chart nâng cao | Hoãn hoặc mô phỏng trước |
+| Loại bỏ | Regression/ML, Recommendation, Comparison, thanh toán thật, giỏ hàng, workflow lái thử độc lập | Không triển khai, không mô tả như chức năng đã có |
 
-Quyết định kiến trúc:
+## 4. Actor và nghiệp vụ chính
 
-- Tin crawl: `listing_origin = CRAWLED`, `seller_id = NULL`, nhập ở trạng thái `PUBLISHED` để làm dữ liệu thị trường/showroom.
-- Tin người dùng: `listing_origin = USER_SUBMITTED`, bắt buộc có `seller_id`, bắt đầu ở `DRAFT` và phải được Admin duyệt.
-- `USER` là role tài khoản. Buyer/Seller là vai trò phát sinh theo listing hoặc deposit, không tạo role riêng.
-- Frontend không quyết định quyền, trạng thái hoặc kết quả giao dịch; Backend thực thi toàn bộ rule.
-- PostgreSQL là system of record; R Plumber chỉ dự đoán giá.
+| Actor | Quyền trong phạm vi |
+|---|---|
+| Khách vãng lai | Xem showroom, tìm kiếm/lọc, xem chi tiết xe, liên hệ nhanh |
+| CUSTOMER | Đăng nhập, đặt cọc giả lập, tạo lịch hẹn, xem đơn cọc của mình |
+| STAFF | Xem và cập nhật trạng thái lịch hẹn showroom |
+| ADMIN | CRUD xe, quản lý tài khoản, xem ledger cọc và thao tác quản trị được chốt |
+| System | Phát OTP thật hoặc OTP demo có hạn dùng; tạo QR/reference giả lập |
 
-## 4. Trạng thái nghiệp vụ
-
-### 4.1. Listing
-
-```text
-DRAFT -> PENDING_REVIEW -> PUBLISHED -> RESERVED -> SOLD
-                         -> REJECTED
-PUBLISHED -> WITHDRAWN
-RESERVED  -> PUBLISHED     (cọc FAILED/EXPIRED/REFUNDED theo rule demo)
-```
-
-Quy tắc tối thiểu:
-
-- Chỉ chủ tin được sửa, rút hoặc gửi duyệt tin của mình.
-- Tin `PENDING_REVIEW`, `RESERVED`, `SOLD` không được sửa trực tiếp.
-- Sửa giá hoặc thông tin quan trọng của tin đã công bố phải đưa về `PENDING_REVIEW`.
-- Chỉ `PUBLISHED` mới nhận cọc.
-- Không được đặt cọc xe của chính mình.
-- AI lỗi hoặc timeout không làm mất tin; tin vẫn `PENDING_REVIEW` với `AI_UNAVAILABLE` để Admin xử lý thủ công.
-
-### 4.2. Deposit
+### Trạng thái tối thiểu
 
 ```text
-PENDING_PAYMENT -> HELD -> RELEASED
-                       -> REFUNDED
-PENDING_PAYMENT -> FAILED
-PENDING_PAYMENT -> EXPIRED
+Vehicle: AVAILABLE -> HOLD/RESERVED -> AVAILABLE hoặc SOLD
+Deposit: PENDING_PAYMENT -> DEPOSITED -> REFUNDED hoặc RELEASED
+Appointment: SCHEDULED -> COMPLETED hoặc CANCELLED
 ```
 
-Quy tắc tối thiểu:
+Quy tắc bắt buộc:
 
-- Một listing chỉ có tối đa một deposit `HELD`.
-- Callback trùng `idempotency_key` phải trả cùng kết quả, không tạo thêm giao dịch.
-- Chỉ Admin được release hoặc refund.
-- `RELEASED` và `REFUNDED` là trạng thái kết thúc, không đảo ngược.
-- Số tiền cọc nằm trong min/max cấu hình và không vượt giá rao.
-- Không xóa cứng deposit và audit history.
+- Chỉ xe `AVAILABLE` được tạo đặt cọc.
+- Một xe không có hai đặt cọc giữ chỗ thành công cùng lúc.
+- Xác nhận cọc và chuyển trạng thái xe phải chạy trong transaction.
+- Lịch hẹn không được ở quá khứ.
+- CUSTOMER không được gọi API STAFF/ADMIN; Backend mới là nơi quyết định quyền.
+- Callback/reference lặp không tạo thêm transaction.
 
-## 5. Workflow theo Increment
+## 5. Phân công và phụ thuộc
 
-### Increment 1 - Foundation
-
-Trạng thái: **ĐÃ HOÀN THÀNH**.
-
-Đã có Spring Boot/React foundation, crawler/model structure, database/system design và tài liệu nhiệm vụ.
-
-### Increment 2 - Market Data
-
-Trạng thái: **GẦN HOÀN THÀNH**. Không đưa nghiệp vụ mua bán mới vào Increment 2.
-
-Đã có Data Contract 17 trường, 10.813 records, schema PostgreSQL v2.0.1, JPA mapping, API search/filter/paging/sorting và TV4 EDA skeleton.
-
-#### Gate I2 - Điều kiện đóng Increment 2
-
-| Owner | Việc còn lại | Bằng chứng PASS |
+| TV | Sở hữu | Bàn giao chính |
 |---|---|---|
-| TV3 | Công bố một canonical checksum thống nhất; import/re-import theo Mapping v2.0.1 | Commit, checksum, số insert/update/reject, 0 duplicate URL |
-| TV5 | Chạy bootstrap/migration và DB smoke test trên PostgreSQL thật | Log PK/FK/CHECK/UNIQUE/trigger |
-| TV1 | Chạy Hibernate `ddl-auto=validate`; smoke search/filter/detail | Log khởi động và response API mẫu |
-| TV2 | Nối list/detail/filter với API thật | Demo từ Backend, không dùng mock cho luồng nghiệm thu |
-| TV4 | Xác minh canonical dataset và chạy lại EDA | Checksum trong report khớp TV3; chưa tạo official model ở Gate I2 |
-
-Nếu PostgreSQL vẫn chưa sẵn sàng sau tối đa hai ngày, leader đóng Increment 2 ở mức `PASS WITH RUNTIME PENDING`, ghi rõ blocker và tiếp tục scope mới.
-
-### Scope Transition Gate - Ngày 1 đến Ngày 2
-
-Mục tiêu: khóa nghiệp vụ và contract trước khi code song song.
-
-1. Leader công bố workflow và danh sách out-of-scope.
-2. TV5 vẽ ERD/UML delta, migration và API contract draft.
-3. TV1 review JPA, security, transaction, HTTP/error/state contract.
-4. TV2 review request/response cần cho từng màn hình và dựng mock theo contract.
-5. TV3 review imported-listing mapping; TV4 review prediction fields/model log.
-6. Cả nhóm ghi `CONTRACT FROZEN FOR IMPLEMENTATION` trong scope change mission.
-
-Gate kéo dài tối đa hai ngày. Sau khi contract frozen, thay đổi phải có version và impact note.
-
-### Increment 3 - Business Core And Automated Pricing
-
-Thời gian: cuối Tuần 1 đến hết Tuần 2.
-
-Mục tiêu: người dùng đăng nhập, đăng tin, Admin kiểm duyệt và ML định giá/gắn cờ.
-
-#### TV5 làm trước
-
-- Migration cho `users`, listing ownership/origin/status/moderation, prediction/model request log và audit history tối thiểu.
-- ERD delta, state diagram, class diagram và API contract draft.
-
-#### TV1
-
-- Auth/RBAC, password hash, JWT và `/auth/register`, `/auth/login`, `/auth/me`.
-- Listing owner CRUD và transition hợp lệ.
-- Admin moderation; validation và structured errors.
-- R Model client có timeout/fallback; lưu prediction metadata.
-- Risk flag đúng ngưỡng `< 50%`; unit/integration test cho role, ownership và transition.
-
-#### TV2
-
-- Login/register, route guard và auth state.
-- My Listings, create/edit/submit/withdraw.
-- Admin moderation queue/detail/action.
-- Valuation form/result và risk display cho Admin.
-
-#### TV3
-
-- Khóa canonical dataset và provenance.
-- Cập nhật import để tin crawl có `CRAWLED`, `seller_id = NULL`, `PUBLISHED` sau khi schema được chốt.
-- Bảo đảm re-import không đụng vào user-submitted listing.
-
-#### TV4
-
-- Chạy EDA canonical và đánh giá candidate A/B/C không leakage.
-- Chốt missing/outlier/feature policy và `regression_v1` bằng test metrics thật.
-- Đóng gói artifact có version và Plumber `/health`, `/predict`.
-- Bàn giao failure behavior cho TV1; không tự quyết định moderation.
-
-#### Gate I3
-
-- User chỉ sửa tin của mình; Admin endpoint bị chặn với USER.
-- Tin chỉ xuất hiện sau approve.
-- Prediction chạy qua HTTP; timeout có fallback có cấu trúc.
-- Giá nhỏ hơn 50% bị flag, bằng 50% không bị flag.
-- Có test tự động cho role, ownership, transition và risk boundary.
-
-### Increment 4 - Deposit, Admin Analytics And Hardening
-
-Thời gian: Tuần 3.
-
-Mục tiêu: hoàn thành đặt cọc giả lập, quản trị, dashboard, UML, system test và demo.
-
-#### TV1
-
-- Deposit intent, callback simulator, own deposits và Admin ledger.
-- Transaction/locking để hai người không cùng giữ một xe.
-- Callback idempotent; refund/release authorization.
-- Dashboard aggregate API và AI monitoring counts.
-
-#### TV2
-
-- Deposit confirmation/result/history.
-- Admin ledger và action refund/release.
-- Dashboard KPI và biểu đồ tối thiểu.
-- Chạy golden path và negative cases cùng TV5.
-
-#### TV3
-
-- Đóng băng dataset/import; cung cấp script reset/seed demo tái lập.
-- Kiểm tra import không phá FK và không chạm dữ liệu giao dịch.
-
-#### TV4
-
-- Hỗ trợ integration Spring Boot-R Plumber và regression test contract.
-- Cung cấp metrics, limitations và monitoring fields.
-- Freeze model trước final system test.
-
-#### TV5
-
-- Cập nhật Use Case, Activity, Sequence, Class, State, Component và Deployment diagrams.
-- Lập test matrix, điều phối API/integration/system test.
-- Tổng hợp requirement -> test case -> evidence.
-
-#### Gate I4
-
-- Hai golden flows chạy được từ UI đến DB/ML.
-- Transition trái phép trả 4xx có cấu trúc, không trả 500.
-- Callback lặp không tạo thêm deposit; đặt cọc đồng thời chỉ một `HELD`.
-- Search/filter cũ không regression.
-- Seed/reset demo tái lập được.
-- UML, SRS, API, ERD, test report và slide cùng một scope.
-
-## 6. Kế hoạch ba tuần
-
-| Mốc | TV1 | TV2 | TV3 | TV4 | TV5 |
-|---|---|---|---|---|---|
-| Ngày 1-2 | Review API/schema, đóng Gate I2 | Review UI contract, đóng Gate I2 | Canonical/import evidence | Canonical/EDA evidence | Chủ trì scope, ERD/API/test delta |
-| Tuần 1 | Auth/RBAC, owner listing skeleton | Auth UI, seller UI theo mock contract | Import mapping draft | Candidate evaluation và model decision | Migration, UML/state/API freeze |
-| Tuần 2 | Moderation, ML client, risk flag | Seller/Admin/valuation integration | Import mới và reset seed | `regression_v1` + Plumber | DB/integration test, UML update |
-| Tuần 3 đầu | Deposit/idempotency/dashboard API | Deposit/ledger/dashboard UI | Freeze demo data | Model integration/monitoring | Deposit schema/test matrix |
-| Tuần 3 cuối | Fix theo severity | E2E và fix UI | Reproducibility support | Prediction regression test | System test, report, UML, demo script |
-
-Mỗi ngày, mỗi TV cập nhật ba dòng trong báo cáo cá nhân: `Đã xong`, `Đang làm`, `Blocked bởi ai`. Blocker quá nửa ngày phải báo leader, không tự đổi contract.
-
-## 7. Phụ thuộc và bàn giao
+| TV1 | Vehicle API, Admin CRUD, deposit, appointment, transaction, Staff/Admin API | API contract, business test, OpenAPI |
+| TV2 | React UI và Test Lead | UI tích hợp, Test Plan/Case/Report, Defect Log, evidence |
+| TV3 | PostgreSQL migration, seed, constraint, Data Dictionary | Schema/seed/reset/test SQL |
+| TV4 | Auth, password hash, JWT/session, role, OTP fallback | Auth API/current-user contract/security test |
+| TV5 | SRS, Use Case, Sequence, Collaboration, Class, ERD, traceability | UML/SRS/truy vết/checklist nộp |
 
 ```mermaid
 flowchart LR
-    L[Leader scope freeze] --> D[TV5 schema API UML delta]
-    D --> B[TV1 backend contracts]
-    D --> C[TV3 import mapping]
-    D --> M[TV4 prediction contract]
-    B --> F[TV2 frontend integration]
-    M --> B
-    C --> DB[(PostgreSQL)]
-    B --> DB
-    DB --> T[TV5 integration and system tests]
-    F --> T
-    M --> T
-    T --> X[Final demo and report]
+    A[TV3 schema và seed] --> B[TV1 nghiệp vụ]
+    A --> C[TV4 auth và role]
+    B --> D[TV2 tích hợp UI]
+    C --> D
+    B --> E[TV5 UML và traceability]
+    C --> E
+    A --> E
+    D --> F[TV2 điều phối system test]
+    E --> F
+    F --> G[Final Gate]
 ```
 
-Mỗi bàn giao phải có commit/PR, contract hoặc schema version, lệnh chạy, test result và known limitations. Tin nhắn "đã làm xong" không được xem là bàn giao nếu thiếu bằng chứng.
+## 6. Kế hoạch Ngày 1 - Khóa contract và dựng lõi
 
-## 8. Test strategy ưu tiên Backend
+### Mục tiêu
 
-### P0 - Bắt buộc
+Database khởi tạo được; login/role cơ bản chạy; API xe và Admin CRUD dùng dữ liệu thật; deposit/appointment có skeleton; UI có route chính; UML tổng thể bám contract.
 
-- Auth: duplicate email, sai password, token thiếu/hết hạn, sai role.
-- Ownership: user sửa/rút/submit tin của người khác.
-- Listing: transition sai, approve/reject lặp, sửa khi reserved/sold.
-- AI: input sai, timeout, response sai schema, ngưỡng 49,99%/50%/50,01%.
-- Deposit: self-deposit, listing không published, amount sai, callback lặp, hai deposit đồng thời, refund/release lặp.
-- Database: FK, unique, check, lock và rollback.
+| Thời điểm | Owner | Việc và bàn giao |
+|---|---|---|
+| 08:00-08:30 | Cả nhóm | Khóa P0/P1/P2, enum/status/tên endpoint. TV2 mở Defect Log, TV5 mở traceability. |
+| 08:30-10:00 | TV3 | ERD vật lý, migration draft, enum/status/FK/index; gửi TV1/TV4/TV5 review. |
+| 08:30-10:00 | TV1 + TV4 | Chốt auth/business API contract và error `400/401/403/404/409/422`. |
+| 08:30-11:00 | TV2 + TV5 | TV2 dựng UI skeleton/Test Plan; TV5 đồng bộ SRS/Use Case/Sequence draft. |
+| 10:30-12:00 | TV3 | Migration/seed/reset chạy được; có CUSTOMER/STAFF/ADMIN và xe demo. |
+| 10:30-17:00 | TV1 | Public vehicle API, Admin CRUD, deposit/appointment skeleton. |
+| 10:30-17:00 | TV4 | Login, password hash, security filter, role protection, current-user contract. |
+| 12:30-17:30 | TV2 | Nối showroom/detail/filter/login với API, ghi mismatch. |
+| 13:00-17:30 | TV5 | Use Case và Sequence login/search/CRUD/deposit draft theo code/contract. |
+| 17:30-19:00 | Cả nhóm | Gate 1 và test module; TV2 ghi evidence. |
 
-### P1 - Cần có
+### Gate 1
 
-- Search/filter/paging/sorting regression.
-- Dashboard aggregate đúng theo status và time range.
-- Frontend xử lý 401/403/404/409/422/503.
-- Import/re-import idempotency và bảo toàn user listing.
+- DB sạch khởi tạo và seed được.
+- CUSTOMER/STAFF/ADMIN đăng nhập được; CUSTOMER bị chặn API Admin.
+- Showroom/detail/filter và Admin CRUD gọi API thật.
+- Use Case tổng thể, Sequence login/CRUD và Test Plan P0 đã được review.
 
-### Golden flows
+## 7. Kế hoạch Ngày 2 - Hoàn thành nghiệp vụ và tích hợp
 
-```text
-Flow A: Seller đăng ký -> tạo tin -> submit -> AI dự đoán/flag -> Admin approve -> showroom
-Flow B: Buyer đăng nhập -> deposit -> callback HELD -> listing RESERVED -> Admin release -> SOLD
-```
+### Mục tiêu
 
-Biến thể refund: `HELD -> REFUNDED -> listing PUBLISHED` theo rule demo.
+Luồng vàng chạy từ đăng nhập đến đặt cọc, khóa xe, lịch hẹn và quản trị giao dịch; P0 không còn mock.
 
-## 9. Tài liệu phải đồng bộ
+| Thời điểm | Owner | Việc và bàn giao |
+|---|---|---|
+| 08:00-08:30 | Cả nhóm | Triage lỗi Gate 1; không nhận chức năng mới. |
+| 08:30-12:00 | TV1 | Deposit/lịch hẹn/ledger tối thiểu, transaction và chặn cọc trùng; gửi API TV2. |
+| 08:30-12:00 | TV4 | Register/logout/OTP hoặc fallback demo, account lock và auth tests. |
+| 08:30-11:00 | TV3 | Constraint/index/test SQL/seed tình huống AVAILABLE-HOLD; schema freeze lúc 11:00. |
+| 08:30-12:00 | TV2 | Auth/Admin CRUD/deposit/lịch hẹn/mock QR UI; validation và error state. |
+| 08:30-16:00 | TV5 | UC P0/P1, Sequence/Collaboration/Class/ERD/traceability theo implementation. |
+| 13:00-16:00 | TV1 + TV2 + TV4 | Tích hợp token/role, deposit/lịch hẹn và xử lý errors. |
+| 16:00-19:00 | Cả nhóm | Gate 2, luồng vàng và test âm do TV2 điều phối. |
 
-TV5 chủ trì cập nhật tên đề tài, SRS, ERD, API spec, UML và Test Plan. Mỗi TV review phần mình sở hữu. Tài liệu cũ về Recommendation/Comparison và out-of-scope payment phải được đánh dấu superseded hoặc sửa trước bảo vệ.
+### Luồng vàng Gate 2
 
-Thứ tự nguồn chuẩn:
+1. Khách vãng lai xem, tìm kiếm/lọc và mở xe `AVAILABLE`.
+2. CUSTOMER đăng nhập, chọn showroom/ngày giờ, tích tùy chọn lái thử và tạo đặt cọc giả lập.
+3. Hệ thống lưu deposit/lịch hẹn, xác nhận mock payment, chuyển xe sang `HOLD/RESERVED` trong transaction.
+4. Tài khoản khác không thể đặt cọc lại xe đó.
+5. STAFF xem/cập nhật lịch hẹn; ADMIN xem ledger và CRUD xe.
 
-1. Workflow này và scope change mission.
-2. Database migration, Data Dictionary và ERD phiên bản mới.
-3. API contract phiên bản mới.
-4. Code và automated tests.
-5. Báo cáo cá nhân và bằng chứng demo.
+### Gate 2
+
+- Luồng vàng end-to-end đạt với DB thật.
+- Chặn cọc trùng, ngày quá khứ, role sai và callback/submit lặp.
+- P0 không dùng mock data hoặc hard-code business result.
+- Lỗi Critical/High đều có owner và hạn sửa.
+
+## 8. Kế hoạch Ngày 3 - Kiểm thử và đóng gói
+
+### Mục tiêu
+
+Không còn lỗi Critical/High; hệ thống build được từ hướng dẫn; tài liệu, schema, API và test evidence khớp nhau.
+
+| Thời điểm | Owner | Việc và bàn giao |
+|---|---|---|
+| 08:00-08:30 | Cả nhóm | Code freeze; chỉ sửa lỗi/tài liệu/demo. |
+| 08:30-11:30 | TV2 | System test, Test Report, Defect Log, evidence, responsive check. |
+| 08:30-11:30 | TV1 | Sửa lỗi business/integration; kiểm tra transaction/state/duplicate submit. |
+| 08:30-11:30 | TV4 | Security test: token, bypass role, password hash, lock, OTP. |
+| 08:30-11:30 | TV3 | Migration/seed/reset/constraint/FK/index test từ DB trống. |
+| 08:30-11:30 | TV5 | Chốt SRS/UML/ERD/traceability từ code và test thật. |
+| 13:00-15:00 | Cả nhóm | System Test Round 2; mỗi TV test chéo một module và hai negative cases. |
+| 15:00-16:30 | TV1 + TV3 | Build/deploy rehearsal từ môi trường sạch. |
+| 15:00-16:30 | TV2 + TV4 + TV5 | Demo rehearsal, auth/UI evidence và cross-check tài liệu. |
+| 16:30-18:30 | Cả nhóm | Final Gate, danh sách hạn chế, chuẩn bị nộp. |
+
+### Final Gate
+
+- Không còn lỗi Critical/High.
+- Build/run được bằng lệnh đã ghi; migration/seed tái lập được.
+- Test Report có input, expected, actual, status và evidence thật.
+- SRS, UML, schema, API, code và demo cùng một scope.
+- Không tuyên bố triển khai phần bị cắt.
+
+## 9. Chiến lược kiểm thử
+
+| Nhóm | Owner chính | Case tối thiểu |
+|---|---|---|
+| Auth/RBAC | TV4, TV2 test chéo | Password sai, token thiếu/sai/hết hạn, role sai, account lock, OTP expiry |
+| Xe/tìm kiếm | TV1, TV2 test chéo | CRUD, xe không tồn tại, lọc kết hợp, dữ liệu biên |
+| Deposit/lịch hẹn | TV1, cả nhóm | Xe không AVAILABLE, cọc đồng thời, duplicate submit, ngày quá khứ, transition sai |
+| Database | TV3, TV1 test chéo | Migration, FK, UNIQUE, CHECK, rollback, seed/reset |
+| Frontend | TV2, TV4 test chéo | Loading/empty/error, `401/403/404/409/422`, responsive, reload |
+| Tài liệu | TV5, cả nhóm | FR-UC-API-Test khớp code/evidence, không còn scope cũ |
+
+## 10. Phương án cắt giảm
+
+1. Cắt P2 trước: PDF biên lai/hợp đồng đổi thành trang HTML có reference; QR là ảnh giả lập; chart/gallery nâng cao hoãn.
+2. Nếu P1 chặn P0: hoãn favorites, OTP email thật, thống kê nâng cao, quản lý tài khoản chi tiết và history mở rộng.
+3. Không cắt password hash, authorization, DB transaction/FK/unique, chặn cọc trùng, migration/seed hoặc test âm.
+4. Mọi phần hoãn phải nằm trong mục hạn chế/hướng phát triển, không ghi là hoàn thành.
+
+## 11. Tài liệu và bàn giao bắt buộc
+
+- TV1: API contract/OpenAPI, backend test result.
+- TV2: Test Plan, Test Case, Defect Log, Test Report, screenshots/demo script.
+- TV3: schema/migration, seed/reset guide, Data Dictionary, DB test log.
+- TV4: auth contract, security guide/test evidence.
+- TV5: SRS, Use Case/spec, Sequence, Collaboration, Class, ERD và traceability matrix.
+
+Mỗi bàn giao phải có file/commit liên quan, hướng dẫn chạy, test result và known limitations. Báo "xong" không thay thế được bằng chứng.
+
+## 12. Mốc cuối
+
+- 30/09/2026: Ngày 1 và Gate 1.
+- 01/10/2026: Ngày 2 và Gate 2.
+- 02/10/2026: Ngày 3 và Final Gate.
+- 03/10/2026: dự phòng sửa lỗi, bổ sung bằng chứng và hoàn thiện báo cáo.
+- 04/10/2026: hạn nộp.

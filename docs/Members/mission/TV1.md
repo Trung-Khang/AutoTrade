@@ -1,726 +1,98 @@
-# TV1.md — Backend & System Integration
+# TV1 - Backend nghiệp vụ và tích hợp
 
-> **Cập nhật phạm vi ngày 27/09/2026:** Mục 14 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Khi có mâu thuẫn, nội dung mới thay thế phần Recommendation/Comparison cũ.
+## 1. Vai trò hiện tại
 
-## 1. Vai trò
+TV1 sở hữu Backend nghiệp vụ của hệ thống **Xây dựng hệ thống quản lý kinh doanh ô tô đã qua sử dụng**. TV1 triển khai và tích hợp các API xe, đặt cọc giả lập, lịch hẹn, Staff/Admin; bảo đảm business rule chạy ở server.
 
-**Vai trò:** Backend Developer & System Integration Lead
+## 2. Phạm vi sở hữu
 
-TV1 phụ trách xây dựng Core Backend bằng Java Spring Boot, kết nối PostgreSQL, giao tiếp với R Model API và tích hợp các nghiệp vụ chính của hệ thống.
+- Spring Boot REST API cho danh sách, tìm kiếm, lọc và chi tiết xe.
+- Admin CRUD xe và API Staff/Admin tối thiểu.
+- Nghiệp vụ đặt cọc giả lập, lịch hẹn, trạng thái xe/giao dịch và transaction chống đặt cọc trùng.
+- API contract, Swagger/OpenAPI, unit test và integration test nghiệp vụ.
 
-### Phạm vi chính
+## 3. Không thuộc trách nhiệm
 
-```text
-backend/
-docker-compose.yml
-docs/UML/Sequence_Diagram/
-docs/UML/Deployment_Diagram/
-```
+- Đăng ký, đăng nhập, JWT, OTP và phân quyền lõi: TV4 sở hữu.
+- Migration, seed, constraint và dữ liệu mẫu: TV3 sở hữu.
+- React UI và hệ thống test report: TV2 sở hữu.
+- SRS/UML/ma trận truy vết: TV5 sở hữu.
+- Hồi quy tuyến tính, Machine Learning, Recommendation và Comparison đã loại khỏi phạm vi nộp.
 
-TV1 không chịu trách nhiệm chính về:
-- Giao diện React.
-- Logic crawl dữ liệu.
-- Huấn luyện Regression.
-- Thiết kế Recommendation thuật toán chi tiết.
+## 4. Ngày 1 - Khóa contract và dựng lõi
 
-TV1 chịu trách nhiệm biến các module đó thành một hệ thống có thể giao tiếp với nhau.
+1. Chốt cùng TV4/TV3 API contract: request, response, lỗi `400/401/403/404/409/422`, role và state transition.
+2. Rà soát schema TV3 để xác nhận entity/DTO hiện có cho vehicle/listing không mâu thuẫn.
+3. Hoàn thiện API công khai: danh sách, tìm kiếm, lọc và chi tiết xe.
+4. Hoàn thiện Admin CRUD xe; không xóa xe đang được deposit/appointment tham chiếu.
+5. Dựng entity/service/controller skeleton cho deposit và appointment theo contract đã khóa.
+6. Bàn giao endpoint xe cho TV2 trước 15:00; code deposit/appointment sẵn sàng review trước 17:00.
 
----
+## 5. Ngày 2 - Hoàn thành nghiệp vụ và tích hợp
 
-# 2. Nguyên tắc làm việc
+1. Chỉ cho phép đặt cọc với xe `AVAILABLE`.
+2. Tạo deposit `PENDING_PAYMENT`, lịch hẹn và mock QR/reference; khi xác nhận thành công chuyển deposit sang `DEPOSITED` và xe sang `HOLD` hoặc `RESERVED` trong cùng transaction.
+3. Chặn hai tài khoản giữ cùng một xe bằng transaction/constraint của TV3; xử lý duplicate submit và callback lặp theo idempotency/reference.
+4. Kiểm tra ngày hẹn không ở quá khứ; lái thử chỉ là checkbox của lịch hẹn, không tạo workflow độc lập.
+5. Cung cấp API cho CUSTOMER xem đơn cọc, STAFF xem/cập nhật lịch hẹn, ADMIN xem ledger tối thiểu.
+6. Tích hợp với TV2 và sửa các mismatch được ghi trong Defect Log.
 
-- Không truy cập PostgreSQL trực tiếp từ Frontend.
-- Frontend chỉ gọi REST API của Spring Boot.
-- Spring Boot giao tiếp với PostgreSQL bằng JPA/Repository.
-- Spring Boot giao tiếp với R Plumber bằng HTTP qua `RModelClient`.
-- Không nhúng code R trực tiếp vào Java.
-- Không đưa mật khẩu Database/API thật vào Git.
-- API phải có validation và xử lý lỗi cơ bản.
+## 6. Ngày 3 - Code freeze và đóng gói
 
-Luồng tổng quát:
+1. Chỉ sửa lỗi Critical/High; không thêm endpoint hoặc state mới.
+2. Kiểm tra transaction, trạng thái sai, dữ liệu không tồn tại, submit lặp và lỗi mapping sau integration.
+3. Hoàn thiện OpenAPI/API notes thực tế.
+4. Chạy build, unit/integration tests và rehearsal cùng TV2/TV3.
 
-```text
-React
-  ↓ HTTP/JSON
-Spring Boot
-  ├── PostgreSQL
-  └── R Plumber
-```
+## 7. Dependency
 
----
+| Cần nhận | Từ ai | Thời điểm |
+|---|---|---|
+| Migration, enum/status, seed và constraint | TV3 | Trước 12:00 Ngày 1 |
+| Current-user contract, role protection | TV4 | Trước 15:00 Ngày 1 |
+| Payload/UI mismatch và Defect Log | TV2 | Trong ngày |
+| Danh sách FR/UC cần khớp | TV5 | Trước Gate 2 |
 
-# 3. Increment 1 — Foundation
+## 8. Bàn giao
 
-## 3.1. Khởi tạo Spring Boot
+- TV2: endpoint, payload, enum, error response, dữ liệu mẫu và lệnh chạy.
+- TV3: yêu cầu migration/constraint có lý do, không tự sửa schema.
+- TV4: endpoint cần role/current user để review quyền.
+- TV5: API contract, state transition, tên class/package thực tế và test evidence.
 
-Vị trí:
+## 9. Tiêu chí hoàn thành
 
-```text
-backend/
-├── pom.xml
-├── mvnw
-├── mvnw.cmd
-└── src/
-```
+- API public và Admin CRUD chạy với dữ liệu seed thật.
+- Deposit thành công khóa xe; deposit trùng không tạo giao dịch thứ hai.
+- Lỗi nghiệp vụ trả `4xx` có cấu trúc, không trả `500`.
+- Staff/Admin chỉ thấy và thực hiện đúng quyền được cấp.
+- Có test nghiệp vụ và log/demo cho Gate 1, Gate 2, Final Gate.
 
-Cần cấu hình tối thiểu:
+## 10. Kiểm thử phải thực hiện
 
-- Tích hợp Swagger/OpenAPI vào Spring Boot Backend
-- Spring Web.
-- Spring Data JPA.
-- PostgreSQL Driver.
-- Validation.
-- Lombok nếu nhóm thống nhất sử dụng.
+- Xe không tồn tại, input lọc sai, CRUD sai dữ liệu.
+- Xe `HOLD/RESERVED` hoặc xe không `AVAILABLE` bị từ chối đặt cọc.
+- Hai request đồng thời, callback/reference lặp và lịch hẹn quá khứ.
+- CUSTOMER gọi API Staff/Admin; người dùng gọi thao tác không thuộc quyền.
+- Test chéo ít nhất một endpoint auth do TV4 bàn giao.
 
-Kiểm tra:
+## 11. Rủi ro và cắt giảm
 
-```bash
-./mvnw clean test
-```
+- Nếu P0 chưa ổn: hoãn dashboard, báo cáo biểu đồ, PDF hợp đồng/biên lai và quản lý ledger nâng cao.
+- Mock QR chỉ hiển thị reference hợp lệ, không tích hợp cổng tiền thật.
+- Không cắt transaction chống đặt cọc trùng, state validation hoặc kiểm tra quyền.
 
-hoặc trên Windows:
+## 12. Checklist cuối ngày
 
-```powershell
-.\mvnw.cmd clean test
-```
+### Ngày 1
+- [ ] API contract đã gửi TV2/TV4/TV5.
+- [ ] Public vehicle API và Admin CRUD có response thật.
+- [ ] Deposit/appointment skeleton đã review schema.
 
-## 3.2. Xây dựng cấu trúc package
+### Ngày 2
+- [ ] Luồng đặt cọc và lịch hẹn end-to-end chạy được.
+- [ ] Có bằng chứng chặn cọc trùng và transition sai.
 
-Tạo:
-
-```text
-backend/src/main/java/com/system/
-
-├── config/
-├── controller/
-├── service/
-├── repository/
-├── entity/
-├── dto/
-├── mapper/
-├── client/
-├── exception/
-└── util/
-```
-
-## 3.3. Cấu hình Database
-
-Vị trí:
-
-```text
-backend/src/main/resources/
-├── application.properties
-├── application-dev.properties
-└── application-prod.properties
-```
-
-Cấu hình kết nối PostgreSQL theo environment variable.
-
-Không hard-code password.
-
-## 3.4. Vehicle CRUD
-
-Phối hợp với TV5 để xác định schema.
-
-Tạo:
-
-```text
-entity/Vehicle.java
-repository/VehicleRepository.java
-service/VehicleService.java
-controller/VehicleController.java
-dto/vehicle/
-```
-
-Chức năng:
-
-```text
-Create
-Read
-Update
-Delete
-Get by ID
-Get all
-```
-
-API dự kiến:
-
-```text
-GET    /api/v1/vehicles
-GET    /api/v1/vehicles/{id}
-POST   /api/v1/vehicles
-PUT    /api/v1/vehicles/{id}
-DELETE /api/v1/vehicles/{id}
-```
-
-## 3.5. Listing
-
-Tạo các thành phần tương ứng:
-
-```text
-Listing.java
-ListingRepository.java
-ListingService.java
-ListingController.java
-dto/listing/
-```
-
-Thực hiện các API đọc dữ liệu Listing cơ bản.
-
-## 3.6. Exception Handling
-
-Vị trí:
-
-```text
-backend/.../exception/
-```
-
-Tạo:
-
-```text
-GlobalExceptionHandler.java
-ResourceNotFoundException.java
-```
-
-API cần trả lỗi có cấu trúc thay vì stack trace.
-
----
-
-# 4. Increment 2 — Market Data
-
-## 4.1. Search API
-
-Phụ trách API tìm kiếm:
-
-```text
-GET /api/v1/vehicles
-```
-
-Hỗ trợ các điều kiện:
-
-- Brand.
-- Model.
-- Price min/max.
-- Manufacture year min/max.
-- Mileage min/max.
-- Fuel type.
-- Transmission.
-- Body type.
-- Location nếu cần.
-
-## 4.2. Pagination
-
-Hỗ trợ:
-
-```text
-page
-size
-```
-
-Ví dụ:
-
-```text
-?page=0&size=20
-```
-
-## 4.3. Sorting
-
-Hỗ trợ các trường phù hợp:
-
-```text
-price
-manufacture_year
-mileage
-```
-
-Không để frontend tự xử lý toàn bộ dữ liệu; Backend phải phân trang/lọc ở Database.
-
-## 4.4. Phối hợp với TV3
-
-TV3 chịu trách nhiệm:
-
-```text
-Crawler
-Cleaning
-Seed Data
-```
-
-TV1 cần nhận dataset/schema cuối từ TV3 và TV5 để đảm bảo API đọc đúng field.
-
-## 4.5. Phối hợp với TV2
-
-Gửi cho TV2:
-
-- API URL.
-- HTTP method.
-- Request parameters.
-- JSON response.
-- Error format.
-
----
-
-# 5. Increment 3 — Automated Pricing
-
-## 5.1. R Model Client
-
-Vị trí:
-
-```text
-backend/src/main/java/com/system/client/
-└── RModelClient.java
-```
-
-Nhiệm vụ:
-
-- Gửi request HTTP tới Plumber.
-- Mapping request/response.
-- Timeout.
-- Xử lý lỗi khi R Model không hoạt động.
-
-## 5.2. Valuation Service
-
-Vị trí:
-
-```text
-backend/.../service/ValuationService.java
-```
-
-Luồng:
-
-```text
-Frontend
-   ↓
-ValuationController
-   ↓
-ValuationService
-   ↓
-RModelClient
-   ↓
-R Plumber
-   ↓
-Prediction
-```
-
-## 5.3. Valuation Controller
-
-Vị trí:
-
-```text
-controller/ValuationController.java
-```
-
-API dự kiến:
-
-```text
-POST /api/v1/valuation
-```
-
-Input là các feature mà TV4 xác định cho model.
-
-Output tối thiểu:
-
-```json
-{
-  "predicted_price": 495000000,
-  "model_version": "regression_v1"
-}
-```
-
-Không tự ý thay đổi feature contract. TV1 phải thống nhất với TV4.
-
-## 5.4. Prediction cho Listing
-
-Khi cần tạo prediction cho dữ liệu trong Database:
-
-```text
-Listing
-   ↓
-Valuation Service
-   ↓
-R Model
-   ↓
-Prediction
-   ↓
-Database
-```
-
-Không gọi R API lại mỗi lần frontend mở một danh sách nếu prediction đã được tính và lưu.
-
----
-
-# 6. Increment 4 — Recommendation & Decision Support
-
-## 6.1. Recommendation API
-
-TV5 chịu trách nhiệm chính về thuật toán score.
-
-TV1 phụ trách tích hợp thành Backend service/API.
-
-Vị trí:
-
-```text
-controller/RecommendationController.java
-service/RecommendationService.java
-```
-
-API dự kiến:
-
-```text
-GET/POST /api/v1/recommendations
-```
-
-## 6.2. Comparison API
-
-Vị trí:
-
-```text
-controller/ComparisonController.java
-service/ComparisonService.java
-```
-
-Cho phép nhận 2–3 vehicle/listing IDs và trả về dữ liệu so sánh.
-
-## 6.3. Smart Tagging
-
-TV5 thống nhất rule:
-
-```text
-difference < -5%      → GOOD_DEAL
--5% ≤ difference ≤ 5% → FAIR_PRICE
-difference > 5%       → OVERPRICED
-```
-
-TV1 triển khai service/DTO/response theo business rule đã chốt.
-
-Công thức:
-
-```text
-difference_percent =
-(actual_price - predicted_price)
-/
-predicted_price × 100
-```
-
-## 6.4. Model version
-
-Prediction phải lưu/return:
-
-```text
-predicted_price
-model_version
-predicted_at
-```
-
----
-
-# 7. Docker & Deployment
-
-## 7.1. Phạm vi
-
-TV1 phụ trách:
-
-```text
-docker-compose.yml
-```
-
-Mục tiêu cuối:
-
-```text
-PostgreSQL
-R Plumber
-Spring Boot
-```
-
-có thể chạy cùng nhau.
-
-## 7.2. Environment
-
-Không commit:
-
-```text
-.env
-```
-
-Chỉ commit:
-
-```text
-.env.example
-```
-
-TV1 cần document:
-
-```text
-DB_HOST
-DB_PORT
-DB_NAME
-DB_USERNAME
-DB_PASSWORD
-R_MODEL_URL
-```
-
-## 7.3. Kiểm thử
-
-Tối thiểu:
-
-```bash
-docker compose up -d
-docker compose ps
-docker compose logs
-```
-
-Kiểm tra:
-
-```text
-Frontend → Backend
-Backend → PostgreSQL
-Backend → R Plumber
-```
-
----
-
-# 8. Tài liệu UML phải bàn giao
-
-## Sequence Diagram
-
-Vị trí:
-
-```text
-docs/UML/Sequence_Diagram/
-```
-
-Ít nhất có:
-
-1. Search Vehicle.
-2. User Valuation.
-3. Recommendation.
-4. Compare Vehicle.
-
-## Deployment Diagram
-
-Vị trí:
-
-```text
-docs/UML/Deployment_Diagram/
-```
-
-Thể hiện:
-
-```text
-Browser
- ↓
-React
- ↓
-Spring Boot
- ├── PostgreSQL
- └── R Plumber
-```
-
----
-
-# 9. Swagger / OpenAPI Documentation
-
-TV1 tích hợp Swagger/OpenAPI vào Spring Boot Backend.
-
-### Checklist
-- Cấu hình `springdoc-openapi`.
-- Hiển thị toàn bộ REST API trên Swagger UI.
-- Mô tả Request/Response DTO.
-- Khai báo validation và error response.
-- Cập nhật API documentation khi thay đổi endpoint.
-- Kiểm tra API test trực tiếp được trên Swagger UI.
-
-### API tối thiểu cần mô tả
-- Vehicle API.
-- Listing API.
-- Valuation API.
-- Recommendation API.
-- Comparison API.
-
-### Input
-- API requirements từ các Increment.
-- Database structure từ TV5.
-- Prediction contract từ TV4.
-
-### Output
-- Swagger/OpenAPI chạy cùng Backend.
-- API Specification trực quan cho TV2 và TV5.
-
-### Bàn giao
-- **TV2:** dùng Swagger để tích hợp ReactJS.
-- **TV5:** dùng Swagger/OpenAPI để xây dựng Test Cases.
-- **Cả nhóm:** dùng Swagger làm API contract chung.
-
----
-
-# 10. Class Diagram
-
-TV1 chịu trách nhiệm chính vẽ Class Diagram dựa trên cấu trúc Backend thực tế.
-
-### Thời điểm thực hiện
-- Sau khi cấu trúc Backend và các module chính đã tương đối ổn định.
-
-### Checklist
-- Xác định các Entity chính.
-- Thể hiện quan hệ giữa Entity.
-- Thể hiện các lớp Service chính.
-- Thể hiện Repository chính (nếu cần phạm vi báo cáo).
-- Thể hiện DTO/Mapper ở mức phù hợp.
-- Đối chiếu lại với code trước khi chốt.
-- Xuất file ảnh/PDF phục vụ báo cáo.
-
-### Input
-- Source code Backend thực tế.
-- Database relationships từ TV5.
-
-### Output
-- Class Diagram khớp với kiến trúc Spring Boot hiện tại.
-
-### Bàn giao
-- **TV5:** nhận file diagram và nội dung mô tả để tổng hợp báo cáo.
-- **Cả nhóm:** dùng làm tài liệu UML chính thức.
-
----
-
-# 11. Tiêu chí nghiệm thu TV1
-
-TV1 hoàn thành khi:
-
-- Spring Boot build thành công.
-- Kết nối PostgreSQL thành công.
-- Vehicle CRUD hoạt động.
-- Listing API hoạt động.
-- Search/filter/pagination/sorting hoạt động.
-- API Valuation gọi được R Plumber.
-- Recommendation API tích hợp được logic của TV5.
-- Comparison API hoạt động.
-- Exception handling hoạt động.
-- Không hard-code secret.
-- Docker Compose khởi động được các service phụ trách.
-- Sequence và Deployment Diagram hoàn thành.
-
----
-
-# 12. Bàn giao cho ai?
-
-### Bàn giao cho TV2
-
-```text
-API Specification
-Endpoint
-Request
-Response
-Error format
-```
-
-để TV2 tích hợp Frontend.
-
-### Bàn giao cho TV3
-
-Schema/contract của dữ liệu mà Backend cần nhận từ pipeline.
-
-### Bàn giao cho TV4
-
-Model API contract:
-
-```text
-Input features
-Output JSON
-model_version
-```
-
-### Bàn giao cho TV5
-
-Service interface liên quan:
-
-```text
-Prediction data
-Vehicle data
-Listing data
-```
-
-để xây Recommendation.
-
-### Bàn giao cho toàn nhóm
-
-```text
-backend/
-docker-compose.yml
-docs/UML/Sequence_Diagram/
-docs/UML/Deployment_Diagram/
-```
-
----
-# 13. Không làm ngoài phạm vi
-
-TV1 không tự phát triển:
-
-- Crawler.
-- Regression training.
-- UI React.
-- Deep Learning.
-- Authentication phức tạp.
-- Payment.
-- Chat.
-- Kafka/Kubernetes.
-
----
-
-# 14. Nhiệm vụ bổ sung sau thay đổi phạm vi - Nghiệp vụ Backend cốt lõi
-
-Phần này thay thế các chỉ dẫn cũ về Recommendation/Comparison và việc loại bỏ toàn bộ Payment. TV1 không tích hợp cổng thanh toán production, nhưng phải xây **deposit/payment simulator** để kiểm thử quy trình kinh doanh.
-
-## Việc đầu tiên
-
-1. Đọc `docs/Project/Workflow_4_Increment.md` và scope change mission.
-2. Đóng Gate I2: `ddl-auto=validate`, smoke test search/filter/detail trên PostgreSQL.
-3. Review schema/API delta của TV5 trong tối đa nửa ngày; chốt state, HTTP code và error schema trước khi code.
-4. Tạo branch/PR nhỏ theo thứ tự Auth -> Listing workflow -> ML moderation -> Deposit -> Dashboard.
-
-## Tuần 1 - Auth và Listing ownership
-
-- Thêm Spring Security, password hash và JWT cho role `USER`, `ADMIN`.
-- API register/login/me; duplicate email và credential sai phải trả 4xx có cấu trúc.
-- User listing CRUD; chỉ owner được sửa, rút hoặc gửi duyệt.
-- State transition theo workflow v2; không nhận status tùy ý từ request.
-- Tin crawl có `seller_id = NULL`, `CRAWLED`, `PUBLISHED`; tin user bắt đầu ở `DRAFT`.
-- Unit test role, ownership, transition và validation.
-
-**Phụ thuộc:** migration/API draft của TV5.
-
-**Bàn giao:** API contract đã chốt cho TV2, test result cho TV5.
-
-**Gate:** user A không đọc/sửa dữ liệu riêng của user B; USER không gọi được Admin endpoint.
-
-## Tuần 2 - Moderation và ML integration
-
-- Admin moderation queue/detail/approve/reject; reject bắt buộc có lý do.
-- R Model client có connect/read timeout và kiểm tra response.
-- Lưu prediction metadata và model request status.
-- Backend tính risk flag: `listing_price < predicted_price * 0.5`.
-- Nếu R API lỗi, giữ tin `PENDING_REVIEW` và đánh dấu `AI_UNAVAILABLE`.
-- Test biên 49,99%, 50%, 50,01% và model timeout/malformed response.
-
-**Phụ thuộc:** prediction contract và Plumber của TV4.
-
-**Bàn giao:** moderation/valuation APIs cho TV2; integration evidence cho TV4/TV5.
-
-## Tuần 3 - Deposit, dashboard và hardening
-
-- Deposit intent và callback simulator có unique idempotency key.
-- Transaction/lock để một listing chỉ có một deposit `HELD`.
-- Cấm self-deposit; validate amount; chỉ Admin được refund/release.
-- Trạng thái kết thúc không được đảo ngược; rollback nếu cập nhật listing/deposit thất bại.
-- Admin ledger, dashboard aggregate và AI monitoring count.
-- Sửa bug P0/P1 theo test matrix TV5; bảo toàn search/filter cũ.
-
-**Phụ thuộc:** migration deposit TV5, UI contract TV2.
-
-**Bàn giao:** OpenAPI/endpoint list, automated tests, demo evidence.
-
-**Nghiệm thu:** callback lặp không tạo giao dịch thứ hai; hai request đồng thời chỉ một `HELD`; transition sai trả 4xx thay vì 500.
-
-## Không làm trong scope mới
-
-- VNPay/MoMo production, thanh toán toàn bộ giá xe, escrow pháp lý.
-- Lịch xem xe/lái thử, chat, notification và complaint workflow.
-- Recommendation/Comparison mới.
+### Ngày 3
+- [ ] Không còn lỗi Critical/High thuộc Backend nghiệp vụ.
+- [ ] API docs, test result và known limitation đã bàn giao.

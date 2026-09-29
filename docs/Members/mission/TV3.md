@@ -1,455 +1,88 @@
-# TV3.md — Data Engineering, Crawler & Data Cleaning
+# TV3 - Database và dữ liệu
 
-> **Cập nhật phạm vi ngày 27/09/2026:** Mục 13 ở cuối tài liệu và `scope_change_mission.md` là nhiệm vụ hiện hành. Dataset 17 trường vẫn được giữ làm nguồn dữ liệu chuẩn cho tìm kiếm và Machine Learning.
+## 1. Vai trò hiện tại
 
-## 1. Vai trò
+TV3 sở hữu PostgreSQL schema vật lý, migration, seed, Data Dictionary và dữ liệu demo phục vụ hệ thống. Dataset crawler là tài sản hiện có, phải được bảo toàn tuyệt đối.
 
-**Vai trò:** Data Engineer / Data Pipeline Developer
+## 2. Phạm vi sở hữu
 
-TV3 chịu trách nhiệm xây dựng pipeline thu thập, làm sạch, chuẩn hóa, validation và chuẩn bị dữ liệu xe cho PostgreSQL.
+- Thiết kế schema/migration/seed cho users, roles, vehicle/listing, deposits, appointments và ledger tối thiểu.
+- PK, FK, `UNIQUE`, `CHECK`, index và constraint chống đặt cọc trùng.
+- Tài khoản mẫu, tối thiểu 10 xe demo, showroom, trạng thái hợp lệ và reset script dev.
+- Data Dictionary, ERD vật lý phối hợp với TV5, hướng dẫn bootstrap/reset.
 
-### Phạm vi chính
+## 3. Không thuộc trách nhiệm
 
-```text
-crawler/
-database/seed/
-```
+- Không chỉnh sửa hoặc xóa bất kỳ file nào trong `crawler/`, gồm data/source/reports.
+- Không làm business logic Backend, security, React UI hay UML/SRS.
+- Machine Learning/Regression/Recommendation/Comparison đã ngoài phạm vi.
 
-TV3 không chịu trách nhiệm chính về:
-- Spring Boot.
-- React.
-- Huấn luyện Regression.
-- Recommendation algorithm.
+## 4. Ngày 1 - Khóa schema và seed
 
----
+1. Chốt enum/status với TV1/TV4/TV5 cho role, vehicle, deposit và appointment.
+2. Thiết kế migration theo PostgreSQL hiện có; không tạo hệ quản trị mới hoặc phá schema cũ khi chưa có migration.
+3. Tạo bảng/quan hệ cần thiết cho P0 và review FK/index/nullable.
+4. Chuẩn bị seed gồm CUSTOMER, STAFF, ADMIN, showroom, xe `AVAILABLE` và xe đã giữ để test.
+5. Bàn giao ERD vật lý/migration draft lúc 10:00, DB bootstrap/reset và seed chạy được trước 12:00.
 
-# 2. Mục tiêu dữ liệu
+## 5. Ngày 2 - Khóa integrity và hỗ trợ integration
 
-Dataset mục tiêu:
+1. Bổ sung unique/locking/constraint hỗ trợ một xe chỉ có một deposit giữ chỗ thành công.
+2. Kiểm tra FK, transaction rollback, index truy vấn vehicle/listing và dữ liệu của appointment/ledger.
+3. Schema freeze lúc 11:00; sau đó chỉ thêm migration sửa lỗi có impact note.
+4. Hỗ trợ TV1 xử lý unique/FK/deadlock; hoàn thiện Data Dictionary và reset guide.
 
-```text
-2.000–5.000+ listings
-```
+## 6. Ngày 3 - Kiểm thử DB và đóng gói
 
-Mỗi listing nên có thông tin đủ để:
+1. Chạy migration từ database trống, seed/reset lặp và ghi log kết quả.
+2. Test constraint, FK, `UNIQUE`, `CHECK`, NULL, index và consistency deposit-vehicle.
+3. Bàn giao script/lệnh khởi tạo DB, dữ liệu demo và known limitations.
 
-- Hiển thị lên Web.
-- Lọc/tìm kiếm.
-- Đưa feature vào model nếu phù hợp.
-- Truy xuất nguồn.
+## 7. Dependency
 
-Các field mục tiêu:
+| Cần nhận | Từ ai | Thời điểm |
+|---|---|---|
+| Entity/API/state cần dùng | TV1 | Sáng Ngày 1 |
+| User/role/auth requirements | TV4 | Sáng Ngày 1 |
+| ERD/UML naming review | TV5 | Trước schema freeze |
+| Dữ liệu hiển thị/mismatch | TV2 | Trong integration |
 
-```text
-brand
-model
-variant
-manufacture_year
-price
-mileage
-fuel_type
-transmission
-body_type
-location
-source_url
-image_url
-listed_at
-crawled_at
-```
+## 8. Bàn giao
 
----
+- TV1/TV4: migration version, enum/status, seed account và DB config không chứa secret.
+- TV2: test account, dữ liệu demo, reset timing và dữ liệu trạng thái.
+- TV5: ERD/Data Dictionary/schema version/test SQL.
 
-# 3. Increment 1 — Foundation
+## 9. Tiêu chí hoàn thành
 
-## 3.1. Chốt Data Contract
+- Database trống tạo được bằng migration/bootstrap được hướng dẫn.
+- Seed được chạy lại an toàn trên môi trường dev.
+- Hai người không thể tạo cọc giữ thành công cho một xe.
+- Schema/Data Dictionary/ERD đồng nhất và không chạm `crawler/`.
 
-Làm việc với:
+## 10. Kiểm thử phải thực hiện
 
-- TV4 để xác định feature Model.
-- TV5 để xác định field Database.
-- TV1 để xác định backend API contract.
+- Migration/seed/reset từ DB trống.
+- FK, unique, check, null, index và transaction rollback.
+- Duplicate deposit và vehicle state consistency.
+- Test chéo Backend API của TV1 với data seed thật.
 
-Tạo documentation tại:
+## 11. Rủi ro và cắt giảm
 
-```text
-crawler/README.md
-```
+- Không thay đổi database engine hoặc viết lại import crawler.
+- Nếu chậm: giữ bảng/constraint P0; hoãn favorites, thống kê/chart và audit nâng cao.
+- Không cắt unique/transaction/FK cho deposit hay reset/seed evidence.
 
-## 3.2. Chuẩn bị Seed Dataset
+## 12. Checklist cuối ngày
 
-Trước khi crawler hoàn chỉnh, chuẩn bị dataset nhỏ:
+### Ngày 1
+- [ ] Migration, ERD draft, seed và reset guide chạy được.
+- [ ] TV1/TV4 đã review enum/FK/state.
 
-```text
-500–1.000 records
-```
+### Ngày 2
+- [ ] Schema freeze và constraint chống cọc trùng có bằng chứng.
+- [ ] Data Dictionary được cập nhật.
 
-để các thành viên khác development.
-
-Vị trí:
-
-```text
-crawler/data/seed/
-```
-
----
-
-# 4. Increment 2 — Market Data
-
-## 4.1. Crawler Chợ Tốt
-
-Vị trí:
-
-```text
-crawler/src/crawlers/chotot/
-├── crawler.py
-└── parser.py
-```
-
-`crawler.py` chịu trách nhiệm lấy dữ liệu.
-
-`parser.py` chịu trách nhiệm chuyển dữ liệu nguồn thành schema nội bộ.
-
-## 4.2. Crawler Bonbanh
-
-Vị trí:
-
-```text
-crawler/src/crawlers/bonbanh/
-├── crawler.py
-└── parser.py
-```
-
-Nếu nguồn không cần/không thể triển khai thực tế, không được tự tạo dữ liệu giả để tuyên bố là crawl.
-
-## 4.3. Data Cleaning
-
-Vị trí:
-
-```text
-crawler/src/cleaning/
-├── clean_price.py
-├── clean_mileage.py
-├── clean_vehicle.py
-└── validator.py
-```
-
-### Giá
-
-Ví dụ:
-
-```text
-750 triệu
-↓
-750000000
-```
-
-### ODO
-
-```text
-45.000 km
-↓
-45000
-```
-
-### Năm
-
-Kiểm tra range hợp lý.
-
-### Missing
-
-Xử lý theo rule đã thống nhất với TV4/TV5.
-
-## 4.4. Duplicate Detection
-
-Kiểm tra duplicate dựa trên các trường phù hợp như:
-
-```text
-source_url
-source + source_id nếu có
-```
-
-Không được xóa hai listing khác nhau chỉ vì cùng model/giá.
-
----
-
-# 5. Pipeline
-
-Vị trí:
-
-```text
-crawler/src/pipeline/
-├── crawl_pipeline.py
-├── clean_pipeline.py
-└── import_pipeline.py
-```
-
-Luồng:
-
-```text
-Source
- ↓
-Raw
- ↓
-Cleaning
- ↓
-Validation
- ↓
-Cleaned
- ↓
-Database
-```
-
-Scripts:
-
-```text
-crawler/scripts/
-├── crawl.py
-├── clean.py
-└── seed_database.py
-```
-
----
-
-# 6. Data Directory
-
-Cấu trúc:
-
-```text
-crawler/data/
-├── raw/
-├── cleaned/
-└── seed/
-```
-
-Quy tắc:
-
-- Raw: dữ liệu thô.
-- Cleaned: dữ liệu sau cleaning.
-- Seed: dataset ổn định phục vụ demo/dev.
-
-Không commit file dữ liệu dung lượng quá lớn nếu không cần thiết.
-
----
-
-# 7. Increment 3 — Hỗ trợ Model
-
-TV3 phải cung cấp cho TV4:
-
-```text
-Clean Dataset
-```
-
-đúng schema.
-
-Cần document rõ:
-
-```text
-field name
-type
-unit
-missing rule
-example
-```
-
-TV4 không được phải tự đoán ý nghĩa field.
-
-Ví dụ:
-
-```text
-price → VND
-mileage → km
-manufacture_year → integer
-```
-
----
-
-# 8. Increment 4 — Final Dataset
-
-Chuẩn bị:
-
-```text
-2.000–5.000+ clean records
-```
-
-Kiểm tra:
-
-- Không có price âm.
-- Không có mileage âm.
-- Year hợp lệ.
-- URL tồn tại nếu source yêu cầu.
-- Field bắt buộc không rỗng.
-- Encoding tiếng Việt đúng.
-- Không duplicate bất hợp lý.
-
-Chuẩn bị dataset phục vụ:
-
-```text
-demo
-database seed
-performance test
-model validation
-```
-
----
-
-# 9. Nhiệm vụ bổ sung — Scheduler / Cronjob (Tùy chọn)
-
-> **Mức độ ưu tiên: Tùy chọn.**
->
-> Chỉ thực hiện sau khi Crawler, Cleaning, Validation và Seed/Import Pipeline đã chạy ổn định. **Không làm blocker cho chức năng cốt lõi.**
-
-## Mục tiêu
-
-Cho phép Data Pipeline được chạy định kỳ thay vì luôn phải chạy thủ công.
-
-### Checklist
-- Chốt script chạy toàn bộ pipeline.
-- Đảm bảo pipeline chạy độc lập từ command/script.
-- Bổ sung Scheduler hoặc Cronjob.
-- Cấu hình chu kỳ chạy thử nghiệm, ví dụ 1 tuần/lần.
-- Ghi log thời gian chạy.
-- Ghi log kết quả crawl/import.
-- Kiểm tra trường hợp pipeline lỗi.
-- Không tạo dữ liệu trùng lặp không kiểm soát.
-
-### Cách triển khai
-Chọn một trong các hướng:
-- Python `schedule`.
-- Crontab trên Linux.
-- Scheduler phù hợp với môi trường triển khai thực tế.
-
-Không cần triển khai nhiều cơ chế cùng lúc.
-
-### Input
-- `crawl_pipeline.py`.
-- `clean_pipeline.py`.
-- `import_pipeline.py`.
-- Database/import configuration đã ổn định.
-
-### Output
-- Script hoặc cấu hình Scheduler.
-- Log chạy pipeline.
-- Hướng dẫn chạy.
-
-### Bàn giao
-- **TV5:** nhận thông tin lịch chạy và dữ liệu được cập nhật.
-- **Cả nhóm:** nhận hướng dẫn vận hành pipeline.
-
-### Definition of Done
-- Pipeline vẫn chạy được thủ công.
-- Scheduler chỉ chạy khi được cấu hình.
-- Không ảnh hưởng chức năng Demo nếu Scheduler không chạy.
-- Có thể giải thích và trình diễn cơ chế tự động cập nhật dữ liệu.
-
----
-
-# 10. Bàn giao
-
-### TV4
-
-Bàn giao:
-
-```text
-clean dataset
-data dictionary
-feature availability
-data quality report
-```
-
-TV4 dùng cho Regression.
-
-### TV5
-
-Bàn giao:
-
-```text
-seed dataset
-listing fields
-source information
-crawl timestamps
-```
-
-### TV1
-
-Bàn giao:
-
-```text
-database-ready dataset
-import instructions
-field mapping
-```
-
-### TV2
-
-Không cần code, nhưng phải cung cấp field/format hiển thị nếu có yêu cầu.
-
----
-
-
-# 11. Tiêu chí nghiệm thu TV3
-
-- Có pipeline crawl.
-- Có parser.
-- Có cleaning.
-- Có validation.
-- Có duplicate handling.
-- Có seed dataset.
-- Có dataset tối thiểu khoảng 2.000 records ở bản cuối.
-- Các field theo Data Contract đầy đủ.
-- Import vào PostgreSQL thành công.
-- Có source_url/listed_at/crawled_at phù hợp.
-- Có README hướng dẫn chạy pipeline.
-
----
-# 12. Không làm ngoài phạm vi
-
-Không xây:
-
-- Spring Boot.
-- React.
-- Regression model.
-- Deep Learning.
-- Recommendation engine.
-- Payment/chat.
-
----
-
-# 13. Nhiệm vụ bổ sung sau thay đổi phạm vi - Dữ liệu và tin đăng nhập từ nguồn
-
-TV3 giữ ranh giới Data Pipeline. TV3 không xây auth/payment, nhưng phải bảo đảm dữ liệu crawl cùng tồn tại an toàn với listing do user tạo.
-
-## Việc đầu tiên
-
-1. Chốt **một** canonical dataset version/checksum thống nhất trong CSV, JSON, lock report và mapping report.
-2. Đóng Gate I2 bằng bằng chứng import/re-import theo schema v2.0.1.
-3. Review schema delta TV5 để chốt mapping listing crawl, không tự sửa database schema.
-
-## Tuần 1 - Canonical và mapping mới
-
-- Công bố commit hash, record count, 17 fields, checksum và quality report thống nhất.
-- Mapping tin crawl: `listing_origin = CRAWLED`, `seller_id = NULL`, `status = PUBLISHED`.
-- Xác nhận import không cần user giả và không tạo dữ liệu enrich giả.
-- Cập nhật validator/import tests nếu schema import thay đổi.
-
-## Tuần 2 - Import/re-import và demo seed
-
-- Import theo migration đã chốt; báo cáo insert/update/reject.
-- Re-import cùng batch: 0 duplicate `source_url`, user listing không bị sửa hoặc xóa.
-- Cung cấp lệnh seed/reset dữ liệu thị trường cho demo.
-- Bảo toàn `image_url`, `listed_at_raw`, `crawled_at`, NULL và provenance.
-
-## Tuần 3 - Freeze và hỗ trợ integration
-
-- Đóng băng canonical dataset/import trước integration freeze.
-- Kiểm tra FK/constraint cùng TV5, search result cùng TV1/TV2.
-- Nếu có data bug P0, sửa bằng version/checksum mới và thông báo TV4; không sửa âm thầm.
-
-**Bàn giao:** canonical checksum và commit, import command, import/re-import report, known data limitations.
-
-**Nghiệm thu:** 10.813 URL unique; imported listing đúng origin/status; pipeline không chạm vào user listing.
-
-## Không làm trong scope mới
-
-- Tài khoản, moderation business logic, payment/deposit và dashboard.
-- Training model hoặc tự điền missing để giúp model.
-- Crawl realtime trong demo.
+### Ngày 3
+- [ ] DB test log được bàn giao TV2/TV5.
+- [ ] Xác nhận `crawler/` không thay đổi.
