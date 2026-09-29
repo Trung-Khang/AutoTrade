@@ -1,5 +1,0 @@
-model_version,dataset,metric,value,unit,n_train,n_test,generated_at,status
-regression_v1,TV3 cleaned dataset,R2,,ratio,,,pending_increment_2,no_official_model
-regression_v1,TV3 cleaned dataset,RMSE,,VND,,,pending_increment_2,no_official_model
-regression_v1,TV3 cleaned dataset,MAE,,VND,,,pending_increment_2,no_official_model
-regression_v1,TV3 cleaned dataset,MAPE,,percent,,,pending_increment_2,no_official_model
