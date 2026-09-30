@@ -8,8 +8,6 @@ import {
   FaSearch,
   FaCar,
   FaPhoneAlt,
-  FaUserCheck,
-  FaClock,
   FaClipboardList
 } from 'react-icons/fa';
 
@@ -23,7 +21,7 @@ const StaffAppointmentPage = () => {
   const loadAppointments = async () => {
     setLoading(true);
     try {
-      const data = await depositApi.getAllAppointments();
+      const data = await depositApi.getStaffAppointments();
       setAppointments(data || []);
     } catch (err) {
       console.error('Lỗi khi tải lịch hẹn:', err);
@@ -36,21 +34,35 @@ const StaffAppointmentPage = () => {
     loadAppointments();
   }, []);
 
-  const handleUpdateStatus = async (depositId, newStatus) => {
+  const handleCheckIn = async (item) => {
+    const note = prompt('Ghi chú tiếp đón khách (staff note):', item.hasTestDrive ? 'Khách đã đến đúng giờ, hoàn thành lái thử xe hài lòng.' : 'Khách đã đến showroom xem xe.');
+    if (note === null) return; // bấm Cancel
+
     try {
-      await depositApi.updateAppointmentStatus(depositId, newStatus);
-      setActionNotice(`Đã cập nhật trạng thái lịch hẹn #${depositId} thành: ${newStatus}`);
+      await depositApi.checkInAppointment(item.appointmentId || item.id, {
+        testDriveCompleted: item.hasTestDrive,
+        staffNote: note
+      });
+      setActionNotice(`Đã xác nhận Check-in thành công cho lịch hẹn của khách ${item.customerName}`);
       setTimeout(() => setActionNotice(''), 3000);
       loadAppointments();
     } catch (err) {
-      alert('Không thể cập nhật trạng thái: ' + err.message);
+      alert('Không thể cập nhật Check-in: ' + err.message);
     }
   };
 
   const filteredList = appointments.filter((item) => {
-    const matchStatus =
-      filterStatus === 'ALL' ||
-      (item.appointmentStatus || 'SCHEDULED') === filterStatus;
+    const rawStatus = item.status || item.appointmentStatus || 'PENDING';
+    const isPending = rawStatus === 'PENDING' || rawStatus === 'SCHEDULED';
+    
+    let matchStatus = true;
+    if (filterStatus === 'PENDING') {
+      matchStatus = isPending;
+    } else if (filterStatus === 'COMPLETED') {
+      matchStatus = rawStatus === 'COMPLETED';
+    } else if (filterStatus === 'CANCELLED') {
+      matchStatus = rawStatus === 'CANCELLED';
+    }
 
     const kw = searchKeyword.toLowerCase().trim();
     const matchSearch =
@@ -58,7 +70,7 @@ const StaffAppointmentPage = () => {
       item.customerName?.toLowerCase().includes(kw) ||
       item.customerPhone?.includes(kw) ||
       item.depositCode?.toLowerCase().includes(kw) ||
-      item.vehicleTitle?.toLowerCase().includes(kw);
+      (item.vehicleInfo || item.vehicleTitle)?.toLowerCase().includes(kw);
 
     return matchStatus && matchSearch;
   });
@@ -68,10 +80,10 @@ const StaffAppointmentPage = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FaClipboardList style={{ color: '#2563eb' }} /> Quản Lý Lịch Hẹn Khách Hàng (Dành Cho Nhân Viên)
+            <FaClipboardList style={{ color: '#D4AF37' }} /> Quản Lý Lịch Hẹn Khách Hàng (Staff Portal)
           </h1>
           <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-            Tiếp đón khách hàng đến xem xe, kiểm tra tình trạng đặt cọc và ghi nhận kết quả lái thử
+            Tiếp đón khách hàng đến xem xe, kiểm tra tình trạng đặt cọc và bấm Check-in ghi nhận kết quả lái thử (Task TV2-06)
           </p>
         </div>
       </div>
@@ -96,10 +108,15 @@ const StaffAppointmentPage = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '6px' }}>
-          {['ALL', 'SCHEDULED', 'COMPLETED', 'CANCELLED'].map((st) => (
+          {[
+            { key: 'ALL', label: 'Tất cả' },
+            { key: 'PENDING', label: 'Chờ tiếp đón' },
+            { key: 'COMPLETED', label: 'Đã hoàn tất' },
+            { key: 'CANCELLED', label: 'Đã hủy' }
+          ].map((st) => (
             <button
-              key={st}
-              onClick={() => setFilterStatus(st)}
+              key={st.key}
+              onClick={() => setFilterStatus(st.key)}
               style={{
                 padding: '8px 14px',
                 borderRadius: '6px',
@@ -107,15 +124,12 @@ const StaffAppointmentPage = () => {
                 fontWeight: '600',
                 cursor: 'pointer',
                 border: '1px solid',
-                borderColor: filterStatus === st ? '#2563eb' : '#e2e8f0',
-                backgroundColor: filterStatus === st ? '#2563eb' : '#ffffff',
-                color: filterStatus === st ? '#ffffff' : '#64748b'
+                borderColor: filterStatus === st.key ? '#D4AF37' : '#e2e8f0',
+                backgroundColor: filterStatus === st.key ? '#D4AF37' : '#ffffff',
+                color: filterStatus === st.key ? '#151515' : '#64748b'
               }}
             >
-              {st === 'ALL' && 'Tất cả'}
-              {st === 'SCHEDULED' && 'Chờ tiếp đón'}
-              {st === 'COMPLETED' && 'Đã hoàn tất'}
-              {st === 'CANCELLED' && 'Đã hủy'}
+              {st.label}
             </button>
           ))}
         </div>
@@ -131,10 +145,14 @@ const StaffAppointmentPage = () => {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           {filteredList.map((item) => {
-            const appStatus = item.appointmentStatus || 'SCHEDULED';
+            const rawStatus = item.status || item.appointmentStatus || 'PENDING';
+            const isPending = rawStatus === 'PENDING' || rawStatus === 'SCHEDULED';
+            const isCompleted = rawStatus === 'COMPLETED';
+            const isCancelled = rawStatus === 'CANCELLED';
+
             return (
               <div
-                key={item.id}
+                key={item.appointmentId || item.id}
                 style={{
                   backgroundColor: '#ffffff',
                   border: '1px solid #e2e8f0',
@@ -151,7 +169,7 @@ const StaffAppointmentPage = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <strong style={{ fontSize: '15px', color: '#0f172a' }}>{item.customerName}</strong>
                     <span style={{ fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <FaPhoneAlt style={{ fontSize: '11px', color: '#2563eb' }} /> {item.customerPhone}
+                      <FaPhoneAlt style={{ fontSize: '11px', color: '#D4AF37' }} /> {item.customerPhone}
                     </span>
                     <span style={{ fontFamily: 'monospace', fontSize: '11px', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>
                       {item.depositCode}
@@ -159,78 +177,67 @@ const StaffAppointmentPage = () => {
                   </div>
 
                   <div style={{ fontSize: '13px', color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaCar style={{ color: '#64748b' }} /> Xe quan tâm: <strong>{item.vehicleTitle}</strong> · Tiền cọc: <strong style={{ color: '#ea580c' }}>{formatFullPrice(item.depositAmount)}</strong>
+                    <FaCar style={{ color: '#64748b' }} /> Xe quan tâm: <strong>{item.vehicleInfo || item.vehicleTitle}</strong>
                   </div>
 
                   <div style={{ fontSize: '13px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span>
-                      <FaCalendarAlt style={{ color: '#16a34a' }} /> Ngày hẹn: <strong>{item.appointmentDate}</strong> lúc <strong>{item.appointmentTime}</strong>
+                      <FaCalendarAlt style={{ color: '#16a34a' }} /> Ngày giờ hẹn: <strong>{item.appointmentDate}</strong>
                     </span>
                     {item.hasTestDrive && (
-                      <span style={{ color: '#2563eb', fontWeight: '600' }}>✓ Đăng ký lái thử</span>
+                      <span style={{ color: '#D4AF37', fontWeight: '700' }}>✓ Đăng ký lái thử (Test-Drive)</span>
                     )}
                   </div>
 
                   {item.note && (
                     <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', background: '#f8fafc', padding: '4px 8px', borderRadius: '4px' }}>
-                      Yêu cầu khách: {item.note}
+                      Ghi chú khách: "{item.note}"
+                    </div>
+                  )}
+
+                  {item.staffNote && (
+                    <div style={{ fontSize: '12px', color: '#166534', background: '#f0fdf4', padding: '4px 8px', borderRadius: '4px' }}>
+                      Ghi chú Check-in: "{item.staffNote}"
                     </div>
                   )}
                 </div>
 
-                {/* Trạng thái & Nút thao tác */}
+                {/* Trạng thái & Nút thao tác Check-in */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div>
-                    {appStatus === 'SCHEDULED' && (
-                      <span style={{ color: '#2563eb', backgroundColor: '#dbeafe', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>
+                    {isPending && (
+                      <span style={{ color: '#b45309', backgroundColor: '#fef3c7', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>
                         Chờ tiếp đón
                       </span>
                     )}
-                    {appStatus === 'COMPLETED' && (
+                    {isCompleted && (
                       <span style={{ color: '#16a34a', backgroundColor: '#dcfce7', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>
-                        ✓ Đã hoàn tất
+                        ✓ Đã đón tiếp
                       </span>
                     )}
-                    {appStatus === 'CANCELLED' && (
+                    {isCancelled && (
                       <span style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '6px 12px', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>
                         ✕ Đã hủy
                       </span>
                     )}
                   </div>
 
-                  {appStatus === 'SCHEDULED' && (
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => handleUpdateStatus(item.id, 'COMPLETED')}
-                        style={{
-                          backgroundColor: '#16a34a',
-                          color: '#ffffff',
-                          border: 'none',
-                          padding: '7px 12px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Đã tiếp đón
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(item.id, 'CANCELLED')}
-                        style={{
-                          backgroundColor: '#f1f5f9',
-                          color: '#dc2626',
-                          border: '1px solid #fecaca',
-                          padding: '7px 12px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Hủy hẹn
-                      </button>
-                    </div>
+                  {isPending && (
+                    <button
+                      onClick={() => handleCheckIn(item)}
+                      style={{
+                        backgroundColor: '#16a34a',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ✓ Check-in / Đã đón tiếp
+                    </button>
                   )}
                 </div>
               </div>
