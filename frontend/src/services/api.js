@@ -13,22 +13,12 @@ const apiClient = axios.create({
   },
 });
 
-// Request Interceptor: đính kèm Authorization JWT Token và X-User-Id từ localStorage
+// Request Interceptor: chỉ đính kèm JWT. User ID luôn được Backend suy ra từ token.
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('autotrade_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-    }
-    try {
-      const user = JSON.parse(localStorage.getItem('autotrade_user') || '{}');
-      if (user && user.id) {
-        config.headers['X-User-Id'] = String(user.id);
-      } else {
-        config.headers['X-User-Id'] = '1';
-      }
-    } catch {
-      config.headers['X-User-Id'] = '1';
     }
     return config;
   },

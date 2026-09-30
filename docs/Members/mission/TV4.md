@@ -87,3 +87,19 @@ TV4 sở hữu authentication, user identity và authorization của Spring Boot
 ### Ngày 3
 - [ ] Security evidence đã bàn giao.
 - [ ] Không còn lỗi Critical/High auth mở.
+
+
+Tự xóa account thử nghiệm qua PostgreSQL
+Trước hết kiểm tra tài khoản:
+
+psql -h localhost -U postgres -d used_car_db -c "SELECT id, username, email, role, active, email_verified, locked FROM app_users WHERE email = 'email-can-xoa@example.com';"
+
+Nếu đó chỉ là account test, không có nghiệp vụ đặt cọc/lịch hẹn liên quan, xóa bằng:
+
+psql -h localhost -U postgres -d used_car_db -c "DELETE FROM app_users WHERE email = 'email-can-xoa@example.com' RETURNING id, username, email;"
+
+Nếu account đã có dữ liệu nghiệp vụ, đừng xóa cứng. Khóa nó để giữ lịch sử:
+
+psql -h localhost -U postgres -d used_car_db -c "UPDATE app_users SET active = false, locked = true WHERE email = 'email-can-khoa@example.com' RETURNING id, username, email, active, locked;"
+
+Tài khoản trungkhang / nguyentrungkhang3001@gmail.com hiện đã được tạo lại để test và đang chờ xác minh email.
