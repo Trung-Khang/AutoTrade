@@ -1,184 +1,136 @@
 # BÁO CÁO TIẾN ĐỘ — TV5
 
-**Ngày:** 30/09/2026  
-**Branch:** `TV5`  
-**HEAD audit:** `61a2715 Merge remote-tracking branch 'origin/main' into TV5`
+**Audit date:** 01/10/2026
+**Branch snapshot:** `TV5`
+**Role:** UML, SRS, ERD documentation and traceability
 
-## 1. Phạm vi trách nhiệm
+## 1. Kết luận hiện tại
 
-TV5 phụ trách:
+TV5 không cần implementation code. Công việc hiện tại là **đồng bộ tài liệu với implementation thật** và chuyển các mismatch kỹ thuật sang đúng owner.
 
-- SRS
-- Use Case
-- Sequence Diagram
-- Collaboration Diagram
-- Class Diagram
-- ERD documentation
-- Traceability Matrix
-- Cross-check tài liệu với code/API/database/test evidence
+Điểm thay đổi lớn nhất so với report cũ: **Auth/JWT/RBAC/OTP đã tồn tại trong backend**, vì vậy không được tiếp tục ghi Auth là `PENDING` do “chưa có backend”.
 
-TV5 **không** sở hữu implementation backend/frontend/auth/database migration.
+## 2. Audit implementation thực tế
 
-## 2. Snapshot code hiện tại
+### Backend
 
-### Backend có implementation
+Đã thấy implementation cho:
 
-- Listing/search/filter/detail.
-- Vehicle service.
-- Admin vehicle CRUD/status.
-- Deposit create/confirm/receipt/my deposits.
-- Appointment list/check-in.
-- Admin ledger/refund.
+- Listing/search/filter/detail
+- Vehicle/Admin vehicle CRUD/status
+- Deposit create/confirm/receipt/my deposits
+- Appointment list/check-in
+- Admin ledger/refund
+- Auth register/verify/resend/login/logout/current-user/forgot/reset
+- JWT filter/service
+- BCrypt password hashing
+- OTP hash + Gmail mail service
+- REST 401/403 handlers
 
-Các class nghiệp vụ chính:
+### Database
 
-```text
-Entity:
-Vehicle, Listing, Source, Showroom, Deposit, Appointment, TransactionLedger
-
-Controller:
-ListingController
-VehicleController
-AdminVehicleController
-DepositController
-StaffAppointmentController
-AdminLedgerController
-
-Service:
-ListingService
-VehicleService
-DepositService
-AppointmentService
-AdminLedgerService
-```
-
-### Backend chưa có
+Migrations hiện có:
 
 ```text
-AuthController / AuthService
-Spring Security configuration/filter
-JWT/session implementation
-User/Role persistence model
-OTP backend
+V3_0_0__showroom_deposit_appointment.sql
+V3_0_1__archive_inventory_boundary.sql
+V3_0_2__deposit_integrity.sql
+V3_0_3__appointment_ledger_integrity.sql
+V3_0_4__auth_and_otp.sql
 ```
 
-Vì vậy TV5 không ghi Auth/RBAC là completed.
+`schema.sql` vẫn là bootstrap v2.0.1 cho `sources/vehicles/listings`, nên clean bootstrap hiện hành chưa được gộp thành một file duy nhất.
 
-## 3. Database hiện tại
+### Frontend
 
-Migration V3 đã có:
+Đã có:
 
-```text
-sources
-vehicles
-listings
-showrooms
-deposits
-appointments
-transaction_ledger
-```
+- AuthProvider + token persistence + `/auth/me` restore
+- ProtectedRoute theo role
+- Login/Register/Verify Email/Forgot Password
+- Showroom/Vehicle detail
+- Deposit/Admin/Staff pages
 
-Trạng thái:
+Nhưng vẫn còn LocalStorage/mock fallback ở service layer; đây là dependency của TV2, không phải việc TV5 sửa trực tiếp.
 
-```text
-Vehicle      = AVAILABLE / HOLD / RESERVED / SOLD
-Deposit      = PENDING / DEPOSITED / CANCELLED / REFUNDED
-Appointment  = PENDING / COMPLETED / CANCELLED
-```
-
-**Mismatch:** `database/schema/schema.sql` vẫn chỉ là v2.0.1 với 3 bảng `sources/vehicles/listings`. TV5 không tự sửa; phải chuyển issue cho TV3.
-
-## 4. Automated tests đã thấy
-
-```text
-backend/src/test/java/com/system/controller/ListingControllerIntegrationTest.java
-backend/src/test/java/com/system/controller/VehicleControllerIntegrationTest.java
-backend/src/test/java/com/system/dto/ListingDtoMappingTest.java
-backend/src/test/java/com/system/service/ListingServiceTest.java
-backend/src/test/java/com/system/specification/ListingSpecificationTest.java
-```
-
-Chưa thấy automated test tương ứng cho deposit, appointment, ledger, auth/security.
-
-## 5. Tình trạng tài liệu TV5 trước khi đồng bộ
-
-| File | Tình trạng trước sync | Quyết định |
-|---|---|---|
-| `docs/SRS/SRS.md` | Chỉ là scope ngắn, thiếu FR/status/API | **REPLACE** |
-| `docs/UML/README.md` | README cũ | **REPLACE** |
-| `docs/UML/Use_Case.md` | Có nhiều UC nhưng state cũ và status cũ | **REPLACE** |
-| `docs/UML/Class_Diagram.md` | Chủ yếu model Increment 2, thiếu Deposit/Appointment/Ledger/Showroom | **REPLACE** |
-| `docs/UML/Sequence_Diagrams.md` | Diagram lỗi format + nhiều flow pending dù code đã có | **REPLACE** |
-| `docs/UML/Collaboration_Diagrams.md` | Placeholder | **REPLACE** |
-| `docs/UML/Traceability_Matrix.md` | Mapping cũ, nhiều endpoint/status cũ | **REPLACE** |
-| `docs/Database/ERD/ERD.md` | Chỉ có 3 bảng | **REPLACE** |
-| `docs/Members/report/TV5_Baocaotiendo.md` | Chứa nhận định stale, đặc biệt Deposit/Auth/Appointment | **REPLACE** |
-
-## 6. Những gì TV5 phải làm
-
-### Priority 1 — bắt buộc
-
-1. Đồng bộ SRS với stack + FR hiện tại.
-2. Đổi toàn bộ state cũ `PENDING_PAYMENT/RELEASED/SCHEDULED` sang state thật trong code.
-3. Cập nhật Use Case 01–15 với status thực tế.
-4. Viết lại Sequence cho 7 flow đã có code.
-5. Viết Collaboration cho deposit/appointment/refund.
-6. Cập nhật Class Diagram với 7 entity + service/controller/repository thực tế.
-7. Cập nhật ERD lên 7 bảng theo V3 migration và đánh dấu bootstrap mismatch.
-8. Cập nhật Traceability FR→UC→API→Test/Evidence.
-9. Viết lại report để phản ánh đúng snapshot 30/09/2026.
-
-### Priority 2 — cross-team review
-
-TV5 gửi các finding sau cho owner:
-
-- **TV1:** API doc receipt/deposit/ledger có example chưa khớp code; kiểm tra delete vehicle 409; kiểm tra appointment date validation; kiểm tra status filter behavior.
-- **TV2:** `depositApi.js` đang dùng endpoint khác backend (`/deposits/my-deposits`, `/appointments`, PATCH status). Cần sync contract.
-- **TV3:** bootstrap `schema.sql` chưa gồm V3; import pipeline còn mô hình cũ.
-- **TV4:** chưa có auth/security backend trong current branch.
-- **TV2:** Test Plan đang đánh dấu nhiều case Pass nhưng repo chưa có backend test/evidence tương ứng.
-
-## 7. Những gì KHÔNG phải việc TV5
-
-- Không code Spring Security/JWT.
-- Không code Deposit/Appointment.
-- Không sửa React API.
-- Không sửa migration/seed/schema để thay TV3.
-- Không tạo fake test evidence.
-- Không ghi chức năng là verified chỉ vì source có class.
-
-## 8. Final Gate của TV5
+## 3. Những gì TV5 đã chốt trong đợt này
 
 ### SRS
 
-- [x] Đúng stack hiện tại.
-- [x] Đúng P0/P1/P2/Removed.
-- [x] Không còn ML/regression/valuation/recommendation/comparison trong current scope.
-- [x] Status phân biệt implementation và verification.
+- Đồng bộ stack thành Spring Boot + Spring Security + React + PostgreSQL.
+- Đưa Auth/JWT/OTP vào scope đã implement.
+- Đổi status về vocabulary thật.
+- Phân biệt `IMPLEMENTED`, `PARTIAL`, `VERIFIED`, `PENDING`.
+- Ghi rõ ownership/security gap cho deposit.
 
 ### UML
 
-- [x] Actor/use case khớp scope.
-- [x] State khớp code/database.
-- [x] Class diagram khớp class thực tế.
-- [x] Sequence/Collaboration khớp endpoint và service flow.
+- Use Case: 15 UC, bổ sung Auth/OTP/reset flow.
+- Sequence: Login, Register/Verify, Reset, Search, Deposit, Staff, Refund, Security boundary.
+- Collaboration: Auth, Deposit, Staff, Refund.
+- Class Diagram: thêm AppUser/AuthOtp/PasswordResetSession và security classes thực tế.
+
+### ERD/Data Dictionary
+
+- Bổ sung 3 bảng auth.
+- Giữ đúng physical FK hiện có.
+- Không vẽ `deposits.user_id` hoặc `appointments.user_id` thành FK khi migration chưa có FK.
+- Ghi rõ `schema.sql` chưa phải full runtime bootstrap.
 
 ### Traceability
 
-- [x] FR → UC → API → Test/Evidence.
-- [x] PENDING/PARTIAL được ghi rõ.
-- [x] Không invent auth implementation.
+- FR-01..03 không còn PENDING vì “chưa có auth”.
+- FR-07/08/10/12/13/14 giữ PARTIAL khi còn contract/security/evidence gap.
+- VERIFIED chỉ dùng khi có evidence execution rõ nguồn.
 
-### Cross-team
+## 4. Các mismatch TV5 phát hiện
 
-- [ ] TV1 sync API contract response.
-- [ ] TV2 sync frontend endpoints.
-- [ ] TV3 sync clean-bootstrap schema.
-- [ ] TV4 deliver auth/security backend.
-- [ ] TV2 replace unsupported test Pass claims by real evidence.
+| ID | Finding | Owner | TV5 xử lý |
+|---|---|---|---|
+| F-01 | Deposit create/my còn `X-User-Id`; confirm/receipt chưa current-user ownership | TV4 + TV1 | Ghi mismatch, giữ status PARTIAL |
+| F-02 | Official API Auth spec còn login email, `demoOtp`, reset 1-step/90s | TV1 + TV4 | Không sửa API doc trong branch TV5 |
+| F-03 | `schema.sql` chưa gồm V3/Auth | TV3 | ERD/Data Dictionary ghi bootstrap gap |
+| F-04 | `vehicleApi.js`/`depositApi.js` có mock/LocalStorage fallback | TV2 | Ghi dependency |
+| F-05 | CORS chưa liệt kê PATCH | TV1/TV4 | Ghi dependency trước Gate 2 |
+| F-06 | Test Plan có PASS claims rộng | TV2 | Traceability không tự chuyển PASS thành VERIFIED |
 
-## 9. Kết luận
+## 5. Evidence hiện có
 
-TV5 hiện không cần viết thêm backend code. Việc cần làm là **đồng bộ toàn bộ tài liệu và diagram với implementation thật**, sau đó ghi rõ các phần còn thiếu/ lệch thuộc owner nào.
+TV4 report ghi nhận:
 
-Bộ tài liệu cập nhật ngày 30/09/2026 phải được xem là bản làm việc mới của TV5; các report/diagram cũ không được dùng làm source-of-truth nếu còn khác code hiện tại.
+- Backend build PASS.
+- Frontend build PASS.
+- AuthSecurityUnitTest 2/2 PASS.
+- Full Maven test 22/22 PASS trên PostgreSQL thật.
+- Runtime API/JWT/RBAC smoke PASS.
+- Gmail OTP PASS.
+
+Các test file Auth/Deposit hiện có:
+
+```text
+AuthSecurityUnitTest
+AuthServiceResetPasswordTest
+OtpMailServiceTest
+DepositServiceUnitTest
+```
+
+Trong môi trường audit hiện tại, Maven không thể rerun vì wrapper cần tải Maven và dependency nhưng môi trường review không tải được Maven Central. Do đó các kết quả trên được ghi là **reported evidence từ TV4**, không phải independent rerun.
+
+## 6. Việc còn lại của TV5 trước Final Gate
+
+1. Commit bộ tài liệu thay thế trong ZIP.
+2. Sau khi owner trả lời F-01..F-06, cập nhật traceability/status lần cuối.
+3. Lấy test evidence thật từ TV2/TV4/TV3 rồi nâng `VERIFIED` cho các FR đủ bằng chứng.
+4. Chốt SRS/UML/ERD lần cuối sau khi clean-bootstrap và current-user contract được sửa.
+
+## 7. Tiêu chí hoàn thành TV5
+
+- [x] SRS đúng stack và scope.
+- [x] Use Case đúng actor/role/state.
+- [x] Sequence/Collaboration bám class/method hiện tại.
+- [x] Class Diagram có Auth/security thật.
+- [x] ERD có V3 + Auth.
+- [x] Traceability FR → UC → API → Test/Evidence.
+- [x] Không invent Auth implementation.
+- [ ] Owner đã xử lý mismatch security/API/bootstrap.
+- [ ] Final evidence đã được TV2 tổng hợp.
