@@ -1,934 +1,413 @@
-# BÁO CÁO TIẾN ĐỘ — MEMBER 05
+# BÁO CÁO TIẾN ĐỘ — TV5
 
-**Dự án:** Smart Used-Car Decision Support System
-**Thành viên:** Member 05 — Database / System Design / Testing
-**Giai đoạn:** Increment 1 — Foundation
-**File báo cáo:** `docs/Members/report/TV5_Baocaotiendo.md`
-**Thời điểm cập nhật:** 09/09/2026  
+**Dự án:** Xây dựng hệ thống quản lý kinh doanh ô tô đã qua sử dụng
+**Vai trò:** TV5 — UML, SRS và tài liệu thiết kế
+**Ngày cập nhật:** 30/09/2026
 
 ---
 
-## 1. Tổng quan nhiệm vụ
+## 1. Phạm vi trách nhiệm hiện tại
 
-Trong Increment 1 — Foundation, Member 05 phụ trách xây dựng nền tảng về **Database và System Design**, làm cơ sở để các thành viên khác triển khai Backend, Data Pipeline, Machine Learning và Frontend.
+TV5 chịu trách nhiệm:
 
-Theo workflow của project, các nhiệm vụ chính của Member 05 gồm:
+* SRS.
+* Use Case.
+* Đặc tả Use Case.
+* Sequence Diagram.
+* Collaboration Diagram.
+* Class Diagram.
+* ERD review.
+* Traceability Matrix.
+* Rà soát tính nhất quán giữa FR → UC → API → Test.
+* Rà soát tài liệu với code và test evidence trước Final Gate.
 
-* Hoàn thiện ERD.
-* Xây dựng Data Dictionary.
-* Xây dựng Database Schema.
-* Chuẩn bị Use Case.
-* Chuẩn bị Class Diagram.
-* Chuẩn bị API Specification ban đầu.
-* Chuẩn bị Test Plan khung.
+TV5 không chịu trách nhiệm implementation Backend, Frontend, Auth, Database migration hoặc business logic.
 
-Các đầu ra được tổ chức trong:
+---
+
+## 2. Scope hiện tại
+
+### P0
+
+* Authentication và Authorization.
+* Showroom/list vehicle.
+* Search/filter/detail.
+* Admin CRUD vehicle.
+* Deposit giả lập.
+* Appointment.
+* Vehicle locking.
+* Duplicate deposit prevention.
+* Test và UML cho golden flow.
+
+### P1
+
+* Register.
+* OTP/password recovery.
+* Favorites.
+* Customer deposit history.
+* Staff appointment update.
+* Admin ledger/account/statistics cơ bản.
+
+### P2
+
+* QR UI nâng cao.
+* Receipt/contract download.
+* Contact links.
+* Advanced gallery/chart.
+
+### Removed
+
+* Machine Learning.
+* Regression.
+* R Plumber.
+* Automated valuation.
+* Recommendation.
+* Comparison.
+* Real payment.
+* Shopping cart.
+* Standalone test-drive workflow.
+
+---
+
+## 3. Những gì đã xác minh từ source code hiện tại
+
+### 3.1. Database
+
+Schema hiện tại sử dụng:
 
 ```text
-database/
-docs/UML/
-docs/Database/
-docs/API/
-docs/Testing/
+sources
+vehicles
+listings
 ```
 
----
-
-# 2. Công việc đã thực hiện
-
-## 2.1. Database Schema
-
-### File
+Các tài liệu database đã có:
 
 ```text
 database/schema/schema.sql
-```
-
-### Công việc
-
-Xây dựng schema ban đầu sử dụng **PostgreSQL** cho hệ thống.
-
-Các bảng chính hiện tại:
-
-```text
-vehicle
-vehicle_comparison
-comparison_vehicle
-```
-
-### `vehicle`
-
-Lưu thông tin xe ô tô cũ và các thông tin liên quan đến định giá.
-
-Các trường chính:
-
-```text
-vehicle_id
-make
-model
-year
-mileage
-fuel
-transmission
-listing_price
-predicted_price
-difference_percent
-model_version
-source_url
-created_at
-updated_at
-```
-
-### `vehicle_comparison`
-
-Lưu thông tin một phiên so sánh xe.
-
-```text
-comparison_id
-created_at
-```
-
-### `comparison_vehicle`
-
-Là bảng trung gian giữa `vehicle` và `vehicle_comparison`, phục vụ quan hệ nhiều-nhiều.
-
-```text
-comparison_id
-vehicle_id
-```
-
-### Constraint
-
-Schema đã chuẩn bị:
-
-* Primary Key.
-* Foreign Key.
-* Composite Primary Key cho bảng trung gian.
-* `NOT NULL` cho các trường bắt buộc.
-* `ON DELETE CASCADE` cho quan hệ bảng trung gian.
-
-### Index
-
-Đã chuẩn bị index cho các trường thường xuyên phục vụ tìm kiếm/lọc:
-
-```text
-make + model
-year
-listing_price
-mileage
-```
-
----
-
-# 3. ERD
-
-## File
-
-```text
-docs/UML/ERD.md
-```
-
-Đã xây dựng ERD ở mức Foundation nhằm mô tả các entity database chính và mối quan hệ giữa chúng.
-
-Quan hệ chính:
-
-```text
-VEHICLE
-    1
-    │
-    │
-    N
-COMPARISON_VEHICLE
-    N
-    │
-    │
-    1
-    ▼
-VEHICLE_COMPARISON
-```
-
-### Ý nghĩa
-
-* Một vehicle có thể xuất hiện trong nhiều comparison.
-* Một comparison có thể chứa nhiều vehicle.
-* `comparison_vehicle` được dùng để xử lý quan hệ nhiều-nhiều.
-
-ERD hiện tại được xem là **initial foundation design** và sẽ tiếp tục được đồng bộ khi Backend và Data Pipeline hoàn thiện entity/schema thực tế.
-
----
-
-# 4. Data Dictionary
-
-## File
-
-```text
+database/migrations/V2_0_1__schema_patch.sql
+database/tests/schema_v2_0_1_smoke_test.sql
+docs/Database/ERD/ERD.md
 docs/Database/Data_Dictionary.md
+docs/Database/Mapping_Matrix.md
 ```
 
-Đã mô tả:
+### 3.2. Backend
 
-* Tên bảng.
-* Tên column.
-* Data type.
-* Primary Key / Foreign Key.
-* Cho phép NULL hay không.
-* Ý nghĩa của từng trường.
-* Một số validation rule cơ bản.
-
-Ví dụ đối với `vehicle`:
-
-| Field                | Ý nghĩa                                 |
-| -------------------- | --------------------------------------- |
-| `vehicle_id`         | ID duy nhất của xe                      |
-| `make`               | Hãng xe                                 |
-| `model`              | Model xe                                |
-| `year`               | Năm sản xuất                            |
-| `mileage`            | Số km đã đi                             |
-| `fuel`               | Loại nhiên liệu                         |
-| `transmission`       | Loại hộp số                             |
-| `listing_price`      | Giá đăng bán                            |
-| `predicted_price`    | Giá dự đoán từ model                    |
-| `difference_percent` | Chênh lệch giữa giá đăng và giá dự đoán |
-| `model_version`      | Phiên bản model                         |
-| `source_url`         | Nguồn dữ liệu                           |
-
----
-
-# 5. Use Case
-
-## File
-
-```text
-docs/UML/Use_Case.md
-```
-
-Đã chuẩn bị các use case ban đầu:
-
-```text
-View Vehicle List
-Search / Filter Vehicles
-View Vehicle Detail
-Compare Vehicles
-Request Vehicle Valuation
-View Recommendations
-```
-
-### Actor chính
-
-```text
-User
-```
-
-### Các thành phần hệ thống liên quan
-
-```text
-Backend
-Data Pipeline
-R / ML Service
-```
-
-### Use Case được mô tả chi tiết
-
-`View Vehicle Detail`
-
-Luồng chính:
-
-```text
-User
- ↓
-Frontend
- ↓
-Spring Boot Backend
- ↓
-PostgreSQL
- ↓
-Backend Response
- ↓
-Frontend
- ↓
-Vehicle Detail
-```
-
----
-
-# 6. Class Diagram
-
-## File
-
-```text
-docs/UML/Class_Diagram.md
-```
-
-Đã chuẩn bị class diagram Foundation gồm:
+Backend hiện đã có:
 
 ```text
 Vehicle
-VehicleComparison
-ComparisonVehicle
-RecommendationResult
+Listing
+Source
+
+VehicleController
+ListingController
+
+VehicleService
+ListingService
+
+VehicleRepository
+ListingRepository
+SourceRepository
+
+ListingSpecification
+
+ListingFilterRequest
+ListingResponseDto
+PageResponse
 ```
 
-### `Vehicle`
-
-Đại diện cho vehicle trong hệ thống.
-
-### `VehicleComparison`
-
-Đại diện cho một phiên comparison.
-
-### `ComparisonVehicle`
-
-Entity/bảng liên kết vehicle với comparison.
-
-### `RecommendationResult`
-
-Được chuẩn bị ở mức thiết kế để phục vụ Recommendation trong Increment 4.
-
----
-
-# 7. API Specification ban đầu
-
-## File
+### 3.3. API hiện có
 
 ```text
-docs/API/API_Specification_Initial.md
+GET    /api/v1/listings
+GET    /api/v1/listings/{id}
+POST   /api/v1/listings
+DELETE /api/v1/listings/{id}
+
+GET    /api/v1/vehicles
+GET    /api/v1/vehicles/{id}
+POST   /api/v1/vehicles
+PUT    /api/v1/vehicles/{id}
+DELETE /api/v1/vehicles/{id}
 ```
 
-Đã chuẩn bị API contract ban đầu cho Backend Spring Boot.
+### 3.4. Search/filter
 
-### Vehicle API
-
-```http
-GET /api/vehicles
-```
-
-Dùng để lấy danh sách vehicle.
-
----
-
-### Vehicle Detail
-
-```http
-GET /api/vehicles/{vehicleId}
-```
-
-Dùng để lấy thông tin chi tiết một xe.
-
----
-
-### Search / Filter
-
-```http
-GET /api/vehicles/search
-```
-
-Các tham số dự kiến:
+Backend hiện hỗ trợ:
 
 ```text
 keyword
+vehicleId
+brand
+model
+variant
 minPrice
 maxPrice
 minYear
 maxYear
 minMileage
 maxMileage
+fuelType
+transmission
+bodyType
+origin
+location
+page
+size
+sort
+```
+
+### 3.5. Frontend
+
+Frontend hiện đã có:
+
+```text
+VehicleListPage
+VehicleDetailPage
+VehicleCard
+VehicleGrid
+VehicleInfo
+FilterPanel
+vehicleApi
+```
+
+Frontend sử dụng API:
+
+```text
+GET /api/v1/listings
+GET /api/v1/listings/{id}
 ```
 
 ---
 
-### Comparison
+## 4. Tình trạng tài liệu TV5
 
-```http
+| Deliverable              | Status                |
+| ------------------------ | --------------------- |
+| ERD                      | DONE / REVIEW         |
+| Data Dictionary          | DONE / REVIEW         |
+| Mapping Matrix           | DONE / REVIEW         |
+| Use Case                 | NEED UPDATE           |
+| Class Diagram            | NEED UPDATE           |
+| Sequence Diagram         | TODO                  |
+| Collaboration Diagram    | TODO                  |
+| Traceability Matrix      | TODO                  |
+| SRS                      | TODO / CREATE         |
+| API documentation review | IN PROGRESS           |
+| Test traceability review | PENDING TEST EVIDENCE |
+
+---
+
+## 5. Các mismatch đã phát hiện
+
+### Mismatch 1 — Scope cũ
+
+Tài liệu UML cũ còn:
+
+```text
+Comparison
+Recommendation
+Valuation
+R / ML
+```
+
+Các nội dung này không còn thuộc phạm vi nộp.
+
+### Mismatch 2 — Stack cũ
+
+Một số tài liệu SRS vẫn ghi:
+
+```text
+Servlet/JSP
+SQL Server/MySQL
+JDBC
+```
+
+Trong repository hiện tại stack là:
+
+```text
+Spring Boot
+React
+PostgreSQL
+JPA
+```
+
+### Mismatch 3 — API cũ
+
+Tài liệu cũ ghi:
+
+```text
+GET /api/vehicles
+GET /api/vehicles/search
 POST /api/comparisons
-```
-
-Ví dụ request:
-
-```json
-{
-    "vehicleIds": [1, 2, 3]
-}
-```
-
----
-
-### Get Comparison
-
-```http
-GET /api/comparisons/{comparisonId}
-```
-
----
-
-### Valuation
-
-API được chuẩn bị trước cho Increment 3:
-
-```http
 POST /api/valuation
 ```
 
----
-
-### Recommendation
-
-API được chuẩn bị trước cho Increment 4:
-
-```http
-GET /api/recommendations
-```
-
-Các endpoint này hiện là **initial API specification**, chưa phải API contract cuối cùng.
-
----
-
-# 8. Test Plan
-
-## File
+Trong code hiện tại API chính sử dụng:
 
 ```text
-docs/Testing/Test_Plan.md
+/api/v1/listings
+/api/v1/vehicles
 ```
 
-Đã chuẩn bị test plan khung cho:
+### Mismatch 4 — Class cũ
 
-### Database Testing
-
-* Kiểm tra tạo schema.
-* Kiểm tra insert vehicle hợp lệ.
-* Kiểm tra validation field bắt buộc.
-* Kiểm tra Foreign Key.
-* Kiểm tra composite key.
-* Kiểm tra cascade delete.
-
-### API Testing
-
-* Vehicle List.
-* Vehicle Detail.
-* Search.
-* Filter.
-* Error 400.
-* Error 404.
-
-### Comparison Testing
-
-* Tạo comparison.
-* Kiểm tra vehicle tồn tại.
-* Kiểm tra vehicle không tồn tại.
-* Lấy comparison.
-
-### Integration Testing
-
-Chuẩn bị hướng kiểm thử:
+UML cũ chứa:
 
 ```text
-Spring Boot
-      ↕
-PostgreSQL
+VehicleComparison
+ComparisonVehicle
+RecommendationResult
 ```
 
-Các giai đoạn sau sẽ mở rộng thêm:
+Các class này không tồn tại trong Backend hiện tại.
 
-```text
-Spring Boot
-      ↕
-R Plumber
-```
+### Mismatch 5 — Deposit/Auth/Appointment
+
+Workflow đã yêu cầu P0 nhưng snapshot code hiện tại chưa có class implementation tương ứng.
+
+TV5 không tự suy đoán tên class.
+
+Phải lấy tên class thực tế từ TV1/TV4.
 
 ---
 
-# 9. Chức năng của phần đã hoàn thành
+## 6. Công việc TV5 ngày 30/09
 
-Sau Increment 1, phần System Design của Member 05 đã hình thành nền tảng cho các chức năng:
+### Ưu tiên 1
+
+Đồng bộ SRS:
 
 ```text
-Vehicle Management
-        │
-        ├── Vehicle List
-        ├── Vehicle Detail
-        ├── Search
-        └── Filter
-
-Comparison
-        │
-        └── Compare Vehicles
-
-Valuation
-        │
-        └── Predicted Price
-
-Recommendation
-        │
-        └── Recommendation / Ranking
-
-Testing
-        │
-        ├── Database Test
-        ├── API Test
-        └── Integration Test
+Stack
+Scope
+FR
+NFR
+Actor
+Business rules
+Status
 ```
 
----
+### Ưu tiên 2
 
-# 10. Ghi chú
-
-## 10.1. PostgreSQL
-
-Database được thiết kế trên **PostgreSQL** theo kiến trúc của project.
-
-## 10.2. Schema hiện tại
-
-Schema hiện tại là **Foundation Schema**.
-
-Workflow chưa xác định đầy đủ tất cả entity cuối cùng của hệ thống, vì vậy một số thành phần sẽ được mở rộng ở các Increment tiếp theo.
-
-Ví dụ:
+Hoàn thiện:
 
 ```text
-Recommendation
-User Preference
-Raw Data
-Crawler Source
-Model Management
-Authentication
-```
-
-chưa được đưa thành bảng chính thức trong schema hiện tại.
-
-## 10.3. API
-
-API Specification hiện tại là bản thiết kế ban đầu để thống nhất hướng giao tiếp giữa Frontend và Backend.
-
-API có thể được điều chỉnh khi Member 01 hoàn thiện Controller, DTO và Service thực tế.
-
-## 10.4. Coordination
-
-Database cần được đồng bộ với:
-
-```text
-Member 01 → Spring Boot Entity / Repository
-Member 03 → Clean Dataset / Seed Dataset
-Member 04 → ML Feature / Prediction Output
-Member 02 → API sử dụng cho Frontend
-```
-
----
-
-# 11. Đánh giá kết quả
-
-### Hoàn thành
-
-```text
-[x] ERD
-[x] Data Dictionary
-[x] PostgreSQL Database Schema
-[x] Use Case
-[x] Class Diagram
-[x] Initial API Specification
-[x] Test Plan
-```
-
-### Mức độ hoàn thành
-
-**Foundation Design: Hoàn thành**
-
-Các tài liệu nền tảng cần thiết cho Increment 1 đã được chuẩn bị và tổ chức vào đúng các thư mục theo workflow.
-
-### Hạn chế hiện tại
-
-* Database chưa có dataset thực tế hoàn chỉnh.
-* Recommendation logic chưa triển khai.
-* Comparison business logic chưa triển khai hoàn chỉnh.
-* API chưa phải implementation cuối cùng.
-* Integration test giữa toàn bộ các module chưa thực hiện ở Increment 1.
-
-Các phần này thuộc các Increment tiếp theo.
-
----
-
-# 12. Kết quả nghiệm thu
-
-## Kết quả
-
-```text
-DATABASE
-    ↓
-PostgreSQL Schema
-    ↓
-ERD
-    ↓
-Data Dictionary
-```
-
-```text
-SYSTEM DESIGN
-    ↓
 Use Case
-    ↓
 Class Diagram
-    ↓
-Initial API Specification
+Sequence Diagram
+Collaboration Diagram
 ```
+
+### Ưu tiên 3
+
+Tạo:
 
 ```text
-TESTING
-    ↓
-Initial Test Plan
+Traceability Matrix
+FR → UC → API → Test
 ```
 
-### Kết luận nghiệm thu
+### Ưu tiên 4
 
-Phần công việc **Member 05 — Increment 1 Foundation** đã hoàn thành ở mức thiết kế nền tảng.
+Review chéo:
 
-Các tài liệu có thể được sử dụng làm cơ sở để:
+```text
+TV1:
+API + business state + actual class names
 
-* Member 01 triển khai Backend.
-* Member 03 chuẩn bị dữ liệu và import vào PostgreSQL.
-* Member 04 xác định feature/output cho model.
-* Member 02 sử dụng API contract cho Frontend.
+TV4:
+Auth + role + security flow
 
-Workflow của project xác định PostgreSQL là trung tâm kết nối giữa Data Pipeline, Backend và Member 05.
+TV3:
+ERD + schema + FK + status
+
+TV2:
+UI + test cases + test evidence
+```
 
 ---
 
-# 13. Bàn giao
+## 7. Quy tắc ghi trạng thái
 
-## Bàn giao cho Member 01
+TV5 chỉ sử dụng:
 
 ```text
-database/schema/schema.sql
-docs/UML/Class_Diagram.md
-docs/API/API_Specification_Initial.md
+IMPLEMENTED
+VERIFIED
+PARTIAL
+PENDING
+BLOCKED
+REMOVED
 ```
 
-Mục đích:
+Không ghi `PASS` nếu chưa có test evidence.
 
-* Đồng bộ Entity.
-* Đồng bộ Database.
-* Đồng bộ API.
-* Chuẩn bị Repository / Service / Controller.
+Không ghi `IMPLEMENTED` nếu chỉ có kế hoạch/documentation.
 
 ---
 
-## Bàn giao cho Member 03
+## 8. Final Gate checklist
 
-```text
-database/schema/schema.sql
-docs/UML/ERD.md
-docs/Database/Data_Dictionary.md
-```
+### SRS
 
-Mục đích:
+* [ ] Spring Boot đúng
+* [ ] React đúng
+* [ ] PostgreSQL đúng
+* [ ] Không còn Servlet/JSP/SQL Server/MySQL
+* [ ] Scope P0/P1/P2 chính xác
+* [ ] Removed scope được ghi rõ
 
-* Xác định cấu trúc dữ liệu.
-* Xác định field cần import.
-* Chuẩn bị Seed Dataset.
-* Chuẩn bị Clean Dataset phù hợp với database.
+### UML
 
----
+* [ ] Use Case đúng actor
+* [ ] Không còn ML/Recommendation/Comparison
+* [ ] Sequence đúng code
+* [ ] Collaboration đúng code
+* [ ] Class Diagram đúng class
+* [ ] ERD đúng schema
 
-## Bàn giao cho Member 04
+### Traceability
 
-```text
-docs/Database/Data_Dictionary.md
-database/schema/schema.sql
-```
+* [ ] FR → UC
+* [ ] UC → API
+* [ ] API → Test
+* [ ] Test → evidence
 
-Mục đích:
+### Final review
 
-* Xác định các feature liên quan đến model.
-* Xác định `predicted_price`.
-* Xác định `model_version`.
-* Đồng bộ output của Regression Model với hệ thống.
-
----
-
-## Bàn giao cho Member 02
-
-```text
-docs/API/API_Specification_Initial.md
-```
-
-Mục đích:
-
-* Nắm được API dự kiến.
-* Chuẩn bị service gọi Backend.
-* Chuẩn bị Vehicle List / Detail / Search / Filter.
+* [ ] Không có class giả
+* [ ] Không có endpoint giả
+* [ ] Không có bảng giả
+* [ ] Không có trạng thái giả
+* [ ] Không tuyên bố PASS khi thiếu evidence
 
 ---
 
-# 14. Công việc tiếp theo
+## 9. Kết luận
 
-## Increment 2 — Market Data
+TV5 đã có nền tảng Database Design từ giai đoạn trước, nhưng phần tài liệu hiện tại chưa đồng bộ với scope mới.
 
-Member 05 sẽ phối hợp với Member 03 và Member 01 để:
+Trọng tâm hiện tại không còn là Database implementation hay Recommendation.
 
-* Kiểm tra dữ liệu sau Import.
-* Kiểm tra Database Integrity.
-* Kiểm tra dữ liệu thực tế trong PostgreSQL.
-* Kiểm thử Search API.
-* Kiểm thử Filter API.
-* Chuẩn bị Performance Test cơ bản.
-
-Workflow quy định Increment 2 tập trung đưa dữ liệu thị trường qua:
+Trọng tâm TV5 từ 30/09/2026 là:
 
 ```text
-Crawler
+SRS
  ↓
-Raw Data
+Use Case
  ↓
-Cleaning
+Sequence
  ↓
-Validation
+Collaboration
  ↓
-Clean Data
+Class / ERD
  ↓
-Batch Import
+Traceability
  ↓
-PostgreSQL
+Cross-check API / code / test
+ ↓
+Final Gate
 ```
-
-và Member 05 có trách nhiệm kiểm tra dữ liệu sau Import và Database Integrity.
-
----
-
-## Increment 3 — Automated Pricing
-
-Member 05 sẽ tham gia:
-
-* Integration Test giữa Spring Boot và R Plumber.
-* Test Input Validation.
-* Test Error Handling.
-* Test Prediction Response.
-
-Workflow xác định phần Integration Testing này thuộc trách nhiệm Member 05 trong Increment 3.
-
----
-
-## Increment 4 — Recommendation & Decision Support
-
-Đây là giai đoạn chính của Member 05.
-
-Các nhiệm vụ:
-
-### Recommendation
-
-```text
-Candidate Vehicles
-       ↓
-Price Score
-       ↓
-ODO Score
-       ↓
-Age Score
-       ↓
-Preference Score
-       ↓
-Market Fairness Score
-       ↓
-Recommendation Score
-       ↓
-Ranking
-       ↓
-Top Recommended Cars
-```
-
-### Comparison
-
-So sánh:
-
-```text
-Price
-Predicted Price
-Difference
-Year
-ODO
-Fuel
-Transmission
-Recommendation Score
-```
-
-### Testing
-
-* Integration Test.
-* API Test.
-* System Test.
-* Performance Test.
-* Test Report.
-
-Các nội dung trên phù hợp với trách nhiệm chính của Member 05 trong Increment 4 theo workflow.
-
----
-
-# 15. Trạng thái tổng thể
-
-```text
-INCREMENT 1
-    │
-    ├── Database Schema          ✅
-    ├── ERD                     ✅
-    ├── Data Dictionary         ✅
-    ├── Use Case                ✅
-    ├── Class Diagram           ✅
-    ├── Initial API             ✅
-    └── Test Plan               ✅
-    
-    ↓
-
-INCREMENT 2
-    │
-    ├── Database Integrity      ⏳
-    ├── Data Import Validation  ⏳
-    ├── Search API Test         ⏳
-    ├── Filter API Test         ⏳
-    └── Performance Test        ⏳
-    
-    ↓
-
-INCREMENT 3
-    │
-    ├── R Plumber Integration   ⏳
-    ├── Prediction Testing      ⏳
-    └── Error Handling Test     ⏳
-    
-    ↓
-
-INCREMENT 4
-    │
-    ├── Recommendation          ⏳
-    ├── Comparison              ⏳
-    ├── Ranking                 ⏳
-    ├── Integration Test        ⏳
-    ├── System Test             ⏳
-    └── Performance Test        ⏳
-```
-
----
-
-# 16. Kết luận
-
-Member 05 đã hoàn thành phần **Database / System Design Foundation** của Increment 1.
-
-Kết quả hiện tại tạo nền tảng để hệ thống tiếp tục phát triển theo workflow:
-
-```text
-Member 03
-Data Pipeline
-      ↓
-PostgreSQL
-      ↓
-Member 01
-Spring Boot
-      ↓
-Member 02
-ReactJS
-
-Member 04
-R / ML
-      ↓
-Prediction
-      ↓
-PostgreSQL
-
-Member 05
-Recommendation
-Comparison
-Testing
-```
-
-Trong các Increment tiếp theo, Member 05 sẽ chuyển trọng tâm từ **thiết kế nền tảng** sang **Database Testing → Integration Testing → Recommendation / Comparison / Decision Support**.
-
-# Báo cáo Tiến độ Nhiệm vụ Emergency Mission
-
-- **Họ và tên:** [Đỗ Trọng Khôi]
-- **Vai trò:** TV5 - Quản trị Database Schema & Tích hợp Dữ liệu
-- **Nhiệm vụ:** Chủ trì thiết kế PostgreSQL Schema chính thức, ERD, Data Dictionary, Mapping Matrix và hỗ trợ nghiệm thu tích hợp Increment 2
-- **Ngày cập nhật:** 15/09/2026
-
----
-
-## 1. Tổng quan Tiến độ Nhiệm vụ (Emergency Mission)
-
-| Giai đoạn | Nhiệm vụ chính | Trạng thái | Sản phẩm bàn giao / Bằng chứng |
-| :-: | :--- | :-: | :--- |
-| **Giai đoạn 0** | Nhận trách nhiệm sở hữu schema chính thức | **HOÀN THÀNH** | Khảo sát SQL cũ, JPA Entity và Dataset thô |
-| **Giai đoạn 2** | Thống nhất Schema v2.0, ERD, Dictionary, Mapping | **HOÀN THÀNH** | PR/Commit: `schema.sql`, `ERD.md`, `Data_Dictionary.md`, `Mapping_Matrix.md` |
-| **Giai đoạn 4** | Triển khai DB kiểm thử, phối hợp nghiệm thu Import & API | **SẴN SÀNG** | Báo cáo tích hợp `reports/Integration_Test_Report.md` |
-
----
-
-## 2. Các công việc chi tiết đã hoàn thành
-
-### 2.1 Chuẩn hóa & Khóa Database Schema v2.0
-- Giải quyết triệt để sự chênh lệch giữa SQL cũ (`vehicle`, `make`, `year`) và JPA Entity (`vehicles`, `listings`, `brand`, `manufacture_year`).
-- Thiết kế mô hình 3 bảng chuẩn hóa: `sources`, `vehicles`, `listings`.
-- Đảm bảo giữ đủ **100% (17/17 trường)** từ Data Contract của TV3, đặc biệt bảo toàn 3 trường enrich: `origin`, `engine_size`, `seat_count`.
-
-### 2.2 Ban hành Bộ tài liệu Thiết kế Chuẩn (Single Source of Truth)
-- **`database/schema/schema.sql`**: Khởi tạo DDL PostgreSQL, thiết lập khóa chính, khóa ngoại (`ON DELETE RESTRICT`), ràng buộc `CHECK (manufacture_year)` và `UNIQUE(source_url)`.
-- **`docs/Database/ERD/ERD.md`**: Vẽ sơ đồ Mermaid ERD và định nghĩa quy tắc định danh `vehicles`.
-- **`docs/Database/Data_Dictionary.md`**: Mô tả chi tiết kiểu dữ liệu, quy tắc null, đơn vị tính và các chỉ mục (Indexes) tối ưu truy vấn.
-- **`docs/Database/Mapping_Matrix.md`**: Ánh xạ rõ ràng từng trường từ Dataset thô $\rightarrow$ PostgreSQL $\rightarrow$ JPA Entity.
-
-### 2.3 Thiết lập Ràng buộc Idempotency & Tối ưu hóa Truy vấn
-- Thêm ràng buộc `UNIQUE` trên trường `listings.source_url` giúp TV3 triển khai cơ chế `UPSERT` (tránh trùng lặp khi import lại cùng dataset).
-- Khởi tạo 4 Indexes chiến lược (`idx_listings_price`, `idx_listings_crawled_at`, `idx_listings_vehicle_id`, `idx_vehicles_search`) để hỗ trợ TV1 triển khai API Search/Filter/Paging/Sorting.
-
----
-
-## 3. Quyết định Kiến trúc Database (Architectural Decision Notes)
-
-1. **Xử lý `listed_at`:**
-   - Tạo cột `listed_at_raw` (TEXT) để lưu văn bản gốc chưa chuẩn hóa (VD: "2 giờ trước").
-   - Tạo cột `listed_at` (TIMESTAMPTZ, Nullable) để lưu thời gian đã parse/xác minh.
-   - Bắt buộc `crawled_at` (TIMESTAMPTZ, NOT NULL) để làm mốc quan sát chuẩn theo múi giờ UTC.
-
-2. **Quy tắc định danh dòng `vehicles`:**
-   - 1 dòng trong `vehicles` đóng vai trò là một cấu hình kỹ thuật xe quan sát được.
-   - Việc liên kết listing mới dựa trên bộ khóa tổ hợp: `(brand, model, variant, manufacture_year, fuel_type, transmission, engine_size)`.
-
----
-
-## 4. Bàn giao & Kế hoạch tiếp theo
-- **Đã bàn giao:** Schema v2.0 cho TV1 (đồng bộ Entity JPA) và TV3 (sửa script `import_pipeline.py`).
-- **Nhiệm vụ tiếp theo (Giai đoạn 4):**
-  1. Hỗ trợ TV3 chạy import toàn bộ 10,813 bản ghi lên Database kiểm thử.
-  2. Xác nhận log kết quả Hibernate `ddl-auto=validate` với TV1.
-  3. Tổng hợp số liệu thực tế gửi Leader nghiệm thu toàn bộ Increment 2.
-
----
-
-## 5. Bản vá Schema v2.0.1 (16/09/2026)
-
-### Các mismatch đã xử lý
-
-- Bổ sung `listings.image_url` kiểu `VARCHAR(500)`, nullable, để giữ URL ảnh từ dataset TV3 và khớp `Listing.imageUrl` của TV1.
-- Sửa Mapping Matrix theo đúng 17 trường dataset. `color` vẫn là cột mở rộng nullable của Database/JPA nhưng không còn được ghi là cột do TV3 cung cấp.
-- Thống nhất vocabulary: `Gasoline`, `Diesel`, `Hybrid`, `Electric`; `Automatic`, `Manual`, `CVT`; `Domestic`, `Imported` hoặc `NULL`.
-- Chuyển ID của `sources`, `vehicles`, `listings` sang `BIGSERIAL`; các foreign key `vehicle_id`, `source_id` sang `BIGINT` để khớp JPA `Long`.
-- Bổ sung CHECK cho price, mileage, engine_size, seat_count và các vocabulary; nullable field vẫn được phép NULL.
-- Bổ sung index cho mileage, fuel_type, transmission và body_type phục vụ filter Increment 2.
-- Làm rõ `schema.sql` là reset/bootstrap mang tính destructive; thêm migration không xóa dữ liệu `database/migrations/V2_0_1__schema_patch.sql` cho database v2.0.0 đang tồn tại.
-
-### Deliverables v2.0.1
-
-```text
-database/schema/schema.sql
-database/schema/README.md
-database/migrations/V2_0_1__schema_patch.sql
-database/tests/schema_v2_0_1_smoke_test.sql
-docs/Database/ERD/ERD.md
-docs/Database/Data_Dictionary.md
-docs/Database/Mapping_Matrix.md
-reports/Integration_Test_Report.md
-```
-
-### Trạng thái kiểm thử
-
-Static review: hoàn thành. Workspace hiện không có PostgreSQL service, `psql` hoặc Docker để chạy DDL. Vì vậy bootstrap/migration, smoke test, Hibernate `ddl-auto=validate` và import đủ 10.813 listings đều **PENDING**, không được ghi PASS trước khi có log thực thi.
-
-### Bàn giao tiếp theo
-
-- **TV1:** chạy Backend với `HIBERNATE_DDL_AUTO=validate` trên schema v2.0.1 và gửi log kết quả.
-- **TV3:** cập nhật import theo Mapping Matrix v2.0.1, giữ `image_url`, dùng `listed_at_raw`, import và re-import dataset; gửi số dòng insert/update/reject.
-- **TV5:** chạy bootstrap/migration và smoke test trên PostgreSQL, sau đó đối chiếu PK/FK, constraint, URL unique và row count với TV1/TV3.
