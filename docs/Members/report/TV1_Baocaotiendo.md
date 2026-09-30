@@ -217,3 +217,59 @@ cd backend
 ```
 **Chạy thành công, sau đó vào mở đường dẫn sau:**
 http://localhost:8080/swagger-ui.html
+
+---
+
+# GIAI ĐOẠN ĐỀ TÀI MỚI: QUẢN LÝ KINH DOANH Ô TÔ ĐÃ QUA SỬ DỤNG
+## BÁO CÁO TIẾN ĐỘ NGÀY 1 & NGÀY 2 (30/09 - 01/10/2026)
+**Người thực hiện:** TV1 (Backend Core & Integration Lead)
+
+### 1. Nhiệm vụ đã hoàn thành xuất sắc
+
+1. **Khóa và ban hành API Contract v3.0 chính thức:**
+   - Ban hành tài liệu: `docs/API/API_Specification_Official_v3.md`.
+   - Chuẩn hóa toàn bộ mã lỗi HTTP: `200`, `201`, `400`, `401`, `403`, `404`, `422` và đặc biệt là mã **`409 Conflict`** khi cọc trùng xe độc bản.
+   - Chuẩn hóa ma trận vòng đời trạng thái (*State Transitions*):
+     - Xe: `AVAILABLE` $\rightarrow$ `HOLD` $\rightarrow$ `RESERVED` $\rightarrow$ `SOLD`.
+     - Cọc: `PENDING` $\rightarrow$ `DEPOSITED` $\rightarrow$ `CANCELLED` / `REFUNDED`.
+     - Lịch hẹn: `PENDING` $\rightarrow$ `COMPLETED`.
+
+2. **Nâng cấp và Xây dựng Domain Model (JPA Entities & Repositories):**
+   - `Vehicle.java`: Bổ sung số VIN độc bản duy nhất (UNIQUE), trạng thái `status`, showroom, giá, ODO, màu sắc, hình ảnh.
+   - `Showroom.java` & `ShowroomRepository.java`: Quản lý các cơ sở showroom trưng bày xe.
+   - `Deposit.java` & `DepositRepository.java`: Đơn đặt cọc giả lập, mã đơn, số tiền cọc, link ảnh QR giả lập VietQR, mã biên lai và số hợp đồng.
+   - `Appointment.java` & `AppointmentRepository.java`: Lịch hẹn xem xe kèm trường boolean `hasTestDrive` (**Quyết định D4: Lái thử là checkbox**).
+   - `TransactionLedger.java` & `TransactionLedgerRepository.java`: Sổ cái ghi chép dòng tiền cọc cho Quản trị viên (FR-14).
+
+3. **Hiện thực hóa "Trái tim nghiệp vụ" – Atomic Lock chống đặt cọc trùng xe:**
+   - Trong `VehicleRepository.java`: Cài đặt phương thức cập nhật nguyên tử:
+     `UPDATE vehicles v SET v.status = :newStatus WHERE v.id = :id AND v.status = 'AVAILABLE'`
+   - Trong `DepositService.java`: 
+     - Tự động sinh mã VietQR giả lập chứa số tiền 10 triệu và mã cọc.
+     - Xác nhận thanh toán `confirmPayment`: Nếu xe đã bị cọc trước trong cùng mili-giây, câu lệnh trả về 0 dòng $\rightarrow$ Lập tức ném `VehicleAlreadyReservedException` $\rightarrow$ `GlobalExceptionHandler` trả về HTTP `409 Conflict`.
+     - Nếu thành công: Khóa xe sang `HOLD`, đổi cọc sang `DEPOSITED`, sinh biên lai điện tử `REC-...` và hợp đồng `HD-COC-...`, tự động ghi sổ cái `TransactionLedger`.
+
+4. **Xây dựng hệ thống REST API Endpoints đầy đủ:**
+   - `VehicleController.java`: API xem, tìm kiếm, lọc xe cho khách hàng.
+   - `AdminVehicleController.java`: API CRUD xe và đổi trạng thái cho Admin.
+   - `DepositController.java`: API cọc xe, xác nhận cọc giả lập, xem biên lai hợp đồng số, danh sách cọc cá nhân (`My Deposits`).
+   - `StaffAppointmentController.java`: API tra cứu lịch hẹn theo showroom và Check-in đón tiếp/lái thử cho Nhân viên.
+   - `AdminLedgerController.java`: API xem tổng quan sổ cái tiền cọc và duyệt hoàn cọc cho Admin.
+
+5. **Bộ kiểm thử tự động (Unit Test Suite):**
+   - Viết test suite `DepositServiceUnitTest.java` kiểm thử toàn diện:
+     - Test tạo cọc thành công kèm lái thử.
+     - Test chặn cọc xe khi không `AVAILABLE`.
+     - Test thanh toán cọc thành công và sinh hợp đồng số.
+     - **Test Chống cọc trùng (Race Condition)**: Giả lập 2 luồng cùng cọc 1 xe, chứng minh hệ thống ném ngoại lệ 409 Conflict và hủy đơn cọc trùng.
+     - Test Staff check-in và Admin hoàn cọc.
+   - **Kết quả kiểm thử:** `Tests run: 6, Failures: 0, Errors: 0, Skipped: 0` $\rightarrow$ **BUILD SUCCESS 100%**.
+
+6. **Kịch bản kiểm thử luồng vàng Gate 2:**
+   - Soạn thảo tài liệu `docs/Testing/Integration_Test_Scenario_Gate_2.md` hướng dẫn cả nhóm chạy End-to-End luồng vàng.
+
+### 2. Bàn giao cho các thành viên
+- **Cho TV2 (Frontend):** Bàn giao API Contract v3.0 và toàn bộ Controller endpoints.
+- **Cho TV3 (Database):** Bàn giao file script migration `V3_0_0__showroom_deposit_appointment.sql`.
+- **Cho TV4 (Auth):** Bàn giao danh sách URL cần bảo vệ role (`/admin/**`, `/staff/**`, `/deposits/**`).
+- **Cho TV5 (UML):** Bàn giao tên class, entity, method và state transition để vẽ Sequence/Class Diagram.
