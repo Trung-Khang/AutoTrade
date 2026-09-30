@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FaCalendarAlt,
   FaRoad,
@@ -6,11 +7,15 @@ import {
   FaCogs,
   FaCarSide,
   FaMapMarkerAlt,
-  FaExternalLinkAlt,
   FaUsers,
   FaTachometerAlt,
   FaGlobeAsia,
   FaPalette,
+  FaCheckCircle,
+  FaLock,
+  FaTimesCircle,
+  FaShieldAlt,
+  FaHandshake,
 } from 'react-icons/fa';
 import { formatFullPrice, formatMileage, formatYear } from '../../utils/formatters';
 import './VehicleInfo.css';
@@ -33,14 +38,17 @@ const VehicleInfo = ({ vehicle }) => {
   const fuelType = vehicle.fuelType || vehicle.fuel_type || 'Xăng';
   const transmission = vehicle.transmission || 'Tự động';
   const bodyType = vehicle.bodyType || vehicle.body_type || 'Sedan';
-  const location = vehicle.location || 'Toàn quốc';
+  const location = vehicle.location || 'Showroom AutoTrade';
   const color = vehicle.color || 'Chưa xác định';
   const origin = vehicle.origin || 'Chưa xác định';
   const seatCount = vehicle.seatCount || vehicle.seat_count;
   const engineSize = vehicle.engineSize || vehicle.engine_size;
-  const sourceName = vehicle.sourceName || vehicle.source_name;
-  const sourceUrl = vehicle.sourceUrl || vehicle.source_url;
-  const description = vehicle.description || vehicle.listedAtRaw;
+  const description = vehicle.description;
+  const status = (vehicle.status || 'AVAILABLE').toUpperCase();
+
+  const isAvailable = status === 'AVAILABLE';
+  const isHold = status === 'HOLD' || status === 'RESERVED';
+  const isSold = status === 'SOLD';
 
   return (
     <div className="vehicle-info-container">
@@ -51,22 +59,88 @@ const VehicleInfo = ({ vehicle }) => {
           className="vehicle-info-main-image"
           onError={() => setImgSrc(DEFAULT_CAR_IMAGE)}
         />
+        
+        {/* Cam kết chất lượng showroom */}
+        <div className="showroom-commitments">
+          <div className="commitment-item">
+            <FaShieldAlt className="commit-icon" />
+            <span>Cam kết không đâm đụng, không ngập nước</span>
+          </div>
+          <div className="commitment-item">
+            <FaCheckCircle className="commit-icon" />
+            <span>Hồ sơ pháp lý minh bạch, sẵn sàng sang tên</span>
+          </div>
+          <div className="commitment-item">
+            <FaHandshake className="commit-icon" />
+            <span>Hỗ trợ lái thử xe tận nơi hoặc tại showroom</span>
+          </div>
+        </div>
       </div>
 
       <div className="vehicle-info-details">
         <div className="vehicle-info-header">
           <div className="header-badges-row">
             <span className="info-brand-badge">{brand}</span>
-            {sourceName && <span className="info-source-tag">Nguồn: {sourceName}</span>}
+            {isAvailable && (
+              <span className="info-status-pill status-available">
+                <FaCheckCircle /> Sẵn sàng mở bán
+              </span>
+            )}
+            {isHold && (
+              <span className="info-status-pill status-hold">
+                <FaLock /> Đang giữ chỗ đặt cọc
+              </span>
+            )}
+            {isSold && (
+              <span className="info-status-pill status-sold">
+                <FaTimesCircle /> Đã hoàn tất bán
+              </span>
+            )}
           </div>
 
           <h1 className="info-title">
-            {model} {variant} {year ? `(${formatYear(year)})` : ''}
+            {brand} {model} {variant} {year ? `(${formatYear(year)})` : ''}
           </h1>
 
           <div className="info-price-section">
-            <span className="price-label">Giá rao bán:</span>
-            <span className="price-value">{formatFullPrice(price)}</span>
+            <div className="price-primary">
+              <span className="price-label">Giá niêm yết:</span>
+              <span className="price-value">{formatFullPrice(price)}</span>
+            </div>
+            <div className="deposit-hint-box">
+              <span className="deposit-tag">Số tiền đặt cọc giữ xe:</span>
+              <strong className="deposit-amount">20.000.000 VNĐ</strong>
+            </div>
+          </div>
+
+          {/* Khối Action Đặt Cọc & Lịch Hẹn */}
+          <div className="detail-deposit-cta-card">
+            {isAvailable ? (
+              <div className="cta-active-box">
+                <p className="cta-desc">
+                  Xe đang có sẵn tại showroom. Quý khách có thể đặt cọc online ngay để giữ quyền ưu tiên mua và đặt lịch hẹn xem/lái thử trực tiếp.
+                </p>
+                <Link to={`/deposit/${vehicle.id}`} className="cta-deposit-btn">
+                  <FaCalendarAlt /> Tiến hành Đặt Cọc & Đặt Lịch Hẹn Ngay
+                </Link>
+              </div>
+            ) : isHold ? (
+              <div className="cta-hold-box">
+                <FaLock className="cta-status-icon" />
+                <div>
+                  <strong>Xe đang được giữ chỗ</strong>
+                  <p>Hiện đã có khách hàng đặt cọc cho xe này. Nếu giao dịch không thành công, xe sẽ tự động mở bán lại.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="cta-sold-box">
+                <FaTimesCircle className="cta-status-icon" />
+                <div>
+                  <strong>Xe đã được bán</strong>
+                  <p>Chiếc xe này đã hoàn tất thủ tục bàn giao cho chủ nhân mới.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -105,14 +179,14 @@ const VehicleInfo = ({ vehicle }) => {
               <span className="spec-label">
                 <FaUsers className="icon" /> Số chỗ ngồi:
               </span>
-              <span className="spec-value">{seatCount ? `${seatCount} chỗ` : 'Chưa xác định'}</span>
+              <span className="spec-value">{seatCount ? `${seatCount} chỗ` : '5 chỗ'}</span>
             </div>
 
             <div className="spec-row">
               <span className="spec-label">
                 <FaTachometerAlt className="icon" /> Động cơ:
               </span>
-              <span className="spec-value">{engineSize ? `${engineSize}L` : 'Chưa xác định'}</span>
+              <span className="spec-value">{engineSize ? `${engineSize}L` : 'Tiêu chuẩn'}</span>
             </div>
 
             <div className="spec-row">
@@ -138,7 +212,7 @@ const VehicleInfo = ({ vehicle }) => {
 
             <div className="spec-row">
               <span className="spec-label">
-                <FaMapMarkerAlt className="icon" /> Khu vực bán:
+                <FaMapMarkerAlt className="icon" /> Địa điểm:
               </span>
               <span className="spec-value">{location}</span>
             </div>
@@ -147,21 +221,8 @@ const VehicleInfo = ({ vehicle }) => {
 
         {description && (
           <div className="vehicle-description-box">
-            <h3 className="specs-section-title">Mô tả tin đăng</h3>
+            <h3 className="specs-section-title">Mô tả tình trạng xe</h3>
             <p className="description-text">{description}</p>
-          </div>
-        )}
-
-        {sourceUrl && (
-          <div className="source-link-box">
-            <a
-              href={sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary source-link-btn"
-            >
-              <FaExternalLinkAlt /> Xem tin đăng gốc trên {sourceName || 'Sàn giao dịch'}
-            </a>
           </div>
         )}
       </div>

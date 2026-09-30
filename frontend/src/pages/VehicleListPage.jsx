@@ -37,7 +37,6 @@ const VehicleListPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Lọc bỏ các params rỗng trước khi gửi lên API
       const cleanParams = {};
       Object.keys(filters).forEach((key) => {
         if (filters[key] !== '' && filters[key] !== null && filters[key] !== undefined) {
@@ -72,7 +71,7 @@ const VehicleListPage = () => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
-      page: 0, // Reset về trang 1 khi đổi bộ lọc
+      page: 0,
     }));
   };
 
@@ -106,14 +105,14 @@ const VehicleListPage = () => {
     <div className="vehicle-list-page">
       <div className="page-header">
         <div>
-          <h1 className="page-title">Tìm kiếm & Lọc xe thị trường</h1>
+          <h1 className="page-title">Kho Xe Showroom AutoTrade</h1>
           <p className="page-subtitle">
-            Dữ liệu tin đăng rao bán xe ô tô cũ được đồng bộ từ các sàn trực tuyến uy tín
+            Khám phá các dòng xe ô tô đã qua sử dụng được kiểm định chất lượng, hỗ trợ đặt cọc giữ chỗ và hẹn lịch lái thử
           </p>
         </div>
         {!isLoading && !error && (
           <div className="vehicle-count-badge">
-            <FaCar /> <span>{pagination.totalElements} tin đăng tìm thấy</span>
+            <FaCar /> <span>{pagination.totalElements} xe trong kho</span>
           </div>
         )}
       </div>
