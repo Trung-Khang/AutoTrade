@@ -24,22 +24,25 @@ const saveStoredVehicles = (list) => {
 };
 
 /**
- * Service quản lý kho xe (Listing REST API của Backend TV1 + Admin CRUD)
+ * Service quản lý kho xe khớp chuẩn 100% với TV1 Contract v3.0.0:
+ * - Public: GET /api/v1/vehicles, GET /api/v1/vehicles/{id}
+ * - Admin: POST /api/v1/admin/vehicles, PUT /api/v1/admin/vehicles/{id}, DELETE /api/v1/admin/vehicles/{id}, PATCH /api/v1/admin/vehicles/{id}/status
  */
 export const vehicleApi = {
   /**
-   * Lấy danh sách xe (hỗ trợ tìm kiếm, lọc, phân trang)
+   * Lấy danh sách xe showroom (hỗ trợ tìm kiếm, lọc, phân trang, sắp xếp)
+   * Endpoint TV1: GET /api/v1/vehicles
    */
   getListings: async (params = {}) => {
     try {
-      const data = await apiClient.get('/listings', { params });
+      const data = await apiClient.get('/vehicles', { params });
       if (data && Array.isArray(data.content)) {
         return {
           content: data.content,
           totalElements: data.totalElements || data.content.length,
           totalPages: data.totalPages || 1,
-          page: data.page || 0,
-          size: data.size || 20,
+          page: data.pageNo ?? data.page ?? 0,
+          size: data.pageSize ?? data.size ?? 20,
         };
       }
       if (Array.isArray(data)) {
@@ -53,7 +56,7 @@ export const vehicleApi = {
       }
       return data;
     } catch (error) {
-      console.warn('Backend API chưa sẵn sàng. Fallback sang Local Storage / Mock.', error.message);
+      console.warn('Backend API /vehicles chưa sẵn sàng. Fallback sang Local Storage / Mock.', error.message);
       
       let list = getStoredVehicles();
 
@@ -111,13 +114,14 @@ export const vehicleApi = {
 
   /**
    * Lấy chi tiết xe theo ID
+   * Endpoint TV1: GET /api/v1/vehicles/{id}
    */
   getListingById: async (id) => {
     try {
-      const data = await apiClient.get(`/listings/${id}`);
+      const data = await apiClient.get(`/vehicles/${id}`);
       return data;
     } catch (error) {
-      console.warn(`Backend API chưa sẵn sàng. Tìm xe #${id} trong Local Storage.`, error.message);
+      console.warn(`Backend API /vehicles/${id} chưa sẵn sàng. Tìm xe #${id} trong Local Storage.`, error.message);
       const list = getStoredVehicles();
       const found = list.find((v) => String(v.id) === String(id));
       if (!found) {
@@ -129,16 +133,18 @@ export const vehicleApi = {
 
   /**
    * Thêm xe mới vào kho (Dành cho Quản trị viên / Admin)
+   * Endpoint TV1: POST /api/v1/admin/vehicles
    */
   createVehicle: async (vehicleData) => {
     try {
-      const response = await apiClient.post('/listings', vehicleData);
+      const response = await apiClient.post('/admin/vehicles', vehicleData);
       return response;
     } catch (error) {
-      console.warn('Backend API POST /listings chưa sẵn sàng. Tạo mới trong Local Storage.', error.message);
+      console.warn('Backend API POST /admin/vehicles chưa sẵn sàng. Tạo mới trong Local Storage.', error.message);
       const list = getStoredVehicles();
       const newCar = {
         id: Date.now(),
+        vin: vehicleData.vin || `VN-${(vehicleData.brand || 'CAR').toUpperCase()}-${Date.now().toString().slice(-4)}`,
         status: 'AVAILABLE',
         listed_at: new Date().toISOString(),
         ...vehicleData,
@@ -155,13 +161,14 @@ export const vehicleApi = {
 
   /**
    * Cập nhật thông tin xe (Dành cho Quản trị viên / Admin)
+   * Endpoint TV1: PUT /api/v1/admin/vehicles/{id}
    */
   updateVehicle: async (id, vehicleData) => {
     try {
-      const response = await apiClient.put(`/listings/${id}`, vehicleData);
+      const response = await apiClient.put(`/admin/vehicles/${id}`, vehicleData);
       return response;
     } catch (error) {
-      console.warn(`Backend API PUT /listings/${id} chưa sẵn sàng. Cập nhật trong Local Storage.`, error.message);
+      console.warn(`Backend API PUT /admin/vehicles/${id} chưa sẵn sàng. Cập nhật trong Local Storage.`, error.message);
       const list = getStoredVehicles();
       const index = list.findIndex((v) => String(v.id) === String(id));
       if (index !== -1) {
@@ -175,13 +182,14 @@ export const vehicleApi = {
 
   /**
    * Xoá xe khỏi hệ thống (Admin)
+   * Endpoint TV1: DELETE /api/v1/admin/vehicles/{id}
    */
   deleteVehicle: async (id) => {
     try {
-      await apiClient.delete(`/listings/${id}`);
+      await apiClient.delete(`/admin/vehicles/${id}`);
       return true;
     } catch (error) {
-      console.warn(`Backend API DELETE /listings/${id} chưa sẵn sàng. Xoá trong Local Storage.`, error.message);
+      console.warn(`Backend API DELETE /admin/vehicles/${id} chưa sẵn sàng. Xoá trong Local Storage.`, error.message);
       let list = getStoredVehicles();
       list = list.filter((v) => String(v.id) !== String(id));
       saveStoredVehicles(list);
@@ -190,11 +198,14 @@ export const vehicleApi = {
   },
 
   /**
-   * Cập nhật trạng thái xe (AVAILABLE / HOLD / SOLD)
+   * Cập nhật trạng thái xe (AVAILABLE / HOLD / RESERVED / SOLD)
+   * Endpoint TV1: PATCH /api/v1/admin/vehicles/{id}/status?status=...
    */
   updateVehicleStatus: async (id, newStatus) => {
     try {
-      const response = await apiClient.patch(`/listings/${id}/status`, { status: newStatus });
+      const response = await apiClient.patch(`/admin/vehicles/${id}/status`, null, {
+        params: { status: newStatus }
+      });
       return response;
     } catch (error) {
       console.warn(`Backend PATCH status xe #${id} chưa sẵn sàng. Cập nhật Local Storage.`, error.message);
@@ -209,7 +220,7 @@ export const vehicleApi = {
     }
   },
 
-  // Alias
+  // Alias tương thích
   getVehicles: async (params = {}) => {
     const res = await vehicleApi.getListings(params);
     return res.content || [];

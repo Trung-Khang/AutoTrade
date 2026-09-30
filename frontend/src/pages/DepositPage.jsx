@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import vehicleApi from '../services/vehicleApi';
 import depositApi from '../services/depositApi';
@@ -13,16 +13,15 @@ import {
   FaArrowLeft,
   FaExclamationTriangle,
   FaReceipt,
-  FaClock
+  FaTimesCircle
 } from 'react-icons/fa';
 import './DepositPage.css';
 
-const DEFAULT_DEPOSIT_AMOUNT = 20000000; // 20,000,000 VNĐ tiền cọc chuẩn
+const DEFAULT_DEPOSIT_AMOUNT = 10000000; // 10.000.000 VND theo chuẩn TV1 Contract v3.0.0
 
 const DepositPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,22 +32,16 @@ const DepositPage = () => {
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
   const [customerEmail, setCustomerEmail] = useState(user?.email || '');
   
-  // Date must be today or future
   const todayStr = new Date().toISOString().split('T')[0];
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('09:30');
   const [hasTestDrive, setHasTestDrive] = useState(true);
   const [note, setNote] = useState('');
   
-  const [hasConfirmedPayment, setHasConfirmedPayment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccessData, setSubmitSuccessData] = useState(null);
-
-  // Sinh mã tham chiếu giao dịch độc nhất
-  const [refCode] = useState(() => {
-    const randomHex = Math.random().toString(36).substring(2, 8).toUpperCase();
-    return `AUTODEP-${id}-${randomHex}`;
-  });
+  const [pendingDeposit, setPendingDeposit] = useState(null); // Lưu sau khi gọi POST /deposits
+  const [conflictError, setConflictError] = useState(null);   // Bắt lỗi 409 Conflict
+  const [receiptData, setReceiptData] = useState(null);       // Lưu sau khi gọi confirm thành công
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -65,7 +58,6 @@ const DepositPage = () => {
     fetchVehicle();
   }, [id]);
 
-  // Cập nhật thông tin khách hàng nếu đăng nhập sau khi load
   useEffect(() => {
     if (user) {
       if (!customerName) setCustomerName(user.fullName || user.username || '');
@@ -73,11 +65,11 @@ const DepositPage = () => {
     }
   }, [user]);
 
-  const handleSubmit = async (e) => {
+  // BƯỚC 1: Khởi tạo đơn đặt cọc (POST /api/v1/deposits)
+  const handleCreateDeposit = async (e) => {
     e.preventDefault();
     if (!vehicle) return;
 
-    // Kiểm tra tính hợp lệ của ngày hẹn (không được ở quá khứ)
     if (!appointmentDate) {
       alert('Vui lòng chọn ngày hẹn xem xe!');
       return;
@@ -93,40 +85,66 @@ const DepositPage = () => {
       return;
     }
 
-    if (!hasConfirmedPayment) {
-      alert('Vui lòng tích xác nhận đã chuyển khoản đặt cọc theo hướng dẫn.');
-      return;
-    }
-
     setIsSubmitting(true);
+    setConflictError(null);
+
     try {
+      const fullAppointmentDateTime = `${appointmentDate}T${appointmentTime}:00`;
       const depositPayload = {
         vehicleId: vehicle.id,
-        vehicleTitle: `${vehicle.brand} ${vehicle.model} ${vehicle.variant || ''}`.trim(),
-        vehiclePrice: vehicle.price,
-        depositAmount: DEFAULT_DEPOSIT_AMOUNT,
+        showroomId: vehicle.showroomId || vehicle.showroom?.id || 1,
+        appointmentDate: fullAppointmentDateTime,
+        hasTestDrive,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
-        customerEmail: customerEmail.trim() || (user ? user.email : 'khachhang@autotrade.vn'),
-        appointmentDate,
-        appointmentTime,
-        hasTestDrive,
-        note: note.trim(),
-        depositCode: refCode
+        customerEmail: customerEmail.trim() || 'khachhang@autotrade.vn',
+        note: note.trim()
       };
 
       const result = await depositApi.createDeposit(depositPayload);
-
-      // Cập nhật trạng thái xe thành HOLD
-      await vehicleApi.updateVehicleStatus(vehicle.id, 'HOLD');
-
-      setSubmitSuccessData({
+      setPendingDeposit({
         ...depositPayload,
-        id: result?.id || Date.now(),
-        code: result?.depositCode || refCode
+        depositId: result.depositId || result.id || Date.now(),
+        depositCode: result.depositCode || `DEP-${Date.now()}`,
+        qrPaymentUrl: result.qrPaymentUrl || `https://api.vietqr.io/image/970422-999999999-compact2.jpg?amount=10000000&addInfo=${result.depositCode || 'AUTODEP'}`
       });
     } catch (err) {
-      alert('Có lỗi xảy ra khi tạo đơn đặt cọc: ' + err.message);
+      if (err.status === 409 || err.message?.includes('409') || err.message?.includes('Xung đột')) {
+        setConflictError(err.message || 'Rất tiếc! Xe này vừa được một khách hàng khác đặt cọc trước bạn.');
+      } else {
+        alert('Có lỗi xảy ra khi tạo đơn cọc: ' + err.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // BƯỚC 2: Khách quét QR xong bấm xác nhận (POST /api/v1/deposits/{id}/confirm)
+  const handleConfirmPayment = async () => {
+    if (!pendingDeposit) return;
+
+    setIsSubmitting(true);
+    setConflictError(null);
+
+    try {
+      const res = await depositApi.confirmPayment(pendingDeposit.depositId);
+      // Đổi trạng thái xe sang HOLD
+      await vehicleApi.updateVehicleStatus(vehicle.id, 'HOLD');
+
+      setReceiptData({
+        ...pendingDeposit,
+        receiptCode: res.receiptCode || `REC-2026-${pendingDeposit.depositId}`,
+        contractNumber: res.contractNumber || `HD-COC-2026-${pendingDeposit.depositId}`,
+        confirmedAt: res.confirmedAt || new Date().toISOString(),
+        message: res.message || 'Đặt cọc giữ xe thành công! Xe đã được khóa trạng thái giữ chỗ cho quý khách.'
+      });
+    } catch (err) {
+      if (err.status === 409 || err.message?.includes('409') || err.message?.includes('cọc trước') || err.message?.includes('Xung đột')) {
+        setConflictError(err.message || 'Rất tiếc! Chiếc xe này vừa có khách hàng khác đặt cọc thành công trong cùng thời điểm. Giao dịch giữ xe của bạn bị hủy.');
+        setPendingDeposit(null);
+      } else {
+        alert('Lỗi xác nhận thanh toán: ' + err.message);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -155,7 +173,7 @@ const DepositPage = () => {
 
   // Nếu xe không ở trạng thái AVAILABLE
   const carStatus = (vehicle.status || 'AVAILABLE').toUpperCase();
-  if (carStatus !== 'AVAILABLE' && !submitSuccessData) {
+  if (carStatus !== 'AVAILABLE' && !receiptData) {
     return (
       <div className="deposit-page-container">
         <Link to="/vehicles" className="card-btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px' }}>
@@ -175,27 +193,29 @@ const DepositPage = () => {
     );
   }
 
-  // Màn hình hoàn tất đặt cọc thành công
-  if (submitSuccessData) {
+  // MÀN HÌNH HOÀN TẤT THÀNH CÔNG (Biên lai thu tiền cọc & Hợp đồng số)
+  if (receiptData) {
     return (
       <div className="deposit-page-container">
         <div className="deposit-success-card">
-          <FaCheckCircle className="success-badge-icon" />
-          <h2>Đặt Cọc & Đặt Hẹn Thành Công!</h2>
+          <FaCheckCircle className="success-badge-icon" style={{ color: '#16a34a' }} />
+          <h2>Đặt Cọc Giữ Chỗ & Đặt Hẹn Thành Công!</h2>
           <p style={{ color: '#64748b', fontSize: '14px' }}>
-            Yêu cầu giữ chỗ của bạn đã được ghi nhận vào hệ thống. Chiếc xe đã được chuyển sang trạng thái <strong>ĐANG GIỮ CHỖ (HOLD)</strong>.
+            {receiptData.message} Chiếc xe đã chính thức chuyển sang trạng thái <strong>HOLD (Đang giữ chỗ)</strong>.
           </p>
 
           <div className="success-summary-box">
-            <div><strong>Mã tham chiếu đơn:</strong> <span className="ref-code-badge">{submitSuccessData.code}</span></div>
-            <div><strong>Xe đặt cọc:</strong> {submitSuccessData.vehicleTitle}</div>
-            <div><strong>Số tiền cọc:</strong> 20.000.000 VNĐ</div>
-            <div><strong>Khách hàng:</strong> {submitSuccessData.customerName} ({submitSuccessData.customerPhone})</div>
+            <div><strong>Mã đơn cọc:</strong> <span className="ref-code-badge">{receiptData.depositCode}</span></div>
+            <div><strong>Số hợp đồng số:</strong> <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{receiptData.contractNumber}</span></div>
+            <div><strong>Mã biên lai thu tiền:</strong> <span>{receiptData.receiptCode}</span></div>
+            <div><strong>Xe đặt cọc:</strong> {vehicle.brand} {vehicle.model} {vehicle.variant || ''}</div>
+            <div><strong>Số tiền cọc:</strong> 10.000.000 VNĐ</div>
+            <div><strong>Khách hàng:</strong> {receiptData.customerName} ({receiptData.customerPhone})</div>
             <div>
-              <strong>Lịch hẹn tại Showroom:</strong> {submitSuccessData.appointmentDate} vào lúc {submitSuccessData.appointmentTime}
-              {submitSuccessData.hasTestDrive && ' (Có đăng ký lái thử)'}
+              <strong>Lịch hẹn tại Showroom:</strong> {appointmentDate} lúc {appointmentTime}
+              {receiptData.hasTestDrive && ' (Có đăng ký lái thử)'}
             </div>
-            <div><strong>Trạng thái lịch hẹn:</strong> <span style={{ color: '#2563eb', fontWeight: 'bold' }}>SCHEDULED (Đã lên lịch)</span></div>
+            <div><strong>Thời hạn giữ chỗ:</strong> 7 ngày kể từ thời điểm đặt cọc</div>
           </div>
 
           <div className="success-actions">
@@ -221,125 +241,160 @@ const DepositPage = () => {
         <p>Giữ quyền ưu tiên sở hữu và sắp xếp thời gian lái thử trực tiếp tại showroom AutoTrade</p>
       </div>
 
+      {conflictError && (
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '16px', borderRadius: '10px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '600' }}>
+          <FaTimesCircle style={{ fontSize: '24px', flexShrink: 0 }} />
+          <div>
+            <strong>Lỗi xung đột đặt cọc (HTTP 409 Conflict):</strong>
+            <p style={{ margin: 0, fontWeight: 'normal', fontSize: '14px', marginTop: '2px' }}>{conflictError}</p>
+          </div>
+        </div>
+      )}
+
       <div className="deposit-layout-grid">
-        {/* Cột trái: Form thông tin & Hẹn lịch */}
+        {/* CỘT TRÁI: FORM THÔNG TIN HOẶC XÁC NHẬN QR */}
         <div className="deposit-card">
-          <form onSubmit={handleSubmit}>
-            <div className="deposit-card-title">
-              <FaCalendarCheck /> 1. Thông tin khách hàng & Lịch hẹn
-            </div>
+          {!pendingDeposit ? (
+            <form onSubmit={handleCreateDeposit}>
+              <div className="deposit-card-title">
+                <FaCalendarCheck /> 1. Thông tin khách hàng & Lịch hẹn xem xe
+              </div>
 
-            <div className="deposit-form-group">
-              <label>Họ và tên người đặt *</label>
-              <input
-                type="text"
-                placeholder="Nhập họ và tên..."
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="grid-2-cols">
               <div className="deposit-form-group">
-                <label>Số điện thoại *</label>
+                <label>Họ và tên người đặt *</label>
                 <input
-                  type="tel"
-                  placeholder="VD: 0901234567"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  type="text"
+                  placeholder="Nhập họ và tên..."
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="deposit-form-group">
-                <label>Địa chỉ Email</label>
+              <div className="grid-2-cols">
+                <div className="deposit-form-group">
+                  <label>Số điện thoại *</label>
+                  <input
+                    type="tel"
+                    placeholder="VD: 0987654321"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="deposit-form-group">
+                  <label>Địa chỉ Email</label>
+                  <input
+                    type="email"
+                    placeholder="VD: nguyenvana@gmail.com"
+                    value={customerEmail}
+                    onChange={(e) => setCustomerEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Chọn ngày giờ hẹn xem xe */}
+              <div className="grid-2-cols" style={{ marginTop: '6px' }}>
+                <div className="deposit-form-group">
+                  <label>Ngày hẹn xem xe tại Showroom *</label>
+                  <input
+                    type="date"
+                    min={todayStr}
+                    value={appointmentDate}
+                    onChange={(e) => setAppointmentDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="deposit-form-group">
+                  <label>Khung giờ hẹn *</label>
+                  <select value={appointmentTime} onChange={(e) => setAppointmentTime(e.target.value)}>
+                    <option value="08:30">08:30 Sáng</option>
+                    <option value="09:30">09:30 Sáng</option>
+                    <option value="10:30">10:30 Sáng</option>
+                    <option value="14:00">14:00 Chiều</option>
+                    <option value="15:30">15:30 Chiều</option>
+                    <option value="17:00">17:00 Chiều</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Checkbox lái thử xe (Test-Drive) */}
+              <label className="test-drive-checkbox-label">
                 <input
-                  type="email"
-                  placeholder="VD: khachhang@email.com"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  type="checkbox"
+                  checked={hasTestDrive}
+                  onChange={(e) => setHasTestDrive(e.target.checked)}
+                />
+                <div className="test-drive-text">
+                  <strong>Đăng ký trải nghiệm lái thử xe (Test-Drive)</strong>
+                  <span>Chuyên viên showroom sẽ chuẩn bị hồ sơ xe để bạn chạy thử trong buổi hẹn</span>
+                </div>
+              </label>
+
+              <div className="deposit-form-group">
+                <label>Ghi chú hoặc yêu cầu riêng (không bắt buộc)</label>
+                <textarea
+                  rows={2}
+                  placeholder="VD: Cần kiểm tra kỹ khoang máy, hỗ trợ thủ tục trả góp..."
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
                 />
               </div>
-            </div>
 
-            {/* Chọn ngày giờ hẹn xem xe */}
-            <div className="grid-2-cols" style={{ marginTop: '6px' }}>
-              <div className="deposit-form-group">
-                <label>Ngày hẹn xem xe tại Showroom *</label>
-                <input
-                  type="date"
-                  min={todayStr}
-                  value={appointmentDate}
-                  onChange={(e) => setAppointmentDate(e.target.value)}
-                  required
-                />
+              <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', fontSize: '12px', color: '#64748b', marginBottom: '16px', lineHeight: '1.5' }}>
+                <FaShieldAlt style={{ color: '#D4AF37', marginRight: '6px' }} />
+                <strong>Cam kết hoàn cọc 100%:</strong> Khách hàng được hoàn trả đủ tiền đặt cọc nếu xe thực tế không đúng cam kết kiểm định 160 điểm.
               </div>
 
-              <div className="deposit-form-group">
-                <label>Khung giờ hẹn *</label>
-                <select value={appointmentTime} onChange={(e) => setAppointmentTime(e.target.value)}>
-                  <option value="08:30">08:30 Sáng</option>
-                  <option value="09:30">09:30 Sáng</option>
-                  <option value="10:30">10:30 Sáng</option>
-                  <option value="14:00">14:00 Chiều</option>
-                  <option value="15:30">15:30 Chiều</option>
-                  <option value="17:00">17:00 Chiều</option>
-                </select>
+              <button type="submit" className="deposit-submit-btn" disabled={isSubmitting}>
+                {isSubmitting ? 'Đang tạo đơn cọc...' : 'Tiếp Tục: Quét Mã QR & Thanh Toán Cọc'}
+              </button>
+            </form>
+          ) : (
+            <div>
+              <div className="deposit-card-title">
+                <FaQrcode /> 2. Quét mã QR chuyển khoản đặt cọc
+              </div>
+
+              <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                <p style={{ fontSize: '14px', color: '#475569', marginBottom: '14px' }}>
+                  Đơn đặt cọc <strong>{pendingDeposit.depositCode}</strong> đã được khởi tạo. Vui lòng quét mã bên phải hoặc chuyển khoản theo hướng dẫn.
+                </p>
+
+                <div style={{ backgroundColor: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px', fontSize: '13px', color: '#92400e', textAlign: 'left', marginBottom: '20px' }}>
+                  ⚠️ <strong>Lưu ý quan trọng:</strong> Hệ thống áp dụng kiểm tra chống cọc trùng thời gian thực (Atomic Lock). Chiếc xe chỉ chính thức được khóa sau khi bạn bấm <strong>"Xác nhận đã chuyển tiền"</strong> bên dưới.
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => setPendingDeposit(null)}
+                    className="card-btn-outline"
+                    disabled={isSubmitting}
+                  >
+                    Quay lại sửa thông tin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmPayment}
+                    className="deposit-submit-btn"
+                    style={{ maxWidth: '320px' }}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Đang kiểm tra & Khóa xe...' : '✓ Tôi Đã Chuyển Tiền Cọc'}
+                  </button>
+                </div>
               </div>
             </div>
-
-            {/* Checkbox lái thử xe (Test-Drive) */}
-            <label className="test-drive-checkbox-label">
-              <input
-                type="checkbox"
-                checked={hasTestDrive}
-                onChange={(e) => setHasTestDrive(e.target.checked)}
-              />
-              <div className="test-drive-text">
-                <strong>Đăng ký trải nghiệm lái thử xe (Test-Drive)</strong>
-                <span>Nhân viên tư vấn sẽ chuẩn bị xe và giấy tờ để bạn chạy thử trong buổi hẹn</span>
-              </div>
-            </label>
-
-            <div className="deposit-form-group">
-              <label>Ghi chú hoặc yêu cầu riêng (không bắt buộc)</label>
-              <textarea
-                rows={2}
-                placeholder="VD: Nhờ kiểm tra kỹ gầm xe, cần xuất hóa đơn công ty..."
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-              />
-            </div>
-
-            {/* Điều khoản */}
-            <div style={{ backgroundColor: '#f8fafc', padding: '12px', borderRadius: '8px', fontSize: '12px', color: '#64748b', marginBottom: '16px', lineHeight: '1.5' }}>
-              <FaShieldAlt style={{ color: '#2563eb', marginRight: '6px' }} />
-              <strong>Chính sách hoàn cọc:</strong> Khách hàng được quyền hoàn trả 100% tiền đặt cọc nếu xe thực tế không đúng với cam kết chất lượng của AutoTrade hoặc không đạt kiểm định.
-            </div>
-
-            <label className="confirm-checkbox-label">
-              <input
-                type="checkbox"
-                checked={hasConfirmedPayment}
-                onChange={(e) => setHasConfirmedPayment(e.target.checked)}
-                required
-              />
-              <span>
-                Tôi xác nhận đã kiểm tra thông tin và đã thực hiện chuyển khoản <strong>20.000.000 VNĐ</strong> giữ chỗ theo mã tham chiếu bên dưới.
-              </span>
-            </label>
-
-            <button type="submit" className="deposit-submit-btn" disabled={isSubmitting || !hasConfirmedPayment}>
-              {isSubmitting ? 'Đang xác nhận đặt cọc...' : 'Xác Nhận Đặt Cọc & Hoàn Tất Lịch Hẹn'}
-            </button>
-          </form>
+          )}
         </div>
 
-        {/* Cột phải: Thông tin xe & Mock VietQR Thanh toán */}
+        {/* CỘT PHẢI: CHI TIẾT XE & KHUNG VIETQR */}
         <div className="deposit-card">
           <div className="deposit-card-title">
-            <FaCarSide /> 2. Chi tiết xe & Chuyển khoản
+            <FaCarSide /> Chi tiết xe & Chuyển khoản
           </div>
 
           <div className="vehicle-summary-row">
@@ -365,26 +420,37 @@ const DepositPage = () => {
               <span>Miễn phí</span>
             </div>
             <div className="pricing-row highlight">
-              <span>Số tiền cọc cần chuyển:</span>
-              <span className="amount">20.000.000 VNĐ</span>
+              <span>Số tiền cọc chuẩn:</span>
+              <span className="amount">10.000.000 VNĐ</span>
             </div>
           </div>
 
           {/* Khung VietQR giả lập */}
           <div className="mock-qr-box">
-            <div className="qr-code-placeholder">
-              <FaQrcode className="qr-icon" />
-              <span>MOCK VIETQR CODE</span>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>Quét mã chuyển khoản tức thì</span>
-            </div>
+            {pendingDeposit?.qrPaymentUrl ? (
+              <img
+                src={pendingDeposit.qrPaymentUrl}
+                alt="VietQR Chuyển khoản"
+                style={{ width: '180px', height: '180px', objectFit: 'contain', margin: '0 auto 12px', display: 'block', borderRadius: '8px' }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="qr-code-placeholder">
+                <FaQrcode className="qr-icon" style={{ color: '#D4AF37' }} />
+                <span>MOCK VIETQR CODE</span>
+                <span style={{ fontSize: '10px', color: '#94a3b8' }}>Quét mã chuyển khoản tức thì</span>
+              </div>
+            )}
 
             <div className="bank-info-table">
               <div><strong>Ngân hàng:</strong> MB Bank (Quân Đội)</div>
-              <div><strong>Số tài khoản:</strong> 0987654321</div>
-              <div><strong>Chủ tài khoản:</strong> CTY CP KINH DOANH AUTOTRADE</div>
-              <div><strong>Số tiền:</strong> 20.000.000 VNĐ</div>
+              <div><strong>Số tài khoản:</strong> 999999999</div>
+              <div><strong>Chủ tài khoản:</strong> CTY CP AUTOTRADE VIET NAM</div>
+              <div><strong>Số tiền:</strong> 10.000.000 VNĐ</div>
               <div>
-                <strong>Nội dung CK:</strong> <span className="ref-code-badge">{refCode}</span>
+                <strong>Nội dung CK:</strong> <span className="ref-code-badge">{pendingDeposit?.depositCode || 'DEP-MOCK-CODE'}</span>
               </div>
             </div>
           </div>

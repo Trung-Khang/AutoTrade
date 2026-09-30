@@ -42,80 +42,53 @@
 
 ---
 
-### NGÀY 2 — HOÀN THÀNH INTEGRATION VÀ CHUẨN BỊ GATE 2 (01/10/2026) — [CODE FRONTEND ĐÃ LÀM XONG 100% TRƯỚC HẠN]
+### NGÀY 2 — TÍCH HỢP VỚI BÀN GIAO TỪ TV1 & CHUẨN BỊ GATE 2 (01/10/2026) — [ĐÃ GHÉP NỐI 100% CONTRACT TV1]
 
-#### A. Những việc TV2 đã chủ động lập trình xong trước thời hạn:
-1. **Chuẩn hóa Design System theo phong cách Modern Minimal / Premium:**
-   - Bảng màu: Primary Gold `#D4AF37`, Dark `#151515`, Background `#F5F5F5`, Card `#FFFFFF`, Text chính `#151515`, Text phụ `#666666`.
-   - Bo góc Card 12px, Button 8px, Font Inter, spacing chuẩn 8px system.
-   - Lưới sản phẩm: Thiết lập chuẩn 4 card/hàng trên Desktop, tạo nhiều khoảng thở thoáng đãng.
-2. **Thiết kế lại Hero Banner trực quan & tinh giản (Khắc phục rối mắt):**
-   - Heading: `TÌM CHIẾC XE PHÙ HỢP VỚI BẠN` (Màu `#FFFFFF`).
-   - Text phụ: `Xe đã qua sử dụng chất lượng / Minh bạch thông tin – Dễ dàng lựa chọn` (Màu `#F5F5F5`).
-   - Nút CTA: `[ 🔍 Tìm xe ngay ]` (Nền `#D4AF37`, chữ `#151515`).
-   - Hình ảnh ô tô là trọng tâm, loại bỏ các khối văn bản dài dòng gây phân tâm.
-3. **Tái cấu trúc chân trang Footer chuẩn nền đen `#151515`:**
-   - Khối Logo `AUTOTRADE` kèm mô tả `Nền tảng mua bán ô tô cũ`.
-   - 3 cột điều hướng rõ ràng: **Sản phẩm** (Tìm xe, Kho xe showroom, Đặt cọc online), **Hỗ trợ** (FAQ, Chính sách, Điều khoản), **Liên hệ** (Email, Hotline, Chi nhánh).
-   - Đường viền phân cách `#333333` và dòng bản quyền `© 2026 Used Car Marketplace`.
-4. **Admin CRUD UI & Quản trị kho xe (`AdminVehiclePage.jsx`):**
-   - Bảng danh mục xe với bộ lọc trạng thái và tìm kiếm.
-   - Modal thêm xe mới, sửa thông tin xe và chức năng xóa xe có dialog xác nhận an toàn.
-   - Dropdown đổi trạng thái xe trực tiếp (`AVAILABLE` / `HOLD` / `SOLD`).
-5. **Giao diện Admin quản lý Sổ cái đặt cọc (`AdminDepositLedgerPage.jsx`):**
-   - Thống kê KPI tổng tiền cọc đang giữ, số đơn cọc hợp lệ, số đơn đã hoàn cọc.
-   - Bảng tra cứu toàn bộ đơn cọc hệ thống và nút "Hoàn tiền cọc" (chuyển đơn sang `REFUNDED` và mở bán lại xe sang `AVAILABLE`).
-6. **Quy trình Đặt cọc & Hẹn lịch xem xe (`DepositPage.jsx`):**
-   - Kiểm tra ràng buộc trạng thái: Chỉ cho phép đặt cọc xe `AVAILABLE`; xe `HOLD` hoặc `SOLD` sẽ bị vô hiệu hóa nút cọc.
-   - Ràng buộc ngày hẹn: Chặn người dùng chọn ngày ở quá khứ (`min={today}`).
-   - Checkbox Đăng ký lái thử xe (Test-Drive) tích hợp trực tiếp.
-   - Tự động sinh mã tham chiếu giao dịch độc nhất (`AUTODEP-[ID]-[RANDOM]`), bảng thông tin ngân hàng và khung quét mã Mock VietQR.
-   - Khi hoàn tất cọc, tự động đổi trạng thái chiếc xe thành `HOLD`.
-7. **Giao diện Khách hàng & Nhân viên:**
-   - `CustomerDepositHistoryPage.jsx`: Tra cứu mã cọc, số tiền cọc, ngày giờ hẹn và trạng thái xử lý.
-   - `StaffAppointmentPage.jsx`: Quản lý danh sách lịch hẹn, lọc theo trạng thái (`SCHEDULED`, `COMPLETED`, `CANCELLED`), cập nhật tiếp đón lái thử.
-8. **Xử lý chuẩn mã lỗi HTTP & Chặn Submit lặp (Double-click):**
-   - `api.js`: Đính kèm JWT token từ `localStorage`, chuẩn hóa xử lý lỗi chi tiết cho các mã HTTP `401/403/404/409/422/500`.
-   - Toàn bộ các nút Submit trên các form đều có cờ `isSubmitting` chặn bấm liên tiếp gây duplicate request.
-9. **Xác thực & Route Guard RBAC (`AuthContext.jsx`, `ProtectedRoute.jsx`, `LoginPage.jsx`):**
-   - Đăng nhập, đăng ký, đăng xuất, lưu token JWT, phân quyền truy cập, hiển thị 403 khi sai quyền và hỗ trợ 3 nút đăng nhập Demo 1-click.
+#### A. Tiếp nhận bàn giao từ TV1 và hoàn thiện tích hợp Frontend:
+1. **Tiếp nhận tài nguyên từ TV1:**
+   - Đã nhận `API_Specification_Official_v3.md` và mã nguồn Backend Spring Boot của TV1.
+   - Toàn bộ 6 task TV1 bàn giao cho TV2 (từ Task TV2-01 đến Task TV2-06) đều đã được ghép nối và cấu hình hoàn tất vào mã nguồn Frontend:
+2. **Task TV2-01: Ghép Showroom & Bộ lọc xe (`GET /api/v1/vehicles`):**
+   - Đã cấu hình `vehicleApi.getListings` gọi endpoint chính thức `/api/v1/vehicles`, hỗ trợ các query params: `keyword`, `brand`, `minPrice`, `maxPrice`, `minYear`, `maxYear`, `transmission`, `fuelType`, `status`, `page`, `size`, `sort`.
+3. **Task TV2-02: Ghép Chi tiết xe (`GET /api/v1/vehicles/{id}`):**
+   - Đã cấu hình `vehicleApi.getListingById` gọi `/api/v1/vehicles/{id}`, hiển thị thông số kỹ thuật, số khung (VIN), tình trạng ODO, địa chỉ showroom và nút cọc.
+4. **Task TV2-03: Ghép Form Đặt cọc & Checkbox Lái thử (`POST /api/v1/deposits`):**
+   - Đã cấu hình `depositApi.createDeposit` gửi payload chuẩn gồm `vehicleId`, `showroomId`, `appointmentDate`, `hasTestDrive`, `customerName`, `customerPhone`, `customerEmail`, `note`. Nhận về `depositCode` và link ảnh `qrPaymentUrl`.
+5. **Task TV2-04: Ghép Modal Quét mã QR & Xác nhận thanh toán (`POST /api/v1/deposits/{id}/confirm`):**
+   - Đã hoàn thiện quy trình 2 bước trên `DepositPage.jsx`: Khách nhập form $\rightarrow$ nhận mã VietQR và thông tin chuyển khoản $\rightarrow$ bấm "Xác nhận chuyển tiền".
+   - **Xử lý đặc biệt chống cọc trùng:** Nếu nhận 200 OK $\rightarrow$ hiển thị biên lai thu tiền cọc và hợp đồng số (`receiptCode`, `contractNumber`); nếu nhận **`409 Conflict`** $\rightarrow$ hiển thị banner đỏ cảnh báo xe vừa có người khác đặt cọc trước và hủy giao dịch giữ chỗ.
+6. **Task TV2-05: Ghép Trang Quản trị xe cho Admin (FR-13):**
+   - `AdminVehiclePage.jsx` kết nối đầy đủ các endpoint: `POST /api/v1/admin/vehicles`, `PUT /api/v1/admin/vehicles/{id}`, `DELETE /api/v1/admin/vehicles/{id}` và `PATCH /api/v1/admin/vehicles/{id}/status`.
+7. **Task TV2-06: Ghép Trang Đón tiếp của Staff (FR-12):**
+   - `StaffAppointmentPage.jsx` kết nối `GET /api/v1/staff/appointments` và `PUT /api/v1/staff/appointments/{id}/check-in` cho phép nhân viên ghi nhận ghi chú và kết quả lái thử khi khách đến showroom.
+8. **Ghép Phân hệ Sổ cái đặt cọc Admin (FR-14):**
+   - `AdminDepositLedgerPage.jsx` kết nối `GET /api/v1/admin/ledger` và `POST /api/v1/admin/ledger/{depositId}/refund` cho phép Admin kiểm soát dòng tiền cọc và duyệt hoàn cọc mở lại xe về `AVAILABLE`.
+9. **Cấu hình Header `X-User-Id` và Bearer Token:**
+   - Trong `api.js`: Đã cấu hình Request Interceptor tự động đính kèm cả `Authorization: Bearer <jwt_token>` và `X-User-Id: <id>` theo đúng quy định giai đoạn Ngày 1 & Ngày 2 của TV1.
 
-#### B. Danh sách file/module đã tạo mới và cập nhật:
+#### B. Danh sách file/module đã hoàn thành:
 - **Core Auth & Routing:**
-  - `frontend/src/context/AuthContext.jsx` (Tạo mới)
-  - `frontend/src/components/common/ProtectedRoute.jsx` (Tạo mới)
-  - `frontend/src/App.jsx` (Cập nhật định tuyến)
+  - `frontend/src/services/api.js` (Cập nhật Header X-User-Id & interceptor lỗi 401/403/404/409/422)
+  - `frontend/src/context/AuthContext.jsx`
+  - `frontend/src/components/common/ProtectedRoute.jsx`
+  - `frontend/src/App.jsx`
 - **Giao diện Màn hình (Pages):**
-  - `frontend/src/pages/HomePage.jsx` & `HomePage.css` (Cập nhật Hero Banner chuẩn yêu cầu)
-  - `frontend/src/pages/VehicleListPage.jsx` & `VehicleListPage.css` (Cập nhật Showroom)
-  - `frontend/src/pages/DepositPage.jsx` & `DepositPage.css` (Tạo mới)
-  - `frontend/src/pages/CustomerDepositHistoryPage.jsx` (Tạo mới)
-  - `frontend/src/pages/StaffAppointmentPage.jsx` (Tạo mới)
-  - `frontend/src/pages/AdminVehiclePage.jsx` & `AdminVehiclePage.css` (Tạo mới)
-  - `frontend/src/pages/AdminDepositLedgerPage.jsx` (Tạo mới Sổ cái đặt cọc)
-  - `frontend/src/pages/LoginPage.jsx` & `LoginPage.css` (Tạo mới)
-  - `frontend/src/pages/RegisterPage.jsx` (Tạo mới)
-- **Components & Navigation:**
-  - `frontend/src/components/common/Navbar.jsx` & `Navbar.css` (Chuẩn hóa màu Dark & Gold)
-  - `frontend/src/components/common/Footer.jsx` & `Footer.css` (Chân trang nền đen 3 cột chuẩn)
-  - `frontend/src/components/vehicle/VehicleCard.jsx` & `VehicleCard.css` (Chuẩn hóa card 12px, nút 8px)
-  - `frontend/src/components/vehicle/VehicleGrid.css` (Lưới 4 card/hàng trên Desktop)
-  - `frontend/src/components/vehicle/VehicleInfo.jsx` & `VehicleInfo.css` (Chi tiết xe)
-  - `frontend/src/components/filter/FilterPanel.css` (Bộ lọc)
-  - `frontend/src/styles/global.css` (Hệ thống Design Tokens Modern Minimal)
+  - `frontend/src/pages/HomePage.jsx` & `HomePage.css` (Hero Banner chuẩn quy chuẩn)
+  - `frontend/src/pages/VehicleListPage.jsx` & `VehicleListPage.css` (Showroom xe)
+  - `frontend/src/pages/DepositPage.jsx` & `DepositPage.css` (Ghép nối Task TV2-03, TV2-04 & xử lý 409 Conflict)
+  - `frontend/src/pages/CustomerDepositHistoryPage.jsx` (Lịch sử cọc khách hàng)
+  - `frontend/src/pages/StaffAppointmentPage.jsx` (Ghép nối Task TV2-06 Check-in)
+  - `frontend/src/pages/AdminVehiclePage.jsx` & `AdminVehiclePage.css` (Ghép nối Task TV2-05 CRUD)
+  - `frontend/src/pages/AdminDepositLedgerPage.jsx` (Ghép nối Admin Ledger & Refund)
+  - `frontend/src/pages/LoginPage.jsx` & `LoginPage.css`
+  - `frontend/src/pages/RegisterPage.jsx`
 - **Dữ liệu & API Services:**
-  - `frontend/src/services/api.js` (Interceptor JWT & mã lỗi HTTP 401/403/404/409/422)
-  - `frontend/src/services/vehicleApi.js` (Bổ sung CRUD Admin & State Sync)
-  - `frontend/src/services/depositApi.js` (Tạo mới Service đơn cọc và lịch hẹn)
-  - `frontend/src/utils/mockVehicles.js` (Chuẩn hóa trạng thái AVAILABLE/HOLD/SOLD)
+  - `frontend/src/services/vehicleApi.js` (Khớp chuẩn 100% endpoint `/api/v1/vehicles` và `/api/v1/admin/vehicles`)
+  - `frontend/src/services/depositApi.js` (Khớp chuẩn 100% endpoint `/api/v1/deposits`, `/staff/appointments`, `/admin/ledger`)
+  - `frontend/src/utils/mockVehicles.js`
 - **Tài liệu Kiểm thử (Test Lead):**
-  - `docs/Testing/Test_Plan.md` (Cập nhật phạm vi và Test Matrix)
-  - `docs/Testing/Defect_Log.md` (Tạo mới sổ theo dõi khiếm khuyết)
-
-#### C. Phần duy nhất còn lại của Ngày 2 cần môi trường thật:
-- **Kết nối API trực tiếp (Real API Integration):**
-  - Toàn bộ mã nguồn Frontend của TV2 đã sẵn sàng cả 2 chế độ: Nếu Backend đang chạy sẽ gọi API thật, nếu Backend chưa chạy sẽ fallback sang Mock LocalStorage để không bị gián đoạn.
-  - Ngay khi TV1 (Backend Core) và TV4 (Auth) bàn giao máy chủ API thật, TV2 sẽ chuyển kết nối và cùng nhóm chạy kiểm thử luồng vàng để nghiệm thu **Gate 2**.
+  - `docs/Testing/Test_Plan.md` (Cập nhật 15 Test Cases P0/P1)
+  - `docs/Testing/Defect_Log.md` (Quản lý khiếm khuyết)
 
 ---
 
