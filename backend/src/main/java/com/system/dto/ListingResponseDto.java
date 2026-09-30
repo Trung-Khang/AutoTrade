@@ -8,14 +8,9 @@ import com.system.entity.Vehicle;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-/**
- * DTO phản hồi dữ liệu tin đăng (Listing) ở dạng phẳng (flattened).
- * Kết hợp thông tin từ bảng listings, vehicles và sources.
- * Hỗ trợ cả camelCase và snake_case để tương thích mượt mà với Frontend.
- */
 public class ListingResponseDto {
 
-    // === Thông tin tin đăng (Listing) ===
+    // Thông tin tin đăng (Listing)
     private Long id;
     private BigDecimal price;
     private Integer mileage;
@@ -29,7 +24,7 @@ public class ListingResponseDto {
     private Instant createdAt;
     private Instant updatedAt;
 
-    // === Thông tin dòng xe (Vehicle) ===
+    // Thông tin dòng xe (Vehicle)
     private Long vehicleId;
     private String brand;
     private String model;
@@ -42,17 +37,13 @@ public class ListingResponseDto {
     private String origin;
     private String bodyType;
 
-    // === Thông tin nguồn sàn (Source) ===
+    // Thông tin nguồn sàn (Source)
     private Long sourceId;
     private String sourceName;
 
     public ListingResponseDto() {
     }
 
-    /**
-     * Chuyển đổi từ Entity Listing sang ListingResponseDto.
-     * Xử lý an toàn null cho các quan hệ Vehicle và Source.
-     */
     public static ListingResponseDto fromEntity(Listing listing) {
         if (listing == null) {
             return null;
@@ -95,10 +86,6 @@ public class ListingResponseDto {
 
         return dto;
     }
-
-    // =========================================================================
-    // Getters / Setters (camelCase)
-    // =========================================================================
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -175,10 +162,7 @@ public class ListingResponseDto {
     public String getSourceName() { return sourceName; }
     public void setSourceName(String sourceName) { this.sourceName = sourceName; }
 
-    // =========================================================================
-    // snake_case JSON Aliases (Hỗ trợ Frontend hiển thị trực tiếp)
-    // =========================================================================
-
+    
     @JsonProperty("source_url")
     public String getSourceUrlAlias() { return sourceUrl; }
 

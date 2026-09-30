@@ -45,16 +45,16 @@ public class ListingService {
         return ListingResponseDto.fromEntity(listing);
     }
 
-    // 1. Lấy toàn bộ danh sách tin đăng rao bán xe (Legacy)
+    //Lấy toàn bộ danh sách tin đăng rao bán xe (Legacy)
     public List<Listing> getAllListings() {
         return listingRepository.findAll();
     }
-    // 2. Lấy chi tiết một tin đăng theo ID
+    //Lấy chi tiết một tin đăng theo ID
     public Listing getListingById(Long id) {
         return listingRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Khong tim thay tin dang voi ID: " + id));
     }
-    // 3. Thêm mới một tin đăng bán xe
+    //Thêm mới một tin đăng bán xe
     public Listing createListing(Listing listing) {
         // Kiểm tra xem dòng xe (Vehicle) liên kết có tồn tại hay không
         if (listing.getVehicle() != null && listing.getVehicle().getId() != null) {
@@ -64,13 +64,13 @@ public class ListingService {
         }
         return listingRepository.save(listing);
     }
-    // 4. Xóa tin đăng theo ID
+    //Xóa tin đăng theo ID
     public void deleteListing(Long id) {
         Listing listing = getListingById(id);
         listingRepository.delete(listing);
     }
 
-    // 5. Lấy danh sách tin đăng theo dòng xe
+    //Lấy danh sách tin đăng theo dòng xe
     public List<Listing> getListingsByVehicleId(Long vehicleId) {
         return listingRepository.findByVehicleId(vehicleId);
     }

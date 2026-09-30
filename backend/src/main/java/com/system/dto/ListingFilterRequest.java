@@ -2,9 +2,6 @@ package com.system.dto;
 
 import java.math.BigDecimal;
 
-/**
- * DTO đóng gói các tiêu chí lọc động cho API tìm kiếm tin đăng xe.
- */
 public class ListingFilterRequest {
 
     // Từ khóa tìm kiếm tự do (tìm trong brand, model, variant, location)

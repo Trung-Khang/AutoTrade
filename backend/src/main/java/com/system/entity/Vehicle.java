@@ -1,6 +1,7 @@
 package com.system.entity;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.Instant;
 
 @Entity
@@ -10,6 +11,10 @@ public class Vehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    // Số khung xe (VIN - Vehicle Identification Number): Định danh độc bản duy nhất của xe cũ
+    @Column(name = "vin", unique = true, length = 50)
+    private String vin;
 
     @Column(name = "brand", nullable = false, length = 50)
     private String brand;
@@ -44,8 +49,36 @@ public class Vehicle {
     @Column(name = "body_type", length = 50)
     private String bodyType;
 
+    // Giá bán niêm yết tại Showroom (VND)
+    @Column(name = "price", precision = 15, scale = 2)
+    private BigDecimal price;
+
+    // Số km đã đi (ODO)
+    @Column(name = "mileage")
+    private Integer mileage;
+
+    // Màu sơn ngoại thất
+    @Column(name = "color", length = 50)
+    private String color;
+
+    // Đường dẫn ảnh đại diện
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
+    // Mô tả tình trạng xe và trang bị
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    // Trạng thái độc bản: AVAILABLE (Sẵn sàng bán), HOLD (Đang giữ cọc), RESERVED (Đang làm HĐ), SOLD (Đã bán)
+    @Column(name = "status", nullable = false, length = 20)
+    private String status = "AVAILABLE";
+
+    // Khóa ngoại liên kết Showroom trưng bày xe
+    @Column(name = "showroom_id")
+    private Long showroomId;
+
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    private Instant createdAt = Instant.now();
 
     public Vehicle() {
     }
@@ -59,6 +92,8 @@ public class Vehicle {
         this.bodyType = bodyType;
         this.fuelType = fuelType;
         this.transmission = transmission;
+        this.status = "AVAILABLE";
+        this.createdAt = Instant.now();
     }
 
     public Vehicle(String brand, String model, String variant, Integer manufactureYear, 
@@ -74,12 +109,42 @@ public class Vehicle {
         this.seatCount = seatCount;
         this.origin = origin;
         this.bodyType = bodyType;
+        this.status = "AVAILABLE";
+        this.createdAt = Instant.now();
+    }
+
+    public Vehicle(String vin, String brand, String model, String variant, Integer manufactureYear, 
+                   String fuelType, String transmission, Double engineSize, Integer seatCount, 
+                   String origin, String bodyType, BigDecimal price, Integer mileage, 
+                   String color, String imageUrl, Long showroomId, String description) {
+        this.vin = vin;
+        this.brand = brand;
+        this.model = model;
+        this.variant = variant;
+        this.manufactureYear = manufactureYear;
+        this.fuelType = fuelType;
+        this.transmission = transmission;
+        this.engineSize = engineSize;
+        this.seatCount = seatCount;
+        this.origin = origin;
+        this.bodyType = bodyType;
+        this.price = price;
+        this.mileage = mileage;
+        this.color = color;
+        this.imageUrl = imageUrl;
+        this.showroomId = showroomId;
+        this.description = description;
+        this.status = "AVAILABLE";
+        this.createdAt = Instant.now();
     }
 
     @PrePersist
     protected void onCreate() {
         if (this.createdAt == null) {
             this.createdAt = Instant.now();
+        }
+        if (this.status == null || this.status.trim().isEmpty()) {
+            this.status = "AVAILABLE";
         }
     }
 
@@ -92,6 +157,14 @@ public class Vehicle {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getVin() {
+        return vin;
+    }
+
+    public void setVin(String vin) {
+        this.vin = vin;
     }
 
     public String getBrand() {
@@ -172,6 +245,62 @@ public class Vehicle {
 
     public void setBodyType(String bodyType) {
         this.bodyType = bodyType;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public Integer getMileage() {
+        return mileage;
+    }
+
+    public void setMileage(Integer mileage) {
+        this.mileage = mileage;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Long getShowroomId() {
+        return showroomId;
+    }
+
+    public void setShowroomId(Long showroomId) {
+        this.showroomId = showroomId;
     }
 
     public Instant getCreatedAt() {

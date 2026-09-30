@@ -26,7 +26,7 @@ public class ListingController {
         this.listingService = listingService;
     }
 
-    // 1. GET: Lấy danh sách tin đăng có tìm kiếm, lọc, phân trang và sắp xếp
+    //GET: Lấy danh sách tin đăng có tìm kiếm, lọc, phân trang và sắp xếp
     @GetMapping
     @Operation(summary = "Tìm kiếm & Lọc tin đăng xe",
                description = "Tìm kiếm và lọc tin đăng theo nhiều tiêu chí (hãng, dòng xe, khoảng giá, năm sản xuất, ODO, nhiên liệu...), hỗ trợ phân trang (page, size) và sắp xếp (sort=price,asc...)")
@@ -37,7 +37,7 @@ public class ListingController {
         return ResponseEntity.ok(response);
     }
 
-    // 2. GET /{id}: Lấy chi tiết tin đăng theo ID
+    //GET /{id}: Lấy chi tiết tin đăng theo ID
     @GetMapping("/{id}")
     @Operation(summary = "Lấy chi tiết tin đăng theo ID", description = "Nhận vào ID tin đăng và trả về thông tin chi tiết kèm thông số xe dạng phẳng DTO")
     public ResponseEntity<ListingResponseDto> getListingById(@PathVariable Long id) {
@@ -45,7 +45,7 @@ public class ListingController {
         return ResponseEntity.ok(dto);
     }
 
-    // 3. POST: Thêm mới một tin đăng bán xe
+    //POST: Thêm mới một tin đăng bán xe
     @PostMapping
     @Operation(summary = "Tạo mới tin đăng xe", description = "Nhận thông tin tin đăng từ người dùng/crawler và lưu vào Database")
     public ResponseEntity<Listing> createListing(@RequestBody Listing listing) {
@@ -53,7 +53,7 @@ public class ListingController {
         return new ResponseEntity<>(createdListing, HttpStatus.CREATED);
     }
 
-    // 4. DELETE /{id}: Xóa một tin đăng theo ID
+    //DELETE /{id}: Xóa một tin đăng theo ID
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa một tin đăng theo ID", description = "Xóa bài đăng rao bán khỏi hệ thống theo ID chỉ định")
     public ResponseEntity<String> deleteListing(@PathVariable Long id) {
