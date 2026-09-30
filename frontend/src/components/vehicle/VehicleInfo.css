@@ -1,26 +1,51 @@
 .vehicle-info-container {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 40px;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 36px;
   background-color: #ffffff;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-light);
   padding: 32px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-light);
 }
 
 .vehicle-info-gallery {
-  width: 100%;
-  border-radius: var(--radius-xs);
-  overflow: hidden;
-  background-color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .vehicle-info-main-image {
   width: 100%;
-  height: 420px;
+  height: 380px;
   object-fit: cover;
-  display: block;
+  border-radius: var(--radius-sm);
+  background-color: #ece8e1;
+}
+
+.showroom-commitments {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.commitment-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #334155;
+  font-weight: 500;
+}
+
+.commit-icon {
+  color: #2563eb;
+  font-size: 15px;
+  flex-shrink: 0;
 }
 
 .vehicle-info-details {
@@ -37,123 +62,249 @@
 }
 
 .info-brand-badge {
-  display: inline-block;
-  background-color: var(--accent-gold-light);
-  color: var(--accent-gold);
-  border: 1px solid rgba(198, 146, 66, 0.2);
+  background-color: #0f172a;
+  color: #ffffff;
+  padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
-  padding: 3px 10px;
-  border-radius: var(--radius-xs);
-  text-transform: uppercase;
+  border-radius: 4px;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-.info-source-tag {
-  display: inline-block;
-  background-color: #f1f5f9;
-  color: var(--text-secondary);
+.info-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
   font-size: 12px;
   font-weight: 600;
-  padding: 3px 10px;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-light);
+  border-radius: 20px;
+}
+
+.info-status-pill.status-available {
+  background-color: #dcfce7;
+  color: #15803d;
+}
+
+.info-status-pill.status-hold {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.info-status-pill.status-sold {
+  background-color: #f1f5f9;
+  color: #64748b;
 }
 
 .info-title {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
-  color: var(--text-primary);
-  line-height: 1.2;
+  color: #0f172a;
+  line-height: 1.25;
+  margin-bottom: 12px;
 }
 
 .info-price-section {
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border-light);
+  justify-content: space-between;
+  padding: 16px 20px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
-.price-label {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.price-value {
-  font-size: 30px;
-  font-weight: 800;
-  color: var(--text-primary);
-}
-
-.specs-section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--text-primary);
-  margin-bottom: 14px;
-}
-
-.specs-grid-detailed {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  background-color: #faf9f6;
-  padding: 20px;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-light);
-}
-
-.spec-row {
+.price-primary {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.spec-row .spec-label {
+.price-label {
   font-size: 12px;
-  color: var(--text-muted);
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.price-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.deposit-hint-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.deposit-tag {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.deposit-amount {
+  font-size: 16px;
+  color: #ea580c;
+}
+
+/* CTA Card */
+.detail-deposit-cta-card {
+  margin-top: 4px;
+}
+
+.cta-active-box {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 1px solid #bfdbfe;
+  padding: 20px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cta-desc {
+  font-size: 13px;
+  color: #1e40af;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.cta-deposit-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.cta-deposit-btn:hover {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 10px -1px rgba(37, 99, 235, 0.3);
+}
+
+.cta-hold-box {
+  background-color: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.cta-hold-box strong {
+  color: #92400e;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cta-hold-box p {
+  color: #b45309;
+  font-size: 13px;
+  margin: 0;
+}
+
+.cta-sold-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.cta-sold-box strong {
+  color: #475569;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cta-sold-box p {
+  color: #64748b;
+  font-size: 13px;
+  margin: 0;
+}
+
+.cta-status-icon {
+  font-size: 24px;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+/* Specs */
+.specs-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.specs-grid-detailed {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 6px 0;
+  border-bottom: 1px dashed #f1f5f9;
+}
+
+.spec-label {
+  color: #64748b;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.spec-row .icon {
-  color: var(--accent-gold);
-}
-
-.spec-row .spec-value {
-  font-size: 14px;
+.spec-value {
+  color: #0f172a;
   font-weight: 600;
-  color: var(--text-primary);
 }
 
 .vehicle-description-box {
-  background-color: #faf9f6;
-  padding: 20px;
-  border-radius: var(--radius-xs);
-  border: 1px solid var(--border-light);
+  background-color: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .description-text {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: 13px;
+  color: #334155;
   line-height: 1.6;
-}
-
-.source-link-box {
-  margin-top: 4px;
-}
-
-.source-link-btn {
-  width: 100%;
+  white-space: pre-line;
+  margin: 0;
 }
 
 @media (max-width: 900px) {
   .vehicle-info-container {
     grid-template-columns: 1fr;
+    padding: 20px;
   }
-
-  .vehicle-info-main-image {
-    height: 300px;
+  .specs-grid-detailed {
+    grid-template-columns: 1fr;
   }
 }
