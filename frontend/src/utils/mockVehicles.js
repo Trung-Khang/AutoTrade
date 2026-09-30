@@ -1,6 +1,9 @@
 /**
- * Mock dataset xe cũ phục vụ Increment 1 & 2 (UI development & testing)
- * Khớp 100% với ListingResponseDto của TV1 và Schema v2.0.1 của TV5.
+ * Mock dataset xe phục vụ Kế hoạch 3 ngày (Hệ thống Quản lý Kinh doanh Ô tô AutoTrade)
+ * Trạng thái xe chuẩn nghiệp vụ:
+ *   - AVAILABLE : Xe đang mở bán tại showroom, sẵn sàng nhận đặt cọc & hẹn xem
+ *   - HOLD      : Xe đã có khách đặt cọc giữ chỗ, tạm dừng nhận cọc mới
+ *   - SOLD      : Xe đã hoàn tất bàn giao và thanh toán đầy đủ
  */
 export const MOCK_VEHICLES = [
   {
@@ -25,10 +28,8 @@ export const MOCK_VEHICLES = [
     seatCount: 5,
     location: 'TP. Hồ Chí Minh',
     image_url: 'https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://xe.chotot.com',
-    source_name: 'Chợ Tốt',
-    sourceName: 'Chợ Tốt',
     description: 'Xe gia đình sử dụng kỹ, bảo dưỡng chính hãng định kỳ, nội thất ghế da nguyên bản, cam lùi, màn hình Android.',
+    status: 'AVAILABLE', // Sẵn sàng nhận cọc
     listed_at: '2026-09-01T08:30:00Z',
   },
   {
@@ -53,10 +54,8 @@ export const MOCK_VEHICLES = [
     seatCount: 5,
     location: 'Hà Nội',
     image_url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://bonbanh.com',
-    source_name: 'Bốn Bánh',
-    sourceName: 'Bốn Bánh',
     description: 'Sơn zin 98%, nội thất thơm mùi mới, trang bị cửa sổ trời, phanh tay điện tử, HUD hiển thị kính lái.',
+    status: 'AVAILABLE',
     listed_at: '2026-09-02T10:15:00Z',
   },
   {
@@ -81,10 +80,8 @@ export const MOCK_VEHICLES = [
     seatCount: 7,
     location: 'Đà Nẵng',
     image_url: 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://xe.chotot.com',
-    source_name: 'Chợ Tốt',
-    sourceName: 'Chợ Tốt',
     description: 'Bản full công nghệ an toàn Honda Sensing, 7 chỗ rộng rãi, bảo hiểm thân vỏ còn dài.',
+    status: 'HOLD', // Đang có khách giữ chỗ đặt cọc
     listed_at: '2026-09-03T14:20:00Z',
   },
   {
@@ -109,10 +106,8 @@ export const MOCK_VEHICLES = [
     seatCount: 5,
     location: 'TP. Hồ Chí Minh',
     image_url: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://bonbanh.com',
-    source_name: 'Bốn Bánh',
-    sourceName: 'Bốn Bánh',
     description: 'Xe siêu lướt, một chủ mua từ mới, đề nổ từ xa, cửa sổ trời, còn bảo hành chính hãng đến 2028.',
+    status: 'AVAILABLE',
     listed_at: '2026-09-04T09:00:00Z',
   },
   {
@@ -137,10 +132,8 @@ export const MOCK_VEHICLES = [
     seatCount: 5,
     location: 'Bình Dương',
     image_url: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://xe.chotot.com',
-    source_name: 'Chợ Tốt',
-    sourceName: 'Chợ Tốt',
     description: 'Gầm cao đô thị năng động, làm mát ghế lái, màn hình giải trí 10.25 inch, đèn full LED.',
+    status: 'AVAILABLE',
     listed_at: '2026-09-04T16:45:00Z',
   },
   {
@@ -165,10 +158,8 @@ export const MOCK_VEHICLES = [
     seatCount: 7,
     location: 'TP. Hồ Chí Minh',
     image_url: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://bonbanh.com',
-    source_name: 'Bốn Bánh',
-    sourceName: 'Bốn Bánh',
     description: 'SUV 7 chỗ máy dầu cực kỳ tiết kiệm nhiên liệu, khung gầm đầm chắc, âm thanh 10 loa sống động.',
+    status: 'SOLD', // Đã bàn giao
     listed_at: '2026-09-05T11:30:00Z',
   },
   {
@@ -193,10 +184,8 @@ export const MOCK_VEHICLES = [
     seatCount: 5,
     location: 'Cần Thơ',
     image_url: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://xe.chotot.com',
-    source_name: 'Chợ Tốt',
-    sourceName: 'Chợ Tốt',
     description: 'Trang bị gói Toyota Safety Sense, camera 360 độ, cảnh báo điểm mù, giữ làn đường.',
+    status: 'AVAILABLE',
     listed_at: '2026-09-05T15:10:00Z',
   },
   {
@@ -221,10 +210,8 @@ export const MOCK_VEHICLES = [
     seatCount: 7,
     location: 'Đồng Nai',
     image_url: 'https://images.unsplash.com/photo-1542282088-72c9c27ed0cd?w=600&auto=format&fit=crop&q=80',
-    source_url: 'https://bonbanh.com',
-    source_name: 'Bốn Bánh',
-    sourceName: 'Bốn Bánh',
     description: 'Xe 7 chỗ gia đình rộng rãi, cực bền bỉ và tiết kiệm xăng, điều hòa 2 dàn lạnh sâu.',
+    status: 'AVAILABLE',
     listed_at: '2026-09-06T08:20:00Z',
   },
 ];

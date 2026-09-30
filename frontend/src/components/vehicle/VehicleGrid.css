@@ -1,13 +1,19 @@
 .vehicle-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 24px;
 }
 
+@media (min-width: 1140px) {
+  .vehicle-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .empty-vehicles-card {
-  background-color: var(--card-bg);
-  border: 1px dashed var(--border-color);
-  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-card);
   padding: 48px 24px;
   text-align: center;
   max-width: 500px;
@@ -16,20 +22,19 @@
 
 .empty-icon {
   font-size: 48px;
-  color: #94a3b8;
+  color: var(--text-muted);
   margin-bottom: 16px;
 }
 
 .empty-title {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-main);
   margin-bottom: 8px;
 }
 
 .empty-desc {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--text-sub);
   line-height: 1.5;
 }
-

@@ -1,0 +1,318 @@
+.deposit-page-container {
+  max-width: 1080px;
+  margin: 32px auto;
+  padding: 0 20px 60px;
+}
+
+.deposit-header {
+  margin-bottom: 24px;
+}
+
+.deposit-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.deposit-header p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.deposit-layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.deposit-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.deposit-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deposit-form-group {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deposit-form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.deposit-form-group input,
+.deposit-form-group select,
+.deposit-form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+  background-color: #ffffff;
+}
+
+.deposit-form-group input:focus,
+.deposit-form-group select:focus,
+.deposit-form-group textarea:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.grid-2-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.test-drive-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 12px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 12px 0 16px;
+}
+
+.test-drive-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.test-drive-text strong {
+  display: block;
+  font-size: 13px;
+  color: #1e40af;
+}
+
+.test-drive-text span {
+  font-size: 12px;
+  color: #3b82f6;
+}
+
+/* Tóm tắt xe và thanh toán */
+.vehicle-summary-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.vehicle-summary-img {
+  width: 90px;
+  height: 65px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.vehicle-summary-info h4 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 4px;
+}
+
+.vehicle-summary-info p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+.pricing-table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.pricing-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #475569;
+}
+
+.pricing-row.highlight {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  padding-top: 10px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.pricing-row.highlight .amount {
+  color: #ea580c;
+  font-size: 18px;
+}
+
+/* Mock QR Code box */
+.mock-qr-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.qr-code-placeholder {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 12px;
+  border: 2px dashed #94a3b8;
+  border-radius: 8px;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.qr-icon {
+  font-size: 48px;
+  color: #2563eb;
+}
+
+.bank-info-table {
+  font-size: 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.bank-info-table span strong {
+  color: #0f172a;
+}
+
+.ref-code-badge {
+  font-family: monospace;
+  background-color: #f1f5f9;
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.confirm-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #334155;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.confirm-checkbox-label input {
+  margin-top: 2px;
+}
+
+.deposit-submit-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #2563eb;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.deposit-submit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.deposit-submit-btn:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Success screen */
+.deposit-success-card {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.success-badge-icon {
+  font-size: 54px;
+  color: #16a34a;
+  margin-bottom: 16px;
+}
+
+.deposit-success-card h2 {
+  font-size: 22px;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.success-summary-box {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 24px 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.success-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+@media (max-width: 868px) {
+  .deposit-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}

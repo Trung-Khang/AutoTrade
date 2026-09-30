@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa';
-import logoImg from '../../assets/icons/logo.svg';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import {
+  FaBars,
+  FaTimes,
+  FaCar,
+  FaUser,
+  FaSignOutAlt,
+  FaCalendarCheck,
+  FaWarehouse,
+  FaClipboardList,
+  FaShieldAlt,
+  FaUserTie
+} from 'react-icons/fa';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isAuthenticated, isAdmin, isStaff, isCustomer, logout } = useAuth();
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -15,14 +28,23 @@ const Navbar = () => {
     setIsOpen(false);
   };
 
+  const handleLogout = () => {
+    logout();
+    closeMenu();
+    navigate('/login');
+  };
+
   return (
     <header className="navbar-header">
       <div className="navbar-container">
+        {/* Brand Logo - Không dùng hình ảnh cũ, dùng Typography & Car Icon */}
         <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <img src={logoImg} alt="Used Car Smart System Logo" className="navbar-brand-logo-img" />
+          <div className="navbar-brand-icon">
+            <FaCar />
+          </div>
           <div className="logo-text-group">
-            <span className="logo-brand">USED CAR</span>
-            <span className="logo-sub">Smart Decision System</span>
+            <span className="logo-brand">AUTOTRADE</span>
+            <span className="logo-sub">Used Car Management</span>
           </div>
         </Link>
 
@@ -45,32 +67,86 @@ const Navbar = () => {
           >
             Trang chủ
           </NavLink>
+
           <NavLink
             to="/vehicles"
             className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
             onClick={closeMenu}
           >
-            Danh sách xe
+            Showroom Xe
           </NavLink>
 
-          <div className="nav-item-disabled" title="Khả dụng từ Increment 3">
-            <span className="nav-link disabled">
-              Định giá tự động
-              <span className="nav-tag-badge">Inc 3</span>
-            </span>
-          </div>
+          {/* Customer Links */}
+          {isAuthenticated && (isCustomer || (!isAdmin && !isStaff)) && (
+            <NavLink
+              to="/customer/deposits"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <FaCalendarCheck /> Đơn cọc & Lịch hẹn
+            </NavLink>
+          )}
 
-          <div className="nav-item-disabled" title="Khả dụng từ Increment 4">
-            <span className="nav-link disabled">
-              Gợi ý & So sánh
-              <span className="nav-tag-badge">Inc 4</span>
-            </span>
-          </div>
+          {/* Staff Links */}
+          {isAuthenticated && (isStaff || isAdmin) && (
+            <NavLink
+              to="/staff/appointments"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <FaClipboardList /> Quản lý lịch hẹn
+            </NavLink>
+          )}
 
+          {/* Admin Links */}
+          {isAuthenticated && isAdmin && (
+            <>
+              <NavLink
+                to="/admin/vehicles"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenu}
+              >
+                <FaWarehouse /> Kho xe
+              </NavLink>
+              <NavLink
+                to="/admin/deposits"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenu}
+              >
+                Sổ cái cọc
+              </NavLink>
+            </>
+          )}
+
+          {/* Auth Action buttons */}
           <div className="navbar-action">
-            <Link to="/vehicles" className="nav-cta-btn" onClick={closeMenu}>
-              Xem danh sách xe
-            </Link>
+            {isAuthenticated ? (
+              <div className="user-profile-badge">
+                <div className="user-info-text">
+                  <span className="user-name">
+                    {user?.fullName || user?.username}
+                  </span>
+                  <span className={`user-role-tag ${user?.role}`}>
+                    {user?.role === 'ADMIN' && <FaShieldAlt />}
+                    {user?.role === 'STAFF' && <FaUserTie />}
+                    {user?.role === 'CUSTOMER' && <FaUser />}
+                    {user?.role}
+                  </span>
+                </div>
+                <button onClick={handleLogout} className="logout-btn" title="Đăng xuất">
+                  <FaSignOutAlt />
+                </button>
+              </div>
+            ) : (
+              <div className="guest-auth-actions">
+                <Link to="/login" className="nav-login-link" onClick={closeMenu}>
+                  Đăng nhập
+                </Link>
+                <Link to="/register" className="nav-cta-btn" onClick={closeMenu}>
+                  Đăng ký
+                </Link>
+              </div>
+            )}
           </div>
         </nav>
       </div>
