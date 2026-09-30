@@ -13,6 +13,7 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                     "http://localhost:3000",
                     "http://localhost:5173",
+                    "http://127.0.0.1:5173",
                     "http://localhost:8080"
                 ) // Các cổng Frontend được phép gọi vào
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Các phương thức HTTP được phép

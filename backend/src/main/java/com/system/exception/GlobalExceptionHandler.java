@@ -5,9 +5,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AuthException.class)
+    public ResponseEntity<ErrorResponse> handleAuthException(AuthException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                ex.getStatus().value(), ex.getStatus().getReasonPhrase(), ex.getMessage(), request.getRequestURI());
+        return new ResponseEntity<>(errorResponse, ex.getStatus());
+    }
 
     // 1. Xử lý lỗi không tìm thấy dữ liệu (404)
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -59,7 +68,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "Internal Server Error",
-                "Đã xảy ra lỗi hệ thống: " + ex.getMessage(),
+                "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.",
                 request.getRequestURI()
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);

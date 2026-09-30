@@ -1,95 +1,129 @@
-# TV4 - Bao cao tien do
+# TV4 - Báo cáo tiến độ xác thực và phân quyền AutoTrade
 
-## Increment 2 - Dataset Integration va EDA
+Ngày cập nhật: 30/09/2026
+Người phụ trách: TV4
+Phạm vi: Authentication, identity, authorization và tích hợp UI xác thực theo `TV4.md` và `Workflow_4_Increment.md`.
 
-Trang thai: **EDA da hoan thanh tren local snapshot; candidate model va official training chua duoc chot.**
+## Phần I - Báo cáo chi tiết
 
-### Dataset da su dung
+### 1. Mục tiêu và phạm vi đã đối chiếu
 
-- Input truc tiep: `crawler/data/cleaned/vehicles_cleaned.csv`; khong copy hay sua dataset TV3.
-- Contract: 17 cot, 10,813 dong, `source_url` unique, CSV UTF-8 with BOM.
-- Local SHA-256: `5a70b532173c897531440105b47ddccfb839198d631ea0375050c57010201b27`.
-- Canh bao provenance: hash tren khac hash `bcec...3513` trong TV3 Phase 1 lock report. TV3 can xac nhan local snapshot la canonical hoac cap nhat lock report truoc official training.
+TV4 chịu trách nhiệm cho luồng đăng ký, xác minh email OTP, đăng nhập, đăng xuất, quên/đặt lại mật khẩu, JWT, phân quyền `CUSTOMER`/`STAFF`/`ADMIN`, lỗi `401`/`403` và contract current user.
 
-### Ket qua EDA
+Không thuộc phạm vi TV4: CRUD xe, nghiệp vụ trạng thái deposit/appointment, migration/seed database chính thức, frontend tổng thể và UML/SRS. Machine Learning, Regression, Recommendation và Comparison đã loại khỏi phạm vi nộp AutoTrade.
 
-- `crawled_at` parse dung 100%; `observed_year = year(crawled_at)` va khong co vehicle age am. `listed_at` giu raw text, khong dung lam timestamp.
-- Missing: mileage 2,307 (21.34%), origin 9,225 (85.31%), engine_size 4,854 (44.89%), seat_count 9,475 (87.63%). Khong coi missing mileage la 0 va khong suy dien origin/engine/seats.
-- 68 gia duoi 50 trieu VND, 5 gia tren 15 ty VND, 8 mileage tren 1,000,000 km, 11 xe truoc 1990. Day la training flags, khong sua du lieu goc.
-- Electric co 1,204 dong; 100% `engine_size = NULL`, khong co gia tri 0. `engine_non_ev = 0` chi la feature dan xuat trong model.
-- `body_type` thuc te chua dong bo hoan toan voi document: con `SUV`, `Crossover`, `Van / Minivan`, `Truck`, `Other`, `Wagon`.
+### 2. Kết quả implementation
 
-### Do phu candidate
+#### Backend
 
-- Complete-case legacy: 710 dong (6.57%).
-- Complete-case co EV exception: 747 dong (6.91%).
-- Reduced-feature baseline: 8,407 dong (77.75%).
-- Missing-aware candidate input: 8,428 dong (77.94%).
+- Thêm Spring Security, Mail, Validation và JJWT vào Maven; đóng gói WAR để tương thích external Tomcat.
+- Thêm `SecurityConfig`, JWT filter, authentication entry point và access-denied handler.
+- API công khai: `POST /api/v1/auth/register`, `verify-email`, `resend-verification`, `login`, `forgot-password`, `verify-reset-otp`, `reset-password`; `GET /api/v1/auth/me` cần JWT.
+- JWT chứa user ID, username và role; Backend tải lại user từ database trước khi xác thực request để account inactive, locked hoặc chưa xác minh không tiếp tục dùng token.
+- Role policy đã khóa theo method/URL, không có kế thừa role ngầm:
+  - `GET /api/v1/vehicles/**`, `GET /api/v1/listings/**` và các endpoint đăng ký/xác minh/login/reset OTP: công khai.
+  - `GET /api/v1/auth/me`, `POST /api/v1/auth/logout`: cần JWT hợp lệ.
+  - `POST /api/v1/deposits`, `POST /api/v1/deposits/{id}/confirm`, `GET /api/v1/deposits/my`, `GET /api/v1/deposits/{id}/receipt`: chỉ `CUSTOMER`.
+  - `GET`/`PUT /api/v1/staff/appointments/**`: chỉ `STAFF`.
+  - `/api/v1/admin/**` và endpoint mutate xe/tin legacy: chỉ `ADMIN`.
+- Bỏ tin cậy `X-User-Id` từ browser. Tất cả endpoint cọc do TV4 tích hợp (`create`, `my`, `confirm`, `receipt`) lấy identity từ JWT; `confirm` và `receipt` trả `403` khi deposit không thuộc current user.
 
-Complete-case bi lech mau manh: Chotot eligible 11.42% trong khi Bonbanh 4.60%. Khong duoc dung no lam model chinh thuc chi vi no de giai thich.
+#### User và OTP
 
-### Candidate va leakage control
+- Migration `V3_0_4__auth_and_otp.sql` bổ sung `app_users`, `auth_otps`, `password_reset_sessions`.
+- Username/email unique; user đăng ký có role `CUSTOMER`, `active=true`, `emailVerified=false`, `locked=false`.
+- Mật khẩu lưu BCrypt strength 12, không plaintext.
+- OTP gồm sáu chữ số từ `SecureRandom`, chỉ lưu SHA-256 hash; hết hạn năm phút, cooldown gửi lại 60 giây, tối đa năm lần sai, dùng một lần. OTP mới vô hiệu hóa OTP cũ cùng user và purpose.
+- OTP đăng ký được tạo sau khi user đã lưu. Nếu SMTP lỗi, user vẫn tồn tại nhưng không đăng nhập đến khi xác minh; có thể gửi lại OTP.
+- Quên mật khẩu trả cùng một thông điệp cho email tồn tại/không tồn tại. OTP reset gắn với đúng email/user/purpose. Sau khi xác minh, reset token ngắn hạn chỉ được trả một lần, giữ trong memory của trang và không ở URL/localStorage.
+- Reset password không mở khóa account bị khóa và không tự đăng nhập.
 
-- A: complete-case chi de tham chieu.
-- B: reduced-feature dung age, mileage, fuel, transmission; de day du form hon nhung mat origin/engine/seat.
-- C: missing-aware dung median fit tren train split, missing indicators, category `Unavailable`, va xu ly EV rieng.
-- Khi runtime co san, split truoc preprocessing, fit median/encoding chi tren train, test tren hold-out, ghi seed, va can nhac group split `brand + model + manufacture_year`.
-- Chua co R2/MAE/RMSE/MAPE candidate hay official vi may hien tai chua co Rscript. Khong co `.rds` official.
+#### SMTP và nhận diện thương hiệu
 
-### Bao cao / ban giao
+- SMTP đọc từ environment của Tomcat, không ghi App Password hoặc SMTP secret vào source, README hay report.
+- `C:\apache-tomcat-11.0.25\bin\setenv.bat` chỉ được kiểm tra trạng thái: các biến SMTP bắt buộc đã có; không đọc, sửa hoặc commit file này.
+- Tên hiển thị: `AutoTrade <trungkhang98pth@gmail.com>`.
+- Tiêu đề: `[AUTOTRADE] Mã xác nhận tạo tài khoản` và `[AUTOTRADE] Mã xác nhận đặt lại mật khẩu`.
+- Đã quét source không phân biệt hoa/thường: không còn nhận diện thương hiệu cũ trong source triển khai AutoTrade.
 
-- `model/regression/eda_dataset.R`: EDA tai lap duoc tu CSV goc.
-- `model/regression/reports/data_quality_report.md`: ket qua EDA va bias/coverage.
-- `model/regression/reports/candidate_strategy.md`: proposal A/B/C va leakage protocol.
-- `model/regression/reports/prediction_contract_proposal.md`: de xuat form/API, chua doi Plumber official.
-- `model/regression/reports/tv3_confirmation.md`: bang chung da co va 2 cau hoi thuc su cho TV3.
+### 3. Đối chiếu với giao diện Login/Register
 
-### Dieu kien truoc official training
+Đã đối chiếu với hai giao diện được cung cấp tại `/login` và `/register`.
 
-1. TV3 xac nhan checksum/version local va vocabulary body type.
-2. TV4 chay lai EDA/candidate evaluation bang R tren snapshot da xac nhan.
-3. Nhom review missing/outlier policy, group/random split, test metrics va residual analysis.
-4. TV1/TV3/TV4 chot prediction contract phu hop candidate duoc chon.
+| Hạng mục | Kết quả | Điều chỉnh đã thực hiện |
+|---|---|---|
+| Bố cục navbar, card, màu sắc, nút chính | Khớp | Giữ CSS/card và các route hiện có. |
+| Tiêu đề Login | Khớp | Dùng `Đăng nhập` và mô tả `Hệ thống Quản lý Kinh doanh Ô tô AutoTrade`. |
+| Placeholder Login | Khớp | Khôi phục gợi ý `VD: admin, staff, customer` và `Nhập mật khẩu...`. |
+| Tiêu đề/Register fields | Khớp | Dùng `Đăng ký tài khoản`, đủ username, họ tên, email, điện thoại, password, confirm password. |
+| Điện thoại bắt buộc | Khớp | UI và Backend đều bắt buộc, kiểm tra định dạng 8-30 ký tự số/ký tự điện thoại hợp lệ. |
+| Mật khẩu | Đã làm rõ | UI hiển thị tối thiểu 8 ký tự, khớp validation Backend; không giữ nội dung cũ sáu ký tự. |
+| Demo account box | Cố ý loại bỏ | Không còn mock login hoặc token giả. Seed account thật do TV3 chuẩn bị và chỉ hiển thị cho demo khi đã có dữ liệu thật. |
+| Quên mật khẩu/OTP | Bổ sung | Login có link quên mật khẩu; có route xác minh email và đặt lại mật khẩu cùng style card hiện hữu. |
 
-## Increment 1 - Regression Foundation
+### 4. Kiểm thử và bằng chứng hiện có
 
-Trang thai: **Hoan thanh khung source code va contract; chua co model chinh thuc.**
+| Kiểm tra | Trạng thái | Kết quả thực tế |
+|---|---|---|
+| Build Backend | PASS | `mvn package -DskipTests` tạo `backend-0.0.1-SNAPSHOT.war`. |
+| Build Frontend | PASS | `npm run build` hoàn thành Vite production build. |
+| BCrypt/OTP hash unit test | PASS | `AuthSecurityUnitTest`: 2/2 pass. |
+| Full Maven test | PASS | `mvn test`: 22/22 pass trên PostgreSQL thật với Java 17 và database UTF-8. Đã sửa compatibility cấu hình để Spring đọc được cả `DB_USERNAME` lẫn tên biến `DB_USER` đang có ở local. |
+| Migration PostgreSQL | PASS | Đã áp dụng `schema.sql`, `V3_0_0` và `V3_0_1` vào `used_car_db`; JPA `validate` khởi động thành công. |
+| Seed ba role demo | PASS | Đã tạo account demo thật `ADMIN`, `STAFF`, `CUSTOMER`, đều active và email verified. |
+| Runtime API/JWT/RBAC | PASS (smoke) | Đã chạy server từ WAR mới: public vehicles `200`; `/auth/me` không token `401`; CUSTOMER `/me` và `/deposits/my` `200`, Staff API `403`; STAFF appointments `200`, deposits/admin `403`; ADMIN ledger `200`, deposits `403`; logout CUSTOMER `200`. |
+| Gửi OTP Gmail thật | PASS | Đăng ký alias mailbox thật và resend sau cooldown đều trả `emailSent=true`; không đọc/log OTP, bản ghi test đã xóa. |
+| Browser E2E register/login/OTP/reset | IN PROGRESS | Frontend và backend đang chạy; cần kiểm thử click-through register/verify/reset tại browser để lưu ảnh bằng chứng. |
 
-TV3 da khoa Data Contract 17 truong va ban cleaned dataset 10,813 dong da co san. TV4 khong train hay cong bo `regression_v1` trong Increment 1 vi missing cua cac feature hien tai can duoc EDA va thong nhat xu ly o Increment 2.
+Không có kết quả runtime nào bị ghi là PASS khi chưa chạy.
 
-### Da hoan thanh
+### 5. Dependency và bàn giao
 
-- Co du cau truc `model/regression/{data,src,models,reports}` va `model/plumber/`.
-- Co preprocessing, metrics, train/test split, evaluation skeleton va fixture smoke path rieng.
-- Dong bo preprocessing va JSON prediction contract voi 17-field TV3 contract va Database Schema v2.0.1.
-- Doi `listed_year` cu thanh `observed_year = year(crawled_at)`; khong nham lan voi nam nguoi ban dang tin.
-- Xac nhan don vi: `price` VND, `mileage` km, `engine_size` lit, `seat_count` seats; `crawled_at` ISO-8601 co timezone.
-- Xac nhan vocabulary `Gasoline/Diesel/Hybrid/Electric`, `Automatic/Manual/CVT`, va `Domestic/Imported`.
-- Giu NULL nguon cho `origin`, `engine_size`, `seat_count`, `mileage`; EV co the NULL `engine_size`, preprocessing chi tao `engine_non_ev = 0` o feature dan xuat.
-- Them bao cao audit/handoff: `model/regression/reports/increment_1_audit.md`.
+| Bên nhận/gửi | Nội dung cần nhận hoặc bàn giao | Trạng thái |
+|---|---|---|
+| TV3 -> TV4 | Schema auth đã được áp dụng local. TV3 cần đưa migration/seed vào quy trình bootstrap chung và xác nhận môi trường nhóm dùng database UTF-8. | Cần phối hợp. |
+| TV4 -> TV1 | JWT/current-user contract, ma trận RBAC và ownership confirm/receipt đã áp dụng tối thiểu ở controller/service cọc. TV1 cần xác nhận contract, không dùng `X-User-Id`, và giữ invariant state/transaction khi tích hợp. | Đã bàn giao tại `TV4_Handoff.md`; chờ xác nhận. |
+| TV4 -> TV2 | Auth API payload/error, route OTP/reset, Bearer token usage; không bật lại mock fallback. | Sẵn sàng bàn giao. |
+| TV4 -> TV5 | Class/endpoint/auth state hiện có để vẽ Use Case, Sequence, Collaboration, Class Diagram và traceability. | Sẵn sàng bàn giao. |
+| Hạ tầng -> TV4 | `JWT_SECRET` Base64 >= 32 byte phải được lưu trong environment deploy lâu dài; bản chạy local hiện dùng key tạm ngoài source. | Cần hoàn tất trước deploy. |
 
-### Ket qua kiem tra
+### 6. Rủi ro, giới hạn và bước tiếp theo
 
-- Static review: PASS cho duong dan smoke, tach biet fixture artifact/metrics voi official artifact, va Plumber waiting/error contract.
-- Runtime smoke: PENDING. Moi truong audit khong co `Rscript`, nen chua chay `train_model.R --smoke` hay HTTP Plumber.
-- Khong co official `.rds`, R2, RMSE, MAE, MAPE, hoac ket qua nao duoc dung cho bao cao do an.
+1. PostgreSQL local phải được tạo với encoding UTF-8; encoding WIN1252 làm test và dữ liệu tiếng Việt lỗi.
+2. External Tomcat không tự có `JWT_SECRET`; cần cấu hình ở môi trường chạy nhưng không commit secret.
+3. Authorization chủ sở hữu đã được thêm cho `confirm payment` và `receipt`; TV1 vẫn phải giữ nguyên invariant state/transaction và bổ sung test tích hợp cọc khi endpoint hoàn thiện.
+4. Test tự động/nghiệm thu Ngày 3 còn thiếu: token hết hạn, role sai theo toàn bộ ma trận, account locked, OTP sai/hết hạn/đã dùng, reset cross-account và ownership deposit qua HTTP thật.
+5. SMTP Gmail đã gửi thành công trong môi trường local; cần lưu ảnh inbox/browse flow khi TV2 test hệ thống.
 
-### Tinh hinh dataset va rui ro model
+## Phần II - Progress Log
 
-- Dataset dung 17 field, 10,813 records, URL unique theo TV3 Phase 1 lock.
-- Missing cao o `origin` (9,225), `engine_size` (4,854), `seat_count` (9,475), va `mileage` (2,307). Complete-case baseline cu chi con khoang 710-715 dong tuy range filter.
-- Vi vay khong duoc coi complete-case regression hien tai la model chinh thuc. Khong yeu cau TV3 tao du lieu gia hoac suy dien feature chi de lam day model.
+| Giai đoạn | Trạng thái | Nội dung hoàn thành/đang làm | Bằng chứng hoặc bàn giao | Dependency/việc tiếp theo |
+|---|---|---|---|---|
+| P0.1 - Đọc scope và khóa contract | DONE | Đối chiếu `TV4.md`, Workflow, UI và `TV1_Handoff_Day1.md`; khóa Auth Contract v3.1.0, roles, error behavior, current-user. | `docs/API/API_Specification_Official_v3.md`, `TV4_Handoff.md`. | TV1/TV2/TV3 xác nhận phần sử dụng. |
+| P0.2 - User/OTP schema | DONE | Tạo migration user, OTP, reset session; unique/check/FK/index phù hợp và đã áp dụng local. | `database/migrations/V3_0_4__auth_and_otp.sql`, PostgreSQL UTF-8. | TV3 tích hợp bootstrap chung. |
+| P0.3 - Login/JWT/RBAC | DONE (cần regression Ngày 3) | Spring Security, JWT filter, matcher theo method/role, current-user, `401/403`; không tự cấp quyền ADMIN cho CUSTOMER/STAFF hoặc ngược lại. | `SecurityConfig`, `JwtAuthenticationFilter`, `AuthController`. | Chạy lại ma trận role qua HTTP sau build cuối. |
+| P0.4 - Bỏ identity giả và ownership | DONE (cần integration test) | Gỡ mock auth và `X-User-Id`; create/my/confirm/receipt deposit lấy ID JWT; confirm/receipt kiểm tra chủ sở hữu. | `AuthContext.jsx`, `api.js`, `DepositController`, `DepositService`. | TV1 giữ transaction/state và test cọc end-to-end. |
+| P1.1 - Register và verify email | DONE (runtime local) | BCrypt, user unverified, OTP hash, verify, resend/cooldown, SMTP failure recovery. | `AuthService`, `OtpService`, `OtpMailService`. | TV2 thực hiện browser E2E/evidence. |
+| P1.2 - Forgot/reset password | DONE (source/build) | Generic response, verify reset OTP, reset token short-lived/single use, BCrypt password mới. | Auth endpoint và UI route `/forgot-password`. | E2E test, negative cases Ngày 3. |
+| P1.3 - Đồng bộ UI | DONE | Login/Register khớp card giao diện tham chiếu; bổ sung verify/reset UI cùng style; làm rõ password 8 ký tự. | `LoginPage.jsx`, `RegisterPage.jsx`, `VerifyEmailPage.jsx`, `ForgotPasswordPage.jsx`. | TV2 browser/responsive test. |
+| P1.4 - Branding AutoTrade | DONE | Email subject/body, sender display config, UI/footer/backend run message dùng AutoTrade; không còn nhận diện thương hiệu cũ. | `OtpMailService`, `application.properties`, UI. | Review lại trước commit. |
+| P2.1 - Unit/build check | DONE | Backend package, frontend production build, BCrypt/OTP hash test. | Maven/Vite output, `AuthSecurityUnitTest`. | Giữ evidence cho TV2/TV5. |
+| P2.2 - DB migration/runtime API | DONE | Database UTF-8, schema/migration và seed role demo đã sẵn sàng; JPA validate và full Maven test pass. | `mvn test`: 22/22 pass. | TV3 đưa vào bootstrap chung. |
+| P2.3 - SMTP/Tomcat live test | DONE (local) | Embedded Tomcat NIO2 chạy tại `8080`; đăng ký và resend OTP tới mailbox thật đều trả `emailSent=true`; bản ghi test đã xóa. | API `/login`, `/me`, Swagger và SMTP runtime. | Cấu hình JWT deploy lâu dài; TV2 chụp evidence browser. |
+| P2.4 - Security regression | PENDING NGÀY 3 | Smoke HTTP của ma trận role mới đã PASS; còn expiry, lock account, OTP boundary, reset cross-account, ownership deposit qua HTTP và automated security test. | Test report do TV2 điều phối; TV4 bổ sung automated security test. | Chạy sau build/integration cuối; không ghi PASS trước khi chạy. |
+| P2.5 - Handoff Ngày 2 | DONE | Bàn giao contract, JWT/current-user, RBAC, frontend mapping, migration/seed requirements, known limitations và backlog Ngày 3. | `TV4_Handoff.md`, API specification, README. | Chờ TV1/TV2/TV3 xác nhận ngắn gọn. |
 
-### Ban giao va phoi hop
+### Checklist xác nhận cuối ngày
 
-- TV3: xac nhan dataset checksum/version cho EDA; thong bao version moi va completeness neu enrichment thay doi `origin`, `engine_size`, `seat_count`; bao toan NULL va `crawled_at` timezone-aware.
-- TV1: chua goi prediction de demo. Khi Increment 2 chap nhan contract, doi `listed_year` sang `observed_year` trong request adapter/API contract.
-- TV2: form valuation sau nay dung `observed_year`, khong hien thi nhu nam dang tin.
-- TV5: database da bao toan cac field ML nullable; khong ep NULL thanh gia tri gia.
-
-### Viec chuyen sang Increment 2
-
-1. Chay EDA va ghi nhan missingness, outlier, distribution theo source/brand/model.
-2. De xuat va xin review policy xu ly missing, outlier, feature selection va train/test split.
-3. Sau khi duoc chap nhan, train model versioned tren dataset that, danh gia hold-out, va moi cong bo metrics/artifact.
-4. Cai R/Rscript va `plumber`, `jsonlite` de chay lai fixture smoke va Plumber runtime test.
+- [x] Source auth duy nhất, không có login song song hoặc mock fallback.
+- [x] Mật khẩu/OTP/SMTP secret không được log hoặc hard-code.
+- [x] UI Login/Register khớp bố cục và nội dung nghiệp vụ hiện hành.
+- [x] Frontend/Backend build được.
+- [x] PostgreSQL migration và seed chạy trên database thật với UTF-8.
+- [x] JWT và ba role chạy end-to-end qua API thật.
+- [x] Gmail SMTP gửi OTP thật thành công; OTP không được in/log.
+- [x] Auth Contract v3.1.0 và biên bản bàn giao TV4 đã tạo.
+- [x] RBAC strict theo matrix leader và ownership `confirm`/`receipt` đã được áp dụng ở phạm vi TV4.
+- [ ] TV2 test chéo và ghi Test Report/Defect Log.
+- [ ] TV5 cập nhật UML/traceability theo source code cuối.
+- [ ] Regression/security test Ngày 3 chạy và lưu bằng chứng thật.

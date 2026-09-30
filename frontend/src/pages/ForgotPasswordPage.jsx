@@ -1,0 +1,21 @@
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import apiClient from '../services/api';
+import './LoginPage.css';
+
+const ForgotPasswordPage = () => {
+  const [step, setStep] = useState('REQUEST');
+  const [email, setEmail] = useState(''); const [code, setCode] = useState('');
+  const [newPassword, setNewPassword] = useState(''); const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetToken, setResetToken] = useState(null); const [message, setMessage] = useState('');
+  const [error, setError] = useState(''); const [busy, setBusy] = useState(false); const navigate = useNavigate();
+  const requestOtp = async (event) => { event.preventDefault(); setBusy(true); setError(''); try { const r = await apiClient.post('/auth/forgot-password', { email }, { timeout: 50000 }); setMessage(r.message); setStep('VERIFY'); } catch (err) { setError(err.message); } finally { setBusy(false); } };
+  const verifyOtp = async (event) => { event.preventDefault(); setBusy(true); setError(''); try { const r = await apiClient.post('/auth/verify-reset-otp', { email, code }); setResetToken(r.resetToken); setMessage(r.message); setStep('RESET'); } catch (err) { setError(err.message); } finally { setBusy(false); } };
+  const reset = async (event) => { event.preventDefault(); setBusy(true); setError(''); try { const r = await apiClient.post('/auth/reset-password', { resetToken, newPassword, confirmPassword }); setMessage(r.message); setTimeout(() => navigate('/login'), 1000); } catch (err) { setError(err.message); } finally { setBusy(false); } };
+  return <div className="auth-page-container"><div className="auth-card"><div className="auth-header"><h1>Đặt lại mật khẩu</h1><p>AutoTrade gửi mã OTP đến email đã đăng ký.</p></div>{message && <div className="auth-success-alert">{message}</div>}{error && <div className="auth-error-alert">{error}</div>}
+    {step === 'REQUEST' && <form onSubmit={requestOtp} className="auth-form"><div className="form-group"><label>Email</label><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></div><button className="auth-submit-btn" disabled={busy}>Gửi OTP</button></form>}
+    {step === 'VERIFY' && <form onSubmit={verifyOtp} className="auth-form"><div className="form-group"><label>Mã OTP</label><input inputMode="numeric" pattern="[0-9]{6}" maxLength="6" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} required /></div><button className="auth-submit-btn" disabled={busy}>Xác minh OTP</button></form>}
+    {step === 'RESET' && <form onSubmit={reset} className="auth-form"><div className="form-group"><label>Mật khẩu mới</label><input type="password" minLength="8" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required autoComplete="new-password" /></div><div className="form-group"><label>Xác nhận mật khẩu mới</label><input type="password" minLength="8" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required autoComplete="new-password" /></div><button className="auth-submit-btn" disabled={busy}>Lưu mật khẩu mới</button></form>}
+    <div className="auth-footer"><Link to="/login">Quay lại đăng nhập</Link></div></div></div>;
+};
+export default ForgotPasswordPage;
