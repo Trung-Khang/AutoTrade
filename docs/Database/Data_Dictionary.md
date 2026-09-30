@@ -54,3 +54,42 @@ Owner: TV5. This document matches `database/schema/schema.sql` and the Mapping M
 ## Boundary with ML
 
 Database constraints protect valid storage and source traceability. They do not apply TV4 model outlier thresholds such as maximum model mileage or price. `listed_year` is derived downstream from `crawled_at`, not stored as a duplicate dataset column.
+
+## Showroom and archive boundary (V3_0_1)
+
+`vehicles.status='ARCHIVED'` denotes a marketplace configuration, never depositable inventory. The public showroom query requires `AVAILABLE` and a showroom association; deposit creation also requires a showroom and price. `vehicles.demo_key` is a nullable unique development seed key, never a VIN. The ten-field archive identity is documented in the Mapping Matrix. Physical showroom vehicle identity remains separate; the demo seed does not assert real VINs. `listings` retains marketplace price, mileage and image while showroom response fields come from the physical `vehicles` row.
+
+## Deposits integrity V3_0_2
+
+`deposits.amount NUMERIC(15,2) NOT NULL` has `chk_deposits_amount_positive` (amount > 0). `uq_deposits_vehicle_deposited` is a unique index on vehicle_id only WHERE status='DEPOSITED'; other statuses can coexist. Existing FK vehicle/showroom uses RESTRICT. user_id remains a required BIGINT without identity FK pending TV4 contract.
+
+## Appointments V3_0_0 through V3_0_3
+
+| Column | Type | Null | Constraint/default and meaning |
+|---|---|---|---|
+| id | BIGSERIAL | No | PK |
+| deposit_id | BIGINT | Yes | fk_appointments_deposit → deposits.id, ON DELETE SET NULL; not unique |
+| user_id | BIGINT | No | Identity scalar; no user FK yet |
+| vehicle_id | BIGINT | No | fk_appointments_vehicle → vehicles.id, ON DELETE RESTRICT |
+| showroom_id | BIGINT | No | fk_appointments_showroom → showrooms.id, ON DELETE RESTRICT |
+| appointment_date | TIMESTAMP | No | Local date/time, no timezone; future-date validation belongs to creation/rescheduling workflow |
+| has_test_drive | BOOLEAN | No | DEFAULT FALSE; checkbox |
+| status | VARCHAR(30) | No | DEFAULT PENDING; chk_appointments_status: PENDING/COMPLETED/CANCELLED |
+| customer_note, staff_note | VARCHAR(500) each | Yes | Optional notes |
+| created_at, updated_at | TIMESTAMPTZ each | No | DEFAULT CURRENT_TIMESTAMP; updated_at is not DB trigger-managed |
+
+Existing indexes: showroom_id, appointment_date, status. V3_0_3 adds non-unique indexes deposit_id, vehicle_id and `(user_id, appointment_date DESC)`. There is no appointment cardinality, cross-table identity match or lifecycle trigger. Workflow says SCHEDULED while implementation says PENDING; reconciliation remains a contract dependency.
+
+## Transaction ledger V3_0_0 through V3_0_3
+
+| Column | Type | Null | Constraint/default and meaning |
+|---|---|---|---|
+| id | BIGSERIAL | No | PK |
+| deposit_id | BIGINT | No | fk_ledger_deposit → deposits.id, ON DELETE RESTRICT; existing non-unique idx_ledger_deposit_id |
+| amount | NUMERIC(15,2) | No | VND. For CONFIRMED only: DEPOSIT_RECEIVED > 0 and not NaN, REFUND < 0 (chk_ledger_confirmed_amount) |
+| transaction_type | VARCHAR(30) | No | chk_ledger_transaction_type: DEPOSIT_RECEIVED/REFUND/FORFEIT |
+| status | VARCHAR(30) | No | DEFAULT CONFIRMED; chk_ledger_status: CONFIRMED/PROCESSED/REVERSED |
+| note | VARCHAR(500) | Yes | Optional transaction note |
+| created_at | TIMESTAMPTZ | No | DEFAULT CURRENT_TIMESTAMP |
+
+No amount sign restriction for FORFEIT or PROCESSED/REVERSED until TV1 defines those conventions. Multiple ledger entries per deposit are allowed; no callback/reference uniqueness key has been agreed. Enum values are storage vocabulary, not a claim that each transition/workflow exists. Sources, rationale, dependency details and actual SQL evidence are in [Appointment_Ledger_Integrity.md](../../database/guides/Appointment_Ledger_Integrity.md).
