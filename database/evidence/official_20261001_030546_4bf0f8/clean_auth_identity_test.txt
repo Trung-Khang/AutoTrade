@@ -1,0 +1,9 @@
+exit=3
+BEGIN
+CREATE FUNCTION
+SELECT 1
+SAVEPOINT
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_identity_test.sql:67: ERROR:  Wrong rejection: 23505, app_users_email_key, 
+CONTEXT:  PL/pgSQL function pg_temp_81.expect_auth_error(text,text,text,text) line 9 at RAISE
+SQL statement "SELECT pg_temp.expect_auth_error(format('UPDATE public.app_users SET email=''test.user@example.test'' WHERE username=''staff'''),'23505','uq_app_users_email_ci')"
+PL/pgSQL function inline_code_block line 13 at PERFORM

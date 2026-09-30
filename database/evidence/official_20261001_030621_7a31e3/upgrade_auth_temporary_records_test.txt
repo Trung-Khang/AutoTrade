@@ -1,0 +1,11 @@
+exit=0
+BEGIN
+CREATE FUNCTION
+SELECT 1
+SAVEPOINT
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_temporary_records_test.sql:71: NOTICE:  PASS timestamps/no trigger, OTP purpose/attempt 0..5/NULL/default/hash length/FK, reset UNIQUE/NULL/default/FK, both RESTRICT preservation, soft disable and CASCADE
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_temporary_records_test.sql:77: NOTICE:  PASS full auth/business rollback
+DO
+ROLLBACK

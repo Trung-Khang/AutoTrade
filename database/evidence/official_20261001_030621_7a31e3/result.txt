@@ -1,0 +1,1 @@
+PASS official clean/schema -> V3_0_0..5; V3_0_3 -> V3_0_4 -> V3_0_5; populated V3_0_4 rows preserved; exact 29-column catalog/default/NULL/CHECK/FK/CASCADE/RESTRICT; BCrypt12; seeds repeat; concurrent uniqueness; 15 atomic rejection probes; deposit/appointment/ledger regressions. Runtime/SMTP recorded separately.

@@ -1,0 +1,1 @@
+PASS npm ci from lockfile; npm run build: Vite 5.4.21, 135 modules. No Frontend source/config changes relative to origin/main.

@@ -1,0 +1,38 @@
+exit=0
+BEGIN
+SELECT 1
+CREATE FUNCTION
+SAVEPOINT
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_transaction_type 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_status 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_confirmed_amount 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_confirmed_amount 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_confirmed_amount 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_confirmed_amount 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_confirmed_amount 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_ledger_confirmed_amount 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23503 fk_ledger_deposit 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23001 fk_ledger_deposit 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  deposit_id
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  amount
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  transaction_type
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  status
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS ledger valid type/status combinations, signed confirmed amounts, defaults/cardinality boundaries
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23514 chk_appointments_status 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  user_id
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  vehicle_id
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  showroom_id
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  appointment_date
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  has_test_drive
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23502  status
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23503 fk_appointments_deposit 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23503 fk_appointments_vehicle 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23503 fk_appointments_showroom 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23001 fk_appointments_vehicle 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS rejection: 23001 fk_appointments_showroom 
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:104: NOTICE:  PASS appointment defaults/status/NULL/FKs, SET NULL and RESTRICT; no lifecycle or uniqueness restriction
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/upgrade_appointment_ledger_integrity_test.adapted.sql:123: NOTICE:  PASS rollback counts and three non-unique appointment index definitions
+DO
+ROLLBACK

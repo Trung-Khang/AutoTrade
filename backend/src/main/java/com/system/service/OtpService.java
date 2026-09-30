@@ -18,6 +18,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class OtpService {
@@ -36,7 +37,7 @@ public class OtpService {
         this.mailService = mailService;
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AuthException.class)
     public OtpDispatch issue(AppUser inputUser, OtpPurpose purpose, boolean enforceCooldown) {
         AppUser user = userRepository.findLockedById(inputUser.getId()).orElseThrow();
         Instant now = Instant.now();
@@ -47,8 +48,8 @@ public class OtpService {
                 throw new AuthException(HttpStatus.TOO_MANY_REQUESTS,
                         "Vui lòng chờ " + waitSeconds + " giây trước khi gửi lại mã OTP.");
             }
-            active.setInvalidatedAt(now);
         }
+        activeOtps.forEach(active -> active.setInvalidatedAt(now));
         otpRepository.saveAll(activeOtps);
 
         String code = String.format("%06d", RANDOM.nextInt(1_000_000));
@@ -68,14 +69,15 @@ public class OtpService {
         return new OtpDispatch(emailSent, 0L);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AuthException.class)
     public AppUser verify(String email, String code, OtpPurpose purpose) {
         AppUser user = userRepository.findByEmailIgnoreCase(normalizeEmail(email))
                 .orElseThrow(() -> new AuthException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ hoặc đã hết hạn."));
+        user = userRepository.findLockedById(user.getId()).orElseThrow();
         AuthOtp otp = otpRepository.findFirstByUserIdAndPurposeAndConsumedAtIsNullAndInvalidatedAtIsNullOrderByCreatedAtDesc(user.getId(), purpose)
                 .orElseThrow(() -> new AuthException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ hoặc đã hết hạn."));
         Instant now = Instant.now();
-        if (otp.getExpiresAt().isBefore(now) || otp.getAttemptCount() >= MAX_ATTEMPTS) {
+        if (!otp.getExpiresAt().isAfter(now) || otp.getAttemptCount() >= MAX_ATTEMPTS) {
             otp.setInvalidatedAt(now);
             throw new AuthException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ hoặc đã hết hạn.");
         }
@@ -101,7 +103,7 @@ public class OtpService {
     }
 
     private String normalizeEmail(String email) {
-        return email == null ? "" : email.trim().toLowerCase();
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
     public record OtpDispatch(boolean emailSent, Long retryAfterSeconds) { }

@@ -1,0 +1,7 @@
+exit=0
+BEGIN
+SELECT 29
+SELECT 16
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_catalog_test.sql:38: NOTICE:  PASS exact 29 columns/defaults/PKs/4 FK policies/reset UNIQUE/OTP index; no duplicate token index or lifecycle trigger/time CHECK
+DO
+ROLLBACK

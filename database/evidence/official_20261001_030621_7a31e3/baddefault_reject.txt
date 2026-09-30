@@ -1,0 +1,13 @@
+exit=3
+BEGIN
+SET
+SET
+ pg_advisory_xact_lock 
+-----------------------
+ 
+(1 row)
+
+DO
+SELECT 29
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/migrations/V3_0_5__auth_identity_integrity.sql:106: ERROR:  V3_0_5 preflight: incompatible columns/defaults; require official V3_0_4
+CONTEXT:  PL/pgSQL function inline_code_block line 11 at RAISE

@@ -1,0 +1,1 @@
+PostgreSQL18 UTF8 fresh isolated databases; Spring Boot3.2.5. Full Maven42 tests PASS using Java21.0.7, compiler target Java17, after unsupported Java26 Byte Buddy failure. Final packaged runtime launch uses explicit Java21 executable with Hibernate validate and HTTP checks. No shared/audit DB mutation.

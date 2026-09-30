@@ -1,0 +1,36 @@
+exit=0
+BEGIN
+SET
+SET
+ pg_advisory_xact_lock 
+-----------------------
+ 
+(1 row)
+
+DO
+SELECT 29
+DO
+DO
+CREATE TABLE
+ALTER TABLE
+CREATE TABLE
+ALTER TABLE
+CREATE FUNCTION
+DO
+CREATE FUNCTION
+ auth_ensure_index 
+-------------------
+ 
+(1 row)
+
+ auth_ensure_index 
+-------------------
+ 
+(1 row)
+
+ auth_ensure_index 
+-------------------
+ 
+(1 row)
+
+COMMIT

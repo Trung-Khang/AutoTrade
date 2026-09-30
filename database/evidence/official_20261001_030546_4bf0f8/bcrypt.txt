@@ -1,0 +1,1 @@
+PASS Spring BCrypt cost 12; private random credential/hash kept only in memory.
