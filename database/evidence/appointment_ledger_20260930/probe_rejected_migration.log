@@ -1,0 +1,5 @@
+BEGIN
+SET
+LOCK TABLE
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/migrations/V3_0_3__appointment_ledger_integrity.sql:18: ERROR:  V3_0_3 preflight failed: inspect ledger violations; no records repaired
+CONTEXT:  PL/pgSQL function inline_code_block line 9 at RAISE

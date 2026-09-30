@@ -1194,3 +1194,130 @@ Lý do:
 ```
 
 
+
+
+## 33. Bổ sung kiểm toán import và showroom ngày 30/09/2026
+
+Phần lịch sử ở trên phản ánh các mốc cũ; nó không chứng minh đã import PostgreSQL. Kiểm toán độc lập lần này đọc đủ 10.813 dòng JSON và CSV sạch, 17 trường, 10.813 URL duy nhất, seed JSON/CSV 18 trường. So sánh từng dòng cho thấy 0 sai khác JSON/CSV sạch và 0 sai khác ở seed, kể cả `image_url` và `listed_at` → `listed_at_raw`. Các tập raw/merged/cleaned/seed có 24 file; SHA-256 trước và sau giống nhau từng file tại `audit/import_2026_09_30/original_hashes_before.txt` và `original_hashes_after.txt` (Compare-Object rỗng). Dữ liệu gốc không bị viết lại.
+
+### Lỗi, chính sách và số lượng
+
+Hàng 3161, URL `https://bonbanh.com/xe-mazda-bt50-2.2l-4x4-mt-2016-6914854`, có `mileage=3380000000`, vượt PostgreSQL INT 2147483647. Giá trị raw cũng là `3,380,000,000 Km`; không đoán giá trị thay thế. Strict mode từ chối toàn batch trước transaction và báo URL/giá trị. Quarantine mode lưu nguyên hàng cùng lý do vào `audit/import_2026_09_30/generated/quarantine.json`: **source 10.813, accepted 10.812, rejected 1**. Chỉ 10.812 hàng hợp lệ được import. Parser giờ từ chối số âm, boolean/NaN/infinity, phân biệt dấu thập phân và dấu ngăn nghìn, xử lý `k`, `vạn`, `nghìn`, `tỷ`, `triệu` và hỗn hợp được hỗ trợ. Dạng mơ hồ/không nhận biết trả NULL, không suy đoán. Validator import kiểm tra kiểu, enum, độ dài VARCHAR, URL tuyệt đối, timestamp có múi giờ và giới hạn DB.
+
+Identity archive là mười thuộc tính `brand, model, variant, manufacture_year, fuel_type, transmission, engine_size, origin, seat_count, body_type`, so sánh NULL an toàn, chỉ tái dùng xe có `showroom_id IS NULL` và `vin IS NULL`. Cùng cấu hình không có nghĩa cùng xe vật lý. `source_url` vẫn là khóa idempotency listing. Giá, mileage, ảnh quảng cáo ở `listings`; `VehicleResponse` showroom đọc các cột vật lý trên `vehicles`. Migration V3_0_1 đổi cấu hình không showroom sang `ARCHIVED`; catalog public chỉ trả xe AVAILABLE có showroom, luồng cọc còn kiểm tra showroom và giá. Không tự gán quảng cáo vào showroom. Seed dev dùng 10 `demo_key` ổn định, 7 AVAILABLE, 1 HOLD, 1 RESERVED, 1 SOLD; các xe được gắn nhãn DEMO, không có VIN thật.
+
+### Cờ cần rà soát
+
+`audit/import_2026_09_30/audit.json` ghi URL và lý do: 12 giá ≤20 triệu, 11 mileage ≥1 triệu, 189 nhóm cấu hình bảy trường có `origin`/`seat_count`/`body_type` không-null mâu thuẫn. Thiếu thuộc tính: variant 1.473, mileage 2.307, fuel 1, transmission 22, body 1.090, origin 9.225, engine 4.854, seat 9.475, image 0, listed_at 1. Alias: Mazda CX5 161, Honda CRV 134, Hyundai SantaFe 175. `derived_model_aliases.csv` chỉ ghi ánh xạ rõ ràng theo URL, không sửa nguồn. Các cờ không tự chứng minh listing sai. Chưa có chứng cứ đáng tin để sửa giá/km/thuộc tính thiếu. Repository chưa có schema users/roles hay cơ chế seed auth được hỗ trợ, nên tài khoản CUSTOMER/STAFF/ADMIN vẫn là phần phụ thuộc TV4, không giả tạo tài khoản ngoài auth.
+
+### Tệp và kiểm thử
+
+Đã đổi `crawler/src/cleaning/{clean_mileage,clean_price,validator}.py`, `crawler/src/pipeline/import_pipeline.py`, `crawler/scripts/audit_import_data.py`, `crawler/tests/{test_phase1_data_contract,test_import_fixes}.py`, migration `database/migrations/V3_0_1__archive_inventory_boundary.sql`, `database/seed/demo_showroom_vehicles.sql`, Backend `VehicleRepository`, `VehicleService`, `DepositService`, cùng Mapping Matrix, Data Dictionary và schema README. Báo cáo cũ được giữ nguyên phía trên.
+
+Python unittest: 9/9 PASS. Strict CLI: từ chối 1/10.813 trước ghi DB. PostgreSQL 18 local: tạo DB thử riêng `autotrade_tv3_audit_20260930`, chạy schema + V3_0_0 + V3_0_1 + seed demo hai lần: 10 xe demo, không lặp. SQL sinh import hai lần: 10.812 listings/10.812 URL; Python importer hai lần: cùng kết quả, 10.812 ảnh không NULL, 1 `listed_at_raw` NULL đúng nguồn. Không có cấu hình archive nào mang trạng thái AVAILABLE; rollback test `BEGIN/INSERT/ROLLBACK` còn 0 hàng. Backend `mvn test -q` trên DB thử sạch `autotrade_tv3_backend_test_20260930`: PASS. Hai lần thử Backend ban đầu thất bại do DB mặc định chưa có và do dùng chung DB đã nạp 10.812 quảng cáo; lần chạy trên DB thử sạch đã qua. Không reset database chia sẻ. DB thử biệt lập được giữ lại để tra kết quả.
+
+### Lệnh chạy lại tại repo root (PowerShell)
+
+```powershell
+$py='C:\Users\DELL\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
+& $py crawler/scripts/audit_import_data.py
+& $py -m unittest discover -s crawler/tests -v
+& $py crawler/src/pipeline/import_pipeline.py --policy strict
+& $py crawler/src/pipeline/import_pipeline.py --policy quarantine
+# Chỉ trên DB thử biệt lập đã có schema + migrations V3_0_0, V3_0_1:
+# DB mới/disposable: psql -d <test_db> -f database/schema/schema.sql
+psql -d <test_db> -f database/migrations/V3_0_0__showroom_deposit_appointment.sql
+psql -d <test_db> -f database/migrations/V3_0_1__archive_inventory_boundary.sql
+$env:DB_NAME='autotrade_tv3_audit_20260930'
+& $py crawler/src/pipeline/import_pipeline.py --policy quarantine --import-db
+psql -d autotrade_tv3_audit_20260930 -f database/seed/demo_showroom_vehicles.sql
+psql -d autotrade_tv3_audit_20260930 -tAc 'SELECT count(*),count(DISTINCT source_url) FROM listings'
+Compare-Object (Get-Content audit/import_2026_09_30/original_hashes_before.txt) (Get-Content audit/import_2026_09_30/original_hashes_after.txt)
+```
+
+`--import-db` cần `psycopg2-binary` và biến DB_HOST/DB_PORT/DB_NAME/DB_USERNAME/DB_PASSWORD phù hợp. Không chạy `database/schema/schema.sql` trên DB có dữ liệu: file này DROP bảng. Dữ liệu archive không được coi là tồn kho đặt cọc; 10 xe demo và tài khoản thật của TV4 vẫn phải được kiểm tra end-to-end sau khi auth hoàn thành.
+
+## 34. Kiểm toán integrity appointments và transaction_ledger ngày 30/09/2026
+
+Đã đọc kế hoạch DOCX, Workflow 4 Increment, mission TV3/TV4, schema/migrations/seed/tests và tài liệu DB; Backend chỉ đọc để xác lập contract. Bổ sung migration additive **V3_0_3__appointment_ledger_integrity.sql**: CHECK ledger type `DEPOSIT_RECEIVED/REFUND/FORFEIT`, status `CONFIRMED/PROCESSED/REVERSED`; khi CONFIRMED, nhận cọc phải dương (khác NaN), REFUND phải âm theo DepositService/AdminLedgerService. Chưa ép dấu tiền cho FORFEIT/PROCESSED/REVERSED. Thêm ba index không unique cho appointment deposit_id, vehicle_id và (user_id, appointment_date DESC), dựa trên FK và AppointmentRepository. Giữ nguyên CHECK PENDING/COMPLETED/CANCELLED, FK SET NULL/RESTRICT và V3_0_2; không đoán cardinality/cross-table/lifecycle.
+
+PostgreSQL 18.6: DB mới `autotrade_tv3_integrity_20260930_230336_851` chạy bootstrap, smoke v2 trước seed, V3_0_0..V3_0_3, seed hai lần, deposit regression, appointment/ledger CHECK/NULL/FK/delete/rollback và index definitions: **PASS**. Test âm kiểm tra đúng constraint name và SQLSTATE; RESTRICT trên PG18 trả 23001. Probe riêng `_preflight` chứa một ledger UNKNOWN: migration từ chối, không thêm constraint/index dở dang và không sửa/xóa hàng vi phạm. DB thử được giữ; các lần thử ban đầu thất bại và cách sửa được ghi trong guide/evidence, không che kết quả thất bại.
+
+Audit preflight: 0 vi phạm ledger, 0 orphan appointment/ledger, users/roles không tồn tại. Chỉ sau test thành công mới apply V3_0_3 vào `autotrade_tv3_audit_20260930`, ON_ERROR_STOP=1: **PASS**. Snapshot toàn hàng theo id ở 7 bảng trước/sau khớp hoàn toàn: **10.812 listings, 10.812 distinct URL, 10.812 ảnh không NULL; 5.243 ARCHIVED không showroom; 10 demo = 7 AVAILABLE + 1 HOLD + 1 RESERVED + 1 SOLD**. Không chạy mutation/seed/schema.sql trên audit; không kết nối hoặc thay đổi `autotrade_tv3_backend_test_20260930`.
+
+Tệp của lần này: migration V3_0_3; `database/tests/appointment_ledger_{preflight,integrity_test,snapshot,preflight_fixture,preflight_rejection_test,catalog_test}.sql`; runner `run_appointment_ledger_audit.ps1`; `database/guides/Appointment_Ledger_Integrity.md`; schema README; phần bổ sung Data Dictionary; evidence tại `database/evidence/appointment_ledger_20260930/`. Credential dùng biến môi trường có sẵn, không in/lưu mật khẩu; các SQL mới UTF-8 không BOM. V3_0_2 và deposit_integrity_test.sql giữ nguyên SHA-256 lần lượt `8766be713a25c1b68a4cfb6206e9753285f02fed2a00f35a0f6c0fb757351b07` và `3b9d8d0dfa8bfdec0e84a1846e7977602e3c4167d940b7eb71f1f9a213c15261`.
+
+Dependency còn mở: TV4/TV1 cần chốt user/role schema, identity/password hash/lock/current-user và delete policy trước migration/seed account/FK user_id. Không tạo fake users. Workflow dùng SCHEDULED nhưng schema/entity dùng PENDING, cần TV1/TV5 chốt; ngày quá khứ cần TV1 validate khi tạo/đổi lịch, không dùng CHECK thời gian thay đổi; callback/reference idempotency và sign/lifecycle chưa có contract đầy đủ. Kiểm tra này **không chứng minh hoàn thành toàn bộ TV3**, auth hay Gate integration.
+
+Kiểm tra SHA-256 toàn bộ tệp ngoài phạm vi so với snapshot đầu phiên: **0 thay đổi**, bao gồm toàn bộ crawler/ và Backend; các thay đổi đã có trước phiên được giữ nguyên. Không commit/push. V3_0_3 đã apply nên không có lệnh DB bắt buộc còn lại; runner mặc định có thể tạo DB mới để tái kiểm thử khi cần, không dùng lại -ApplyAudit trên audit hiện tại. Hướng dẫn, giới hạn và bảng kết quả chi tiết nằm trong guide.
+
+## 35. Tổng hợp công việc TV3 và yêu cầu phối hợp TV4 — 30/09/2026
+
+### 35.1. Phạm vi hiện hành
+
+Theo kế hoạch ba ngày và `docs/Members/mission/TV3.md`, TV3 phụ trách PostgreSQL schema vật lý, migration, constraint/index/FK, seed, dữ liệu demo, Data Dictionary và hướng dẫn bootstrap/backup/reset. TV4 phụ trách auth/security và cung cấp contract tài khoản để TV3 triển khai database tương thích.
+
+Các mục crawler/ML trước đây được giữ làm lịch sử; không dùng để phân công công việc hiện tại. Trong đợt integrity V3_0_3, Backend chỉ được đọc để xác lập contract; không sửa Backend, frontend hoặc crawler.
+
+### 35.2. Nội dung đã hoàn thành
+
+| Hạng mục | Kết quả ghi nhận | Căn cứ |
+|---|---|---|
+| Kết nối PostgreSQL và kiểm tra cấu trúc | Hai database audit/backend test đều có 7 bảng | Output PowerShell người dùng cung cấp |
+| Dữ liệu marketplace trên database audit | 10.812 listings, 10.812 URL phân biệt, 10.812 ảnh không NULL | Truy vấn COUNT thực tế |
+| Phân biệt archive và tồn kho showroom | 5.243 cấu hình ARCHIVED không showroom; 10 xe demo gồm 7 AVAILABLE, 1 HOLD, 1 RESERVED, 1 SOLD | Truy vấn GROUP BY thực tế |
+| Preflight deposit | Không có xe có nhiều cọc DEPOSITED; không có amount <= 0 | Truy vấn trước V3_0_2 |
+| Migration V3_0_2 | Đã áp dụng unique index theo vehicle_id khi status=DEPOSITED và CHECK amount > 0 | Output BEGIN/CREATE INDEX/ALTER TABLE/COMMIT |
+| Deposit regression | Chặn cọc DEPOSITED trùng xe và tiền cọc bằng 0; các dòng thử rollback | Hai NOTICE PASS và ROLLBACK |
+| Migration V3_0_3 | Bổ sung ledger CHECK và ba appointment index; đã áp dụng trên audit sau test biệt lập/preflight | Báo cáo Codex và mục 34 |
+| Kiểm thử V3_0_3 | Bootstrap sạch, migration, seed lặp, CHECK/NULL/FK/delete/rollback/index và probe dữ liệu vi phạm được báo cáo PASS | Mục 34; evidence trong repository |
+| Bảo toàn dữ liệu/phạm vi | Snapshot 7 bảng trước/sau khớp; database backend test và các tệp ngoài phạm vi không đổi trong phiên V3_0_3 | Mục 34; snapshot/SHA-256 do Codex ghi nhận |
+| Tài liệu | Đã cập nhật Data Dictionary, README, guide integrity và báo cáo tiến độ | Danh sách tệp tại mục 34 |
+
+V3_0_2 chống trùng cọc ở trạng thái DEPOSITED; không suy ra rằng mọi trạng thái giữ chỗ khác hoặc toàn bộ lifecycle đã được khóa. Kiểm tra tiền cọc bằng 0 không thay thế kiểm thử đầy đủ mọi biên số tiền. Các kết quả V3_0_3 được tổng hợp theo báo cáo Codex và mục 34, không phải một lần kiểm toán độc lập mới trong lần bổ sung tài liệu này.
+
+Không chạy lại V3_0_2/V3_0_3 trên database audit đã áp dụng. Không chạy `schema.sql` trên database có dữ liệu cần giữ.
+
+### 35.3. TV4 cần xác nhận gì để TV3 làm tiếp
+
+Database hiện chưa có `users` và `roles`; chưa thể bổ sung FK user_id và seed tài khoản tương thích auth khi contract còn thiếu. TV4 cần bàn giao một contract rõ ràng, có phiên bản hoặc mốc xác nhận, gồm:
+
+| Nội dung cần chốt | TV4 cần cung cấp/xác nhận | TV3 sử dụng để làm gì |
+|---|---|---|
+| Identity tài khoản | Tên đăng nhập hay email; trường bắt buộc; quy tắc chuẩn hóa và UNIQUE; các trường profile được auth sử dụng | Thiết kế bảng users và index/constraint |
+| Password hash | Thuật toán/encoder, tham số và định dạng hash mà code đăng nhập chấp nhận; độ dài cột cần thiết | Thiết kế cột password hash, tạo seed đăng nhập được |
+| Role và cardinality | CUSTOMER/STAFF/ADMIN; một hay nhiều role mỗi user; cách code auth đọc role và tên authority | Thiết kế roles và quan hệ user–role tương thích |
+| Khóa/trạng thái tài khoản | Trạng thái hợp lệ, giá trị mặc định, cơ chế enabled/locked và yêu cầu dữ liệu liên quan | CHECK/default/nullable và seed đúng trạng thái |
+| STAFF và showroom | Có cần liên kết showroom không; một hay nhiều showroom; nullable và chính sách khi showroom bị xóa | FK/quan hệ/index tương ứng |
+| Khóa user và current-user | Kiểu PK user; cách auth xác định user hiện tại; thống nhất với TV1 về user_id trong deposit/appointment | FK và contract dữ liệu xuyên các bảng |
+| Xóa hoặc vô hiệu hóa tài khoản | Hard delete hay soft delete; cách bảo toàn deposit, appointment và ledger khi user ngừng hoạt động | Chọn delete policy và kiểm thử referential integrity |
+| Tài khoản demo | Bộ tài khoản CUSTOMER/STAFF/ADMIN và yêu cầu quyền/phạm vi showroom để kiểm thử | Seed dev có thể chạy lại, bàn giao test account |
+
+Không ghi mật khẩu thật, token hoặc secret vào báo cáo/repository. Nếu dùng tài khoản demo, phải thống nhất cơ chế cấu hình thông tin đăng nhập dev và lưu hash đúng định dạng; TV3 không tạo tài khoản giả chỉ để vượt FK/test.
+
+TV4 chịu trách nhiệm triển khai đăng nhập, xác định current-user và phân quyền trong Backend. TV3 chịu trách nhiệm viết migration/seed database sau khi nhận contract; không giao toàn bộ phần users/roles database sang TV4.
+
+### 35.4. Các dependency khác cần phối hợp
+
+| Điểm chưa chốt | Thành viên cần phối hợp | Hành động cần có |
+|---|---|---|
+| SCHEDULED trong workflow và PENDING trong schema/entity | TV1 và TV5; TV4 nếu liên quan kiểm tra quyền | Thống nhất enum trước khi TV3 thay CHECK |
+| Ngày hẹn phải ở tương lai | TV1 | Chốt và triển khai validation khi tạo/đổi lịch; không suy đoán CHECK phụ thuộc thời gian hiện tại |
+| FORFEIT/PROCESSED/REVERSED | TV1 và người phụ trách workflow liên quan | Chốt dấu tiền và lifecycle để xác định constraint DB bổ sung |
+| Callback/reference idempotency | TV1; TV4 nếu có yêu cầu xác thực callback | Chốt khóa tham chiếu và quy tắc xử lý lặp trước khi thêm UNIQUE |
+
+Những điểm này không mặc định thuộc riêng TV4 và không được giải quyết bằng cách TV3 tự sửa business logic.
+
+### 35.5. Trình tự TV3 thực hiện sau khi nhận contract
+
+1. Đối chiếu contract TV4 với schema/API của TV1; ghi impact và version.
+2. Viết migration additive tiếp theo cho users/roles và quan hệ cần thiết; không sửa migration đã áp dụng.
+3. Kiểm tra user_id hiện có trước khi thêm FK; báo cáo orphan và thống nhất cách xử lý, không tự xóa dữ liệu hoặc tạo user giả.
+4. Seed CUSTOMER/STAFF/ADMIN tương thích password encoder, role và showroom đã chốt; bảo đảm seed dev chạy lại an toàn.
+5. Kiểm thử trên database biệt lập: bootstrap/migration, seed lặp, UNIQUE/FK/CHECK/NULL/delete/rollback và các ca quyền dữ liệu cần bàn giao.
+6. Cập nhật Data Dictionary, ERD vật lý phối hợp TV5, bootstrap/backup/reset guide và log kiểm thử.
+7. Bàn giao migration/schema/seed cho TV1/TV4, dữ liệu demo cho TV2 và bằng chứng DB cho TV5; kiểm thử tích hợp theo phân công, không sửa code ngoài phạm vi.
+
+Trong thời gian chờ TV4, TV3 vẫn tiếp tục hoàn thiện hướng dẫn bootstrap/backup/reset, tổng hợp evidence và kiểm thử các constraint không phụ thuộc tài khoản.
+
+**Trạng thái hiện tại:** các bước kiểm tra dữ liệu và integrity V3_0_2/V3_0_3 đã có kết quả nêu trên; phần users/roles, FK user_id, seed tài khoản và kiểm thử auth tích hợp còn chờ contract. Chưa xác nhận hoàn thành toàn bộ TV3.

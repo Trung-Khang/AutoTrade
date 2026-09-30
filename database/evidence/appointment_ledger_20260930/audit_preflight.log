@@ -1,0 +1,22 @@
+ id | deposit_id | transaction_type | status | amount 
+----+------------+------------------+--------+--------
+(0 rows)
+
+ ledger_violations 
+-------------------
+                 0
+(1 row)
+
+ appointment_orphan_id 
+-----------------------
+(0 rows)
+
+ ledger_orphan_id 
+------------------
+(0 rows)
+
+ users_dependency | roles_dependency 
+------------------+------------------
+                  | 
+(1 row)
+

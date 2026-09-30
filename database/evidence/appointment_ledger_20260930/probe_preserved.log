@@ -1,0 +1,2 @@
+DO
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/tests/appointment_ledger_preflight_rejection_test.sql:11: NOTICE:  PASS migration refused violating data; offending row retained; no partial constraints/indexes

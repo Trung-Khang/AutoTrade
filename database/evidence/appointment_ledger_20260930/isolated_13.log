@@ -1,0 +1,45 @@
+BEGIN
+                  database                   
+---------------------------------------------
+ autotrade_tv3_integrity_20260930_230336_851
+(1 row)
+
+ listings | distinct_urls | images 
+----------+---------------+--------
+        0 |             0 |      0
+(1 row)
+
+  status   | no_showroom | count 
+-----------+-------------+-------
+ AVAILABLE | f           |     7
+ HOLD      | f           |     1
+ RESERVED  | f           |     1
+ SOLD      | f           |     1
+(4 rows)
+
+ demo_key |  status   
+----------+-----------
+ DEMO-01  | AVAILABLE
+ DEMO-02  | AVAILABLE
+ DEMO-03  | AVAILABLE
+ DEMO-04  | AVAILABLE
+ DEMO-05  | AVAILABLE
+ DEMO-06  | AVAILABLE
+ DEMO-07  | AVAILABLE
+ DEMO-08  | HOLD
+ DEMO-09  | RESERVED
+ DEMO-10  | SOLD
+(10 rows)
+
+      relation      | rows |           fingerprint            
+--------------------+------+----------------------------------
+ sources            |    0 | d41d8cd98f00b204e9800998ecf8427e
+ vehicles           |   10 | bf829a0438e9206454c8753b0fb2d04b
+ listings           |    0 | d41d8cd98f00b204e9800998ecf8427e
+ showrooms          |    3 | c8e719de5c3cad72f1f7056d77fcc343
+ deposits           |    0 | d41d8cd98f00b204e9800998ecf8427e
+ appointments       |    0 | d41d8cd98f00b204e9800998ecf8427e
+ transaction_ledger |    0 | d41d8cd98f00b204e9800998ecf8427e
+(7 rows)
+
+COMMIT

@@ -1,0 +1,8 @@
+BEGIN
+SELECT 1
+CREATE FUNCTION
+SAVEPOINT
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/tests/appointment_ledger_integrity_test.sql:103: ERROR:  Wrong rejection: state 23514, constraint chk_ledger_confirmed_amount, column 
+CONTEXT:  PL/pgSQL function pg_temp_72.expect_error(text,text,text,text) line 12 at RAISE
+SQL statement "SELECT pg_temp.expect_error(prefix || '100,''UNKNOWN'',''CONFIRMED'')','23514','chk_ledger_transaction_type')"
+PL/pgSQL function inline_code_block line 21 at PERFORM

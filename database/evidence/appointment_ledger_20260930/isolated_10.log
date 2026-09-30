@@ -1,0 +1,5 @@
+BEGIN
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/tests/deposit_integrity_test.sql:61: NOTICE:  PASS: Chan coc DEPOSITED trung xe
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/tests/deposit_integrity_test.sql:61: NOTICE:  PASS: Chan tien coc bang 0
+DO
+ROLLBACK

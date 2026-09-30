@@ -1,0 +1,37 @@
+BEGIN
+      conrelid      |           conname            | convalidated |                                                                                                                                                                             pg_get_constraintdef                                                                                                                                                                              
+--------------------+------------------------------+--------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ deposits           | chk_deposits_amount_positive | t            | CHECK ((amount > (0)::numeric))
+ deposits           | chk_deposits_status          | t            | CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'DEPOSITED'::character varying, 'CANCELLED'::character varying, 'REFUNDED'::character varying])::text[])))
+ deposits           | fk_deposits_showroom         | t            | FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE RESTRICT
+ deposits           | fk_deposits_vehicle          | t            | FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE RESTRICT
+ appointments       | chk_appointments_status      | t            | CHECK (((status)::text = ANY ((ARRAY['PENDING'::character varying, 'COMPLETED'::character varying, 'CANCELLED'::character varying])::text[])))
+ appointments       | fk_appointments_deposit      | t            | FOREIGN KEY (deposit_id) REFERENCES deposits(id) ON DELETE SET NULL
+ appointments       | fk_appointments_showroom     | t            | FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE RESTRICT
+ appointments       | fk_appointments_vehicle      | t            | FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE RESTRICT
+ transaction_ledger | chk_ledger_confirmed_amount  | t            | CHECK ((((status)::text <> 'CONFIRMED'::text) OR ((transaction_type)::text <> ALL ((ARRAY['DEPOSIT_RECEIVED'::character varying, 'REFUND'::character varying])::text[])) OR (((transaction_type)::text = 'DEPOSIT_RECEIVED'::text) AND (amount > (0)::numeric) AND (amount <> 'NaN'::numeric)) OR (((transaction_type)::text = 'REFUND'::text) AND (amount < (0)::numeric))))
+ transaction_ledger | chk_ledger_status            | t            | CHECK (((status)::text = ANY ((ARRAY['CONFIRMED'::character varying, 'PROCESSED'::character varying, 'REVERSED'::character varying])::text[])))
+ transaction_ledger | chk_ledger_transaction_type  | t            | CHECK (((transaction_type)::text = ANY ((ARRAY['DEPOSIT_RECEIVED'::character varying, 'REFUND'::character varying, 'FORFEIT'::character varying])::text[])))
+ transaction_ledger | fk_ledger_deposit            | t            | FOREIGN KEY (deposit_id) REFERENCES deposits(id) ON DELETE RESTRICT
+(12 rows)
+
+     tablename      |           indexname           |                                                                 indexdef                                                                 
+--------------------+-------------------------------+------------------------------------------------------------------------------------------------------------------------------------------
+ appointments       | appointments_pkey             | CREATE UNIQUE INDEX appointments_pkey ON public.appointments USING btree (id)
+ appointments       | idx_appointments_date         | CREATE INDEX idx_appointments_date ON public.appointments USING btree (appointment_date)
+ appointments       | idx_appointments_deposit_id   | CREATE INDEX idx_appointments_deposit_id ON public.appointments USING btree (deposit_id)
+ appointments       | idx_appointments_showroom_id  | CREATE INDEX idx_appointments_showroom_id ON public.appointments USING btree (showroom_id)
+ appointments       | idx_appointments_status       | CREATE INDEX idx_appointments_status ON public.appointments USING btree (status)
+ appointments       | idx_appointments_user_date    | CREATE INDEX idx_appointments_user_date ON public.appointments USING btree (user_id, appointment_date DESC)
+ appointments       | idx_appointments_vehicle_id   | CREATE INDEX idx_appointments_vehicle_id ON public.appointments USING btree (vehicle_id)
+ deposits           | deposits_deposit_code_key     | CREATE UNIQUE INDEX deposits_deposit_code_key ON public.deposits USING btree (deposit_code)
+ deposits           | deposits_pkey                 | CREATE UNIQUE INDEX deposits_pkey ON public.deposits USING btree (id)
+ deposits           | idx_deposits_status           | CREATE INDEX idx_deposits_status ON public.deposits USING btree (status)
+ deposits           | idx_deposits_user_id          | CREATE INDEX idx_deposits_user_id ON public.deposits USING btree (user_id)
+ deposits           | idx_deposits_vehicle_id       | CREATE INDEX idx_deposits_vehicle_id ON public.deposits USING btree (vehicle_id)
+ deposits           | uq_deposits_vehicle_deposited | CREATE UNIQUE INDEX uq_deposits_vehicle_deposited ON public.deposits USING btree (vehicle_id) WHERE ((status)::text = 'DEPOSITED'::text)
+ transaction_ledger | idx_ledger_deposit_id         | CREATE INDEX idx_ledger_deposit_id ON public.transaction_ledger USING btree (deposit_id)
+ transaction_ledger | transaction_ledger_pkey       | CREATE UNIQUE INDEX transaction_ledger_pkey ON public.transaction_ledger USING btree (id)
+(15 rows)
+
+COMMIT

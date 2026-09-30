@@ -1,0 +1,4 @@
+BEGIN
+INSERT 0 1
+INSERT 0 1
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/tests/schema_v2_0_1_smoke_test.sql:25: ERROR:  more than one row returned by a subquery used as an expression

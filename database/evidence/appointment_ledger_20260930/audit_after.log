@@ -1,0 +1,46 @@
+BEGIN
+           database           
+------------------------------
+ autotrade_tv3_audit_20260930
+(1 row)
+
+ listings | distinct_urls | images 
+----------+---------------+--------
+    10812 |         10812 |  10812
+(1 row)
+
+  status   | no_showroom | count 
+-----------+-------------+-------
+ ARCHIVED  | t           |  5243
+ AVAILABLE | f           |     7
+ HOLD      | f           |     1
+ RESERVED  | f           |     1
+ SOLD      | f           |     1
+(5 rows)
+
+ demo_key |  status   
+----------+-----------
+ DEMO-01  | AVAILABLE
+ DEMO-02  | AVAILABLE
+ DEMO-03  | AVAILABLE
+ DEMO-04  | AVAILABLE
+ DEMO-05  | AVAILABLE
+ DEMO-06  | AVAILABLE
+ DEMO-07  | AVAILABLE
+ DEMO-08  | HOLD
+ DEMO-09  | RESERVED
+ DEMO-10  | SOLD
+(10 rows)
+
+      relation      | rows  |           fingerprint            
+--------------------+-------+----------------------------------
+ sources            |     2 | 16621ac7def4b0aaac67caa587547b3c
+ vehicles           |  5253 | c0abd2fcb3cb7f27a509a992129a9c4a
+ listings           | 10812 | 767c111373b232de16926bb325810373
+ showrooms          |     3 | 1775c6dfc8a634f394902daf971b3564
+ deposits           |     0 | d41d8cd98f00b204e9800998ecf8427e
+ appointments       |     0 | d41d8cd98f00b204e9800998ecf8427e
+ transaction_ledger |     0 | d41d8cd98f00b204e9800998ecf8427e
+(7 rows)
+
+COMMIT

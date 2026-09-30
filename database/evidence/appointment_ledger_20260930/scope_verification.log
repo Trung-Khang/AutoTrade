@@ -1,0 +1,10 @@
+Scope verification 2026-09-30 Asia/Bangkok
+Existing out-of-scope files checked by SHA-256: 228
+Crawler files checked: 35
+Modified/deleted outside scope: 0
+New files outside scope: 0
+V3_0_2 SHA-256: 8766BE713A25C1B68A4CFB6206E9753285F02FED2A00F35A0F6C0FB757351B07
+Deposit integrity test SHA-256: 3B9D8D0DFA8BFDEC0E84A1846E7977602E3C4167D940B7EB71F1F9A213C15261
+New SQL files checked: UTF-8 without BOM.
+No commit or push commands executed.
+Existing backend/crawler/unrelated working-tree changes preserved.

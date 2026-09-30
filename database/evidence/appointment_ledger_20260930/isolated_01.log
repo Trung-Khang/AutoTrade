@@ -1,0 +1,19 @@
+DROP TABLE
+DROP TABLE
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/schema/schema.sql:7: NOTICE:  table "listings" does not exist, skipping
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/schema/schema.sql:8: NOTICE:  table "vehicles" does not exist, skipping
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade/database/schema/schema.sql:9: NOTICE:  table "sources" does not exist, skipping
+DROP TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE TRIGGER
