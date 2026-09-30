@@ -4,10 +4,6 @@ import org.springframework.data.domain.Page;
 
 import java.util.List;
 
-/**
- * Lớp bọc phản hồi phân trang chuẩn hóa cho REST API.
- * Giúp Frontend dễ dàng nhận thông tin trang hiện tại, tổng số trang, và danh sách dữ liệu.
- */
 public class PageResponse<T> {
 
     private List<T> content;
@@ -31,9 +27,8 @@ public class PageResponse<T> {
         this.last = last;
     }
 
-    /**
-     * Chuyển đổi từ Spring Data Page<T> sang PageResponse<T>.
-     */
+    //Chuyển đổi từ Spring Data Page<T> sang PageResponse<T>.
+    
     public static <T> PageResponse<T> fromPage(Page<T> springPage) {
         if (springPage == null) {
             return null;
