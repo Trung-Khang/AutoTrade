@@ -1,198 +1,215 @@
-# Sequence Diagrams
+# Sequence Diagrams — Current API Flow
 
-## 1. Search / Filter Vehicle Listings
+Ngày đồng bộ: 30/09/2026
 
-Actor:
-Guest
+## 1. Search / Filter Listing
 
-Lifelines:
-- Guest
-- React VehicleListPage
-- vehicleApi
-- ListingController
-- ListingService
-- ListingSpecification
-- ListingRepository
-- PostgreSQL
-
-```mermaid
-## 1. Search / Filter Vehicle Listings
-
-Actor:
-Guest
-
-Lifelines:
-- Guest
-- React VehicleListPage
-- vehicleApi
-- ListingController
-- ListingService
-- ListingSpecification
-- ListingRepository
-- PostgreSQL
-
-```mermaid
+```plantuml
 @startuml
-skinparam style strictuml
+actor Guest
+participant "ListingController" as C
+participant "ListingService" as S
+participant "ListingSpecification" as SP
+participant "ListingRepository" as R
+participant "ListingResponseDto" as D
 
-actor "Khách (Guest)" as Guest
-boundary "Giao diện Danh sách xe\n(VehicleListPage)" as UI
-control "Bộ điều khiển Danh sách\n(ListingController)" as C
-entity "Tiêu chí & Dịch vụ\n(ListingService)" as S
-entity "Kho chứa Danh sách\n(ListingRepository)" as R
-database "Cơ sở dữ liệu\n(Database)" as DB
+Guest -> C: GET /api/v1/listings?filters&page
+C -> S: searchListings(filter, pageable)
+S -> SP: filterBy(filter)
+SP --> S: Specification<Listing>
+S -> R: findAll(spec, pageable)
+R --> S: Page<Listing>
+S -> D: fromEntity(listing)
+D --> S: ListingResponseDto
+S --> C: PageResponse<ListingResponseDto>
+C --> Guest: 200 OK
+@enduml
+```
 
-Guest -> UI: 1 1. Nhập từ khóa và bấm "Tìm kiếm"
-activate UI
-UI -> C: 2 2. getListings(params)
-activate C
-C -> S: 3 3. Truy vấn danh sách xe theo bộ lọc
-activate S
-S -> R: 4 4. findAll(specification, pageable)
-activate R
-R -> DB: 5 5. Truy vấn cơ sở dữ liệu
-activate DB
-DB --> R: 6 6. Trả về dữ liệu kết quả
-deactivate DB
-R --> S: 7 7. Trả về danh sách đối tượng Listing
-deactivate R
-S -> S: 8 8. Chuyển đổi dữ liệu sang DTO
-S --> C: 9 9. Trả về PageResponse<ListingResponseDto>
-deactivate S
-C --> UI: 10 10. Trả về kết quả JSON (200 OK)
-deactivate C
-UI --> Guest: 11 11. Hiển thị danh sách xe
-deactivate UI
+## 2. View Detail
 
+```plantuml
 @startuml
+actor Guest
+participant "ListingController" as C
+participant "ListingService" as S
+participant "ListingRepository" as R
+participant "ListingResponseDto" as D
 
-## 2. View Listing Detail
-
-```mermaid
-    
-    @startuml
-    skinparam style strictuml
-
-    actor "Khách\n(Guest)" as Guest
-    boundary "Giao diện Chi tiết xe\n(VehicleDetailPage)" as UI
-    control "Bộ điều khiển Danh sách\n(ListingController)" as C
-    entity "Dịch vụ Danh sách\n(ListingService)" as S
-    entity "Kho chứa Danh sách\n(ListingRepository)" as R
-    database "Cơ sở dữ liệu\n(PostgreSQL)" as DB
-
-    Guest -> UI: 1 1. Chọn xem tin đăng
-    activate UI
-    UI -> C: 2 2. getListingById(id) [GET /api/v1/listings/{id}]
-    activate C
-    C -> S: 3 3. getListingDtoById(id)
-    activate S
-    S -> R: 4 4. findById(id)
-    activate R
-    R -> DB: 5 5. Truy vấn dữ liệu xe (SELECT)
-    activate DB
-    DB --> R: 6 6. Trả về dữ liệu Listing
-    deactivate DB
-    R --> S: 7 7. Trả về đối tượng Listing
-    deactivate R
-    S -> S: 8 8. ListingResponseDto.fromEntity()
-    S --> C: 9 9. Trả về ListingResponseDto
-    deactivate S
-    C --> UI: 10 10. Phản hồi 200 OK (Mảng JSON)
-    deactivate C
-    UI --> Guest: 11 11. Hiển thị thông tin chi tiết xe
-    deactivate UI
-
-    @enduml
-
+Guest -> C: GET /api/v1/listings/{id}
+C -> S: getListingDtoById(id)
+S -> R: findById(id)
+alt found
+  R --> S: Listing
+  S -> D: fromEntity(listing)
+  D --> S: DTO
+  S --> C: DTO
+  C --> Guest: 200 OK
+else not found
+  R --> S: empty
+  S --> C: ResourceNotFoundException
+  C --> Guest: 404
+end
+@enduml
+```
 
 ## 3. Admin CRUD Vehicle
 
-Trạng thái: API CRUD đã tồn tại trong Backend; authorization ADMIN chưa được xác minh trong snapshot hiện tại.
+```plantuml
+@startuml
+actor ADMIN
+participant "AdminVehicleController" as C
+participant "VehicleService" as S
+participant "VehicleRepository" as R
+participant "ShowroomRepository" as SR
 
-Exact security lifeline phải được cập nhật sau khi TV4 bàn giao.
+ADMIN -> C: POST /api/v1/admin/vehicles
+C -> S: createVehicle(request)
+S -> R: save(vehicle)
+R --> S: Vehicle
+S --> C: Vehicle
+C --> ADMIN: 201 Created
 
-Admin
-  ↓
-React Admin UI
-  ↓
-VehicleController
-  ↓
-VehicleService
-  ↓
-VehicleRepository
-  ↓
-PostgreSQL
+ADMIN -> C: PUT /api/v1/admin/vehicles/{id}
+C -> S: updateVehicle(id, request)
+S -> R: findById(id)
+R --> S: Vehicle
+S -> R: save(vehicle)
+R --> S: Vehicle
+S --> C: Vehicle
+C --> ADMIN: 200 OK
 
-```mermaid
-    
-    @startuml
-    skinparam style strictuml
+ADMIN -> C: PATCH /api/v1/admin/vehicles/{id}/status?status=...
+C -> S: updateVehicleStatus(id, status)
+S -> R: findById(id)
+R --> S: Vehicle
+S -> R: save(vehicle)
+R --> S: Vehicle
+S --> C: Vehicle
+C --> ADMIN: 200 OK
+@enduml
+```
 
-    actor "Quản trị viên\n(Admin)" as Admin
-    boundary "Giao diện Quản trị\n(React Admin UI)" as UI
-    control "Bộ điều khiển Xe\n(VehicleController)" as C
-    entity "Dịch vụ Xe\n(VehicleService)" as S
-    entity "Kho chứa Xe\n(VehicleRepository)" as R
-    database "Cơ sở dữ liệu\n(PostgreSQL)" as DB
+## 4. Create Deposit + Appointment
 
-    Admin -> UI: 1 1. Thao tác CRUD tin xe
-    activate UI
-    UI -> C: 2 2. Gửi yêu cầu HTTP Request
-    activate C
-    C -> S: 3 3. Xử lý nghiệp vụ xe
-    activate S
-    S -> R: 4 4. Gọi phương thức Repository
-    activate R
-    R -> DB: 5 5. Thao tác dữ liệu (INSERT/UPDATE/DELETE)
-    activate DB
-    DB --> R: 6 6. Kết quả truy vấn
-    deactivate DB
-    R --> S: 7 7. Trả về đối tượng Entity/Status
-    deactivate R
-    S --> C: 8 8. Trả về DTO/Response
-    deactivate S
-    C --> UI: 9 9. Phản hồi HTTP Status Code
-    deactivate C
-    UI --> Admin: 10 10. Hiển thị thông báo kết quả
-    deactivate UI
+```plantuml
+@startuml
+actor CUSTOMER
+participant "DepositController" as C
+participant "DepositService" as S
+participant "VehicleRepository" as VR
+participant "ShowroomRepository" as SR
+participant "DepositRepository" as DR
+participant "AppointmentRepository" as AR
 
-    @enduml
+CUSTOMER -> C: POST /api/v1/deposits
+C -> S: createDeposit(request, userId)
+S -> VR: findById(vehicleId)
+VR --> S: Vehicle
+S -> S: check status == AVAILABLE
+S -> SR: findById(showroomId)
+SR --> S: Showroom
+S -> DR: save(Deposit PENDING)
+DR --> S: Deposit
+S -> AR: save(Appointment PENDING)
+AR --> S: Appointment
+S --> C: DepositResponse
+C --> CUSTOMER: 201 Created
+@enduml
+```
 
-## 4. Login
+## 5. Confirm Deposit + Atomic Vehicle Lock
 
-Status: PENDING.
+```plantuml
+@startuml
+actor CUSTOMER
+participant "DepositController" as C
+participant "DepositService" as S
+participant "DepositRepository" as DR
+participant "VehicleRepository" as VR
+participant "TransactionLedgerRepository" as LR
 
-Không tự ghi tên AuthController/AuthService/JWTFilter khi chưa nhận code TV4.
+CUSTOMER -> C: POST /api/v1/deposits/{id}/confirm
+C -> S: confirmPayment(id)
+S -> DR: findById(id)
+DR --> S: Deposit
 
-Cần cập nhật sau khi TV4 bàn giao:
+alt status already DEPOSITED
+  S --> C: existing ReceiptResponse
+else PENDING
+  S -> VR: updateVehicleStatusIfAvailable(vehicleId, AVAILABLE, HOLD)
+  alt one row updated
+    VR --> S: 1
+    S -> S: set deposit DEPOSITED + receipt/contract
+    S -> DR: save(deposit)
+    S -> LR: save(Deposit ledger transaction)
+    S --> C: ReceiptResponse
+    C --> CUSTOMER: 200 OK
+  else row count 0
+    VR --> S: 0
+    S --> C: conflict / duplicate deposit
+    C --> CUSTOMER: conflict
+  end
+end
+@enduml
+```
 
-endpoint;
-request/response;
-token/session;
-security filter;
-error 401/403;
-current-user contract.
+## 6. Staff Check-in
 
-## 5. Deposit + Appointment
+```plantuml
+@startuml
+actor STAFF
+participant "StaffAppointmentController" as C
+participant "AppointmentService" as S
+participant "AppointmentRepository" as R
 
-Status: PENDING.
+STAFF -> C: GET /api/v1/staff/appointments
+C -> S: getAppointments(showroomId, status)
+S -> R: findBy...()
+R --> S: appointments
+S --> C: List<Appointment>
+C --> STAFF: 200 OK
 
-Contract nghiệp vụ:
+STAFF -> C: PUT /api/v1/staff/appointments/{id}/check-in
+C -> S: checkIn(id, request)
+S -> R: findById(id)
+R --> S: Appointment
+S -> S: status = COMPLETED
+S -> R: save(appointment)
+R --> S: Appointment
+S --> C: Appointment
+C --> STAFF: 200 OK
+@enduml
+```
 
-CUSTOMER
-   ↓
-Select AVAILABLE Vehicle
-   ↓
-Create Deposit PENDING_PAYMENT
-   ↓
-Create Appointment SCHEDULED
-   ↓
-Mock QR / Reference
-   ↓
-Confirm Payment
-   ↓
-Deposit DEPOSITED
-   +
-Vehicle HOLD/RESERVED
+## 7. Admin Refund
 
-Chi tiết lifeline và tên class phải lấy trực tiếp từ TV1 implementation.
+```plantuml
+@startuml
+actor ADMIN
+participant "AdminLedgerController" as C
+participant "AdminLedgerService" as S
+participant "DepositRepository" as DR
+participant "VehicleRepository" as VR
+participant "TransactionLedgerRepository" as LR
+
+ADMIN -> C: POST /api/v1/admin/ledger/{depositId}/refund
+C -> S: refundDeposit(depositId, reason)
+S -> DR: findById(depositId)
+DR --> S: Deposit
+S -> S: status = REFUNDED
+S -> DR: save(deposit)
+S -> VR: findById(vehicleId)
+VR --> S: Vehicle
+S -> S: status = AVAILABLE
+S -> VR: save(vehicle)
+S -> LR: save(negative refund ledger)
+LR --> S: Ledger
+S --> C: result map
+C --> ADMIN: 200 OK
+@enduml
+```
+
+## 8. Auth sequence
+
+**PENDING.** Không vẽ backend `AuthController/SecurityFilter/JWT` khi các class đó chưa có trong repository.

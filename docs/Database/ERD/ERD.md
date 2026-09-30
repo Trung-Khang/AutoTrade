@@ -1,58 +1,143 @@
-# Entity Relationship Diagram - PostgreSQL Schema v2.0.1
+# ERD — Current Increment
 
-Owner: TV5. Status: official Increment 2 schema, pending runtime import and Backend integration verification.
+Ngày đồng bộ: 30/09/2026
+
+## 1. Current relational model
+
+Nguồn đối chiếu: `database/schema/schema.sql` + `database/migrations/V3_0_0__showroom_deposit_appointment.sql` + current JPA entities.
 
 ```mermaid
 erDiagram
-    sources ||--o{ listings : provides
-    vehicles ||--o{ listings : configures
+    SOURCES ||--o{ LISTINGS : provides
+    VEHICLES ||--o{ LISTINGS : appears_in
+    SHOWROOMS ||--o{ VEHICLES : stores
+    VEHICLES ||--o{ DEPOSITS : receives
+    SHOWROOMS ||--o{ DEPOSITS : selected_for
+    VEHICLES ||--o{ APPOINTMENTS : scheduled_for
+    SHOWROOMS ||--o{ APPOINTMENTS : hosted_at
+    DEPOSITS o|--o{ APPOINTMENTS : links
+    DEPOSITS ||--o{ TRANSACTION_LEDGER : generates
 
-    sources {
-        bigint id PK
-        varchar source_name UK
-        varchar base_url
-        timestamptz created_at
+    SOURCES {
+      bigint id PK
+      varchar source_name UK
+      varchar base_url
+      timestamptz created_at
     }
 
-    vehicles {
-        bigint id PK
-        varchar brand
-        varchar model
-        varchar variant
-        int manufacture_year
-        varchar fuel_type
-        varchar transmission
-        double engine_size
-        int seat_count
-        varchar origin
-        varchar body_type
-        timestamptz created_at
+    VEHICLES {
+      bigint id PK
+      varchar vin UK
+      varchar brand
+      varchar model
+      varchar variant
+      int manufacture_year
+      varchar fuel_type
+      varchar transmission
+      double engine_size
+      int seat_count
+      varchar origin
+      varchar body_type
+      numeric price
+      int mileage
+      varchar color
+      varchar image_url
+      text description
+      varchar status
+      bigint showroom_id FK
+      timestamptz created_at
     }
 
-    listings {
-        bigint id PK
-        bigint vehicle_id FK
-        bigint source_id FK
-        numeric price
-        int mileage
-        varchar color
-        varchar location
-        text source_url UK
-        varchar image_url
-        text listed_at_raw
-        timestamptz listed_at
-        timestamptz crawled_at
-        timestamptz created_at
-        timestamptz updated_at
+    LISTINGS {
+      bigint id PK
+      bigint vehicle_id FK
+      bigint source_id FK
+      numeric price
+      int mileage
+      varchar color
+      varchar location
+      text source_url UK
+      varchar image_url
+      text listed_at_raw
+      timestamptz listed_at
+      timestamptz crawled_at
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    SHOWROOMS {
+      bigint id PK
+      varchar name
+      varchar address
+      varchar phone
+      varchar city
+      timestamptz created_at
+    }
+
+    DEPOSITS {
+      bigint id PK
+      varchar deposit_code UK
+      bigint vehicle_id FK
+      bigint user_id
+      bigint showroom_id FK
+      numeric amount
+      varchar status
+      varchar qr_code_url
+      varchar receipt_code
+      varchar contract_number
+      timestamptz created_at
+      timestamptz confirmed_at
+    }
+
+    APPOINTMENTS {
+      bigint id PK
+      bigint deposit_id FK
+      bigint user_id
+      bigint vehicle_id FK
+      bigint showroom_id FK
+      timestamp appointment_date
+      boolean has_test_drive
+      varchar status
+      varchar customer_note
+      varchar staff_note
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    TRANSACTION_LEDGER {
+      bigint id PK
+      bigint deposit_id FK
+      numeric amount
+      varchar transaction_type
+      varchar status
+      varchar note
+      timestamptz created_at
     }
 ```
 
-## Rules
+## 2. Current state constraints
 
-- `vehicles` represents an observed vehicle configuration. A listing is linked using the documented configuration attributes and null-safe matching; matching brand/model alone never proves the same vehicle.
-- `listings.source_url` is the unique listing identity for idempotent import. A repeated import updates mutable listing values instead of creating a duplicate listing.
-- `image_url` belongs to `listings`, because it is media for a specific market listing rather than a permanent vehicle specification.
-- `listed_at_raw` preserves the source string. `listed_at` remains NULL until the value can be parsed and verified; `crawled_at` is the reliable observation timestamp.
-- `color` is an optional extension field and is not part of the current 17-field TV3 dataset.
+### Vehicle
 
-Future prediction, recommendation, and comparison tables will be added in later increments. Prediction values must not overwrite `listings.price`.
+`AVAILABLE`, `HOLD`, `RESERVED`, `SOLD`
+
+### Deposit
+
+`PENDING`, `DEPOSITED`, `CANCELLED`, `REFUNDED`
+
+### Appointment
+
+`PENDING`, `COMPLETED`, `CANCELLED`
+
+## 3. Important database findings
+
+1. `V3_0_0__showroom_deposit_appointment.sql` contains the current V3 business tables and vehicle extensions.
+2. `database/schema/schema.sql` is still a v2.0.1 destructive bootstrap containing only `sources`, `vehicles`, `listings`.
+3. Therefore the repository currently has **two schema layers that are not yet presented as one clear clean-bootstrap contract**.
+4. `user_id` in `deposits`/`appointments` has no `users` table or FK in the current V3 migration.
+5. The DB model has no role table/permission model yet because TV4 auth backend is not implemented.
+6. These DB implementation issues belong to **TV3**; TV5's task is to keep ERD/traceability accurate and report the discrepancy.
+
+## 4. TV5 status
+
+**ERD documentation: PARTIAL until TV3 confirms the authoritative clean-bootstrap sequence.**

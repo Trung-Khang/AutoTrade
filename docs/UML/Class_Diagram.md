@@ -1,24 +1,19 @@
-# Class Diagram — Current Implementation & P0 Design
+# Class Diagram — Current Implementation
 
-**Owner:** TV5
+Ngày đồng bộ: 30/09/2026
 
-## 1. Nguyên tắc
+TV5 models only classes actually found in the repository. Auth/security classes are intentionally omitted because they are not implemented in the current backend.
 
-Class Diagram phải sử dụng tên class/package thực tế trong repository.
+## 1. Backend class diagram
 
-Không đưa vào diagram các class chưa tồn tại chỉ để làm đẹp sơ đồ.
+```plantuml
+@startuml
+skinparam classAttributeIconSize 0
 
-Các module Auth / Deposit / Appointment chỉ được bổ sung tên class cụ thể sau khi TV4/TV1 bàn giao code.
-
----
-
-## 2. Current Backend Classes
-
-```mermaid
-classDiagram
-
-class Vehicle {
+package "Entity" {
+  class Vehicle {
     Long id
+    String vin
     String brand
     String model
     String variant
@@ -29,17 +24,22 @@ class Vehicle {
     Integer seatCount
     String origin
     String bodyType
-    Instant createdAt
-}
+    BigDecimal price
+    Integer mileage
+    String color
+    String imageUrl
+    String description
+    String status
+    Long showroomId
+  }
 
-class Source {
+  class Source {
     Long id
     String sourceName
     String baseUrl
-    Instant createdAt
-}
+  }
 
-class Listing {
+  class Listing {
     Long id
     Vehicle vehicle
     Source source
@@ -49,230 +49,131 @@ class Listing {
     String location
     String sourceUrl
     String imageUrl
-    String listedAtRaw
-    Instant listedAt
-    Instant crawledAt
-    Instant createdAt
-    Instant updatedAt
-}
+  }
 
-class ListingFilterRequest {
-    String keyword
-    Long vehicleId
-    String brand
-    String model
-    String variant
-    BigDecimal minPrice
-    BigDecimal maxPrice
-    Integer minYear
-    Integer maxYear
-    Integer minMileage
-    Integer maxMileage
-    String fuelType
-    String transmission
-    String bodyType
-    String origin
-    String location
-}
-
-class ListingResponseDto {
+  class Showroom {
     Long id
-    BigDecimal price
-    Integer mileage
-    String color
-    String location
-    String sourceUrl
-    String imageUrl
+    String name
+    String address
+    String phone
+    String city
+  }
+
+  class Deposit {
+    Long id
+    String depositCode
     Long vehicleId
-    String brand
-    String model
-    String variant
-    Integer manufactureYear
-    String fuelType
-    String transmission
-    Double engineSize
-    Integer seatCount
-    String origin
-    String bodyType
-    Long sourceId
-    String sourceName
+    Long userId
+    Long showroomId
+    BigDecimal amount
+    String status
+    String qrCodeUrl
+    String receiptCode
+    String contractNumber
+    Instant createdAt
+    Instant confirmedAt
+  }
+
+  class Appointment {
+    Long id
+    Long depositId
+    Long userId
+    Long vehicleId
+    Long showroomId
+    LocalDateTime appointmentDate
+    boolean hasTestDrive
+    String status
+    String customerNote
+    String staffNote
+  }
+
+  class TransactionLedger {
+    Long id
+    Long depositId
+    BigDecimal amount
+    String transactionType
+    String status
+    String note
+  }
 }
 
-class PageResponse~T~ {
-    List~T~ content
-    int page
-    int size
-    long totalElements
-    int totalPages
-    boolean first
-    boolean last
+package "DTO" {
+  class CreateDepositRequest
+  class DepositResponse
+  class ReceiptResponse
+  class CheckInRequest
+  class ListingFilterRequest
+  class ListingResponseDto
+  class PageResponse
+  class VehicleRequest
+  class VehicleResponse
 }
 
-class VehicleController
-class ListingController
-class VehicleService
-class ListingService
-class ListingSpecification
-class VehicleRepository
-class ListingRepository
-class SourceRepository
-class ResourceNotFoundException
-class GlobalExceptionHandler
+package "Service" {
+  class ListingService
+  class VehicleService
+  class DepositService
+  class AppointmentService
+  class AdminLedgerService
+}
+
+package "Controller" {
+  class ListingController
+  class VehicleController
+  class AdminVehicleController
+  class DepositController
+  class StaffAppointmentController
+  class AdminLedgerController
+}
+
+package "Repository" {
+  interface ListingRepository
+  interface VehicleRepository
+  interface SourceRepository
+  interface ShowroomRepository
+  interface DepositRepository
+  interface AppointmentRepository
+  interface TransactionLedgerRepository
+}
 
 Listing "*" --> "1" Vehicle
 Listing "*" --> "1" Source
-
-VehicleController --> VehicleService
-VehicleController --> ListingService
+Vehicle "*" --> "0..1" Showroom
+Deposit "*" --> "1" Vehicle
+Deposit "*" --> "1" Showroom
+Appointment "*" --> "1" Vehicle
+Appointment "*" --> "1" Showroom
+Appointment "0..*" --> "0..1" Deposit
+TransactionLedger "*" --> "1" Deposit
 
 ListingController --> ListingService
+VehicleController --> ListingService
+AdminVehicleController --> VehicleService
+DepositController --> DepositService
+StaffAppointmentController --> AppointmentService
+AdminLedgerController --> AdminLedgerService
 
-VehicleService --> VehicleRepository
 ListingService --> ListingRepository
 ListingService --> VehicleRepository
-ListingService --> ListingSpecification
+VehicleService --> VehicleRepository
+VehicleService --> ShowroomRepository
+DepositService --> DepositRepository
+DepositService --> VehicleRepository
+DepositService --> ShowroomRepository
+DepositService --> AppointmentRepository
+DepositService --> TransactionLedgerRepository
+AppointmentService --> AppointmentRepository
+AdminLedgerService --> DepositRepository
+AdminLedgerService --> VehicleRepository
+AdminLedgerService --> TransactionLedgerRepository
 
-ListingController --> ListingResponseDto
-ListingService --> ListingResponseDto
-ListingService --> PageResponse
-ListingController --> PageResponse
-ListingController --> Listing
-VehicleController --> Vehicle
-
-ListingRepository --> Listing
-VehicleRepository --> Vehicle
-SourceRepository --> Source
-
-GlobalExceptionHandler --> ResourceNotFoundException
+@enduml
 ```
 
----
+## 2. Important modeling notes
 
-## 3. Package structure represented by the diagram
-
-```text
-com.system
-├── controller
-│   ├── VehicleController
-│   └── ListingController
-│
-├── dto
-│   ├── ListingFilterRequest
-│   ├── ListingResponseDto
-│   └── PageResponse
-│
-├── entity
-│   ├── Vehicle
-│   ├── Listing
-│   └── Source
-│
-├── repository
-│   ├── VehicleRepository
-│   ├── ListingRepository
-│   └── SourceRepository
-│
-├── service
-│   ├── VehicleService
-│   └── ListingService
-│
-├── specification
-│   └── ListingSpecification
-│
-└── exception
-    ├── ResourceNotFoundException
-    ├── ErrorResponse
-    └── GlobalExceptionHandler
-```
-
----
-
-## 4. Database relationship
-
-```text
-sources
-    1
-    │
-    │
-    N
-listings
-    N
-    │
-    │
-    1
-vehicles
-```
-
-`Listing` is the market listing entity.
-
-`Vehicle` stores the observed vehicle configuration.
-
-`Source` stores the marketplace/source information.
-
----
-
-## 5. Current search/filter flow
-
-```text
-ListingController
-       ↓
-ListingService
-       ↓
-ListingSpecification
-       ↓
-ListingRepository
-       ↓
-PostgreSQL
-```
-
-The result is mapped to:
-
-```text
-Page<Listing>
-     ↓
-Page<ListingResponseDto>
-     ↓
-PageResponse<ListingResponseDto>
-```
-
----
-
-## 6. Classes not yet finalized
-
-The following must not be invented in the diagram:
-
-```text
-AuthController
-AuthService
-DepositController
-DepositService
-AppointmentController
-AppointmentService
-SecurityFilter
-JwtService
-User
-Role
-Deposit
-Appointment
-```
-
-They are planned by the current workflow, but their actual names and relationships must come from the implementation handed over by TV1/TV4.
-
----
-
-## 7. Final synchronization rule
-
-Before Final Gate, TV5 must compare:
-
-```text
-Class Diagram
-      ↕
-Java source code
-      ↕
-Database schema
-      ↕
-API contract
-      ↕
-Sequence Diagram
-```
-
-Any class existing only in documentation must be removed or marked pending.
+- `Deposit` và `Appointment` đang giữ foreign-key IDs dạng `Long`; chúng chưa phải JPA `@ManyToOne` object relationships.
+- `Deposit.userId` và `Appointment.userId` chưa có user entity/foreign key trong current database migration.
+- `Vehicle.showroomId` cũng là `Long`; showroom được service load riêng.
+- `ListingResponseDto` là flat DTO ghép Listing + Vehicle + Source.
+- Không thêm `User`, `Role`, `JwtToken`, `Otp`, `SecurityConfig` vào class diagram cho tới khi TV4 có implementation thực tế.
