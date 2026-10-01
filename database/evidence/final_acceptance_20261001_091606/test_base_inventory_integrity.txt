@@ -1,0 +1,24 @@
+{"label": "test_base_inventory_integrity", "file": "database/tests/final_inventory_integrity.sql", "sha256": "44f2725a659c90cdc61096a29a5683661ffef5b8228bea91a9d78be4fe70aca1", "order": null, "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:16:29.407744+07:00", "end": "2026-10-01T09:16:29.571516+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+BEGIN
+CREATE FUNCTION
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_manufacture_year
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_fuel_type
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_transmission
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_engine_size
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_seat_count
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_origin
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_vehicles_status
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23505 uq_vehicles_demo_key
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23505 sources_source_name_key
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23505 vehicles_vin_key
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23505 listings_source_url_key
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_listings_price
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23514 chk_listings_mileage
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23503 fk_listings_vehicle
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23503 fk_listings_source
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23503 fk_deposits_vehicle
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS inventory rejection 23503 fk_deposits_showroom
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/final_inventory_integrity.sql:81: NOTICE:  PASS base PK/ID/index/predicates, archive boundary, vehicle vocabulary/VIN/demo uniqueness, listing FK/CHECK/UNIQUE/trigger and deposit vehicle/showroom FK; state transitions remain Backend-owned

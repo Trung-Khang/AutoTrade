@@ -1,3 +1,56 @@
+# TV3 — Bàn giao database acceptance chính thức, 01/10/2026
+
+**TV3 database handoff completed trên máy database; route liên máy BLOCKED. Chưa nghiệm thu toàn hệ thống.**
+
+Baseline mới nhất đã fetch và fast-forward TV3: `ab43effaabe1bff4e40c5844fd45a7a61cfc6ef0` (`origin/main`). Linked worktree giữ nguyên .git pointer, không rewrite history; không có thay đổi cục bộ ban đầu. Không thấy AGENTS.md trong root/các thư mục cha hoặc thư mục con áp dụng. Đã đọc kế hoạch DOCX, Workflow, mission TV3, official top README và locked Auth Physical Contract; các mô tả ML/candidate/pending lịch sử không áp dụng.
+
+Database duy nhất tạo cho acceptance: **autotrade_final**, UTF8/template0, owner `postgres`; PostgreSQL **18.6** trên **DESKTOP-42GEDK2**, local server `::1:5432`, database OID và cluster ID trong evidence. Không sửa used_car_db/crawler/schema.sql/migrations cũ.
+
+```dotenv
+DB_NAME=autotrade_final
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+HIBERNATE_DDL_AUTO=validate
+```
+
+JDBC không password: `jdbc:postgresql://localhost:5432/autotrade_final`. `DB_PASSWORD` chỉ environment riêng do operator cấp. Localhost trên máy khác không phải instance này.
+
+| Bootstrap stage | Verdict |
+|---|---|
+| schema.sql | PASS, CREATE thành công + chứng minh empty trước chạy |
+| V3_0_0 showroom/deposit/appointment | PASS |
+| V3_0_1 archive/inventory boundary | PASS |
+| V3_0_2 deposit integrity | PASS |
+| V3_0_3 appointment/ledger | PASS |
+| V3_0_4 auth/OTP | PASS |
+| V3_0_5 official auth identity integrity | PASS |
+| Showroom seed | PASS |
+| Auth seed | PASS |
+
+Đúng thứ tự chín file; không V2_0_1/candidate/Flyway. File SHA256/order/connection/start/end/exit và log PASS trong `database/evidence/final_acceptance_20261001_091606/migration_manifest.executed.json`; logs bootstrap gốc `final_acceptance_20261001_091335/`. Không migration lỗi, không additive repair. Runner ban đầu lỗi parser empty-result trước schema; creation logs + OID/server + empty UTF8 đủ chứng minh resume. Không drop/recreate hoặc patch SQL objects.
+
+**Demo:** 3 showroom; đúng 10 keys DEMO-01–DEMO-10, IDs 1–10, showroom 1; 7 AVAILABLE, 1 HOLD, 1 RESERVED, 1 SOLD. Showroom stock giả lập tách crawler/archive; không import sources/listings. Account IDs 1/2/3: customer/customer@example.test/CUSTOMER, staff/staff@example.test/STAFF, admin/admin@example.test/ADMIN; active và email_verified=true, locked=false. Một BCrypt12 hash chung được giữ cho reruns, Spring BCrypt compatibility PASS.
+
+**Credential riêng:** `D:\CONG_NGHE_PHAN_MEM\AutoTrade-TV3\.env.tv3-final.private.json`, ignored, ACL operator DELL + execution account + SYSTEM. Operator tự bàn giao qua private channel; TV3 không gửi teammate. Không dùng random credential của verify_official_tv3.py. Không password/hash/JWT/OTP/reset/SMTP secret trong evidence/commit/log/command args.
+
+**Seed-repeat PASS:** before/after fresh trên autotrade_final, full-row fingerprints của mọi public table giống nhau; IDs/credential/roles/states và toàn bộ fields không đổi, không thêm business rows. Valid resume cũng PASS, không replay migration. Source state/evidence được giữ trong protected ignored local journal.
+
+**DB integrity PASS:** exact Auth29/default/NULL/PK/FK/UNIQUE/CHECK/index; deposit positive amount và duplicate; hai concurrent sessions trên fixture xe riêng cho một commit, một reject SQLSTATE23505 tại uq_deposits_vehicle_deposited; user FKs/OTP/reset FKs; deposits và appointments independently RESTRICT giữ auth/history; soft disable giữ history; eligible user CASCADE cả OTP/reset; appointment/ledger; inventory/archive/VIN/key/listing CHECK/FK/UNIQUE/timestamp trigger. Test fixture rollback, full-row preservation và zero tagged concurrent residue. Sequence gaps giữ nguyên.
+
+Live physical catalog: `database/evidence/final_acceptance_20261001_091606/live_catalog.json` và `Data_Dictionary.live.md`; vehicles export `demo_vehicles.csv`; kết quả tổng `integrity_verdict.txt`, logs test và `concurrent_deposit.json`. Cuối kiểm tra: 3 users, 10 vehicles, 3 showrooms; business/auth temporary/sources/listings = 0.
+
+**Kết nối liên máy BLOCKED:** VPN 26.181.182.25 probe bị pg_hba.conf từ chối; HBA chỉ loopback dù listen_addresses hiện có là *. Không mở Internet/đổi HBA/firewall. Probe từ máy teammate NOT RUN do không có access session; operator cần restricted VPN route/tunnel rồi các TV xác minh đúng cluster/OID. Đây là blocker sử dụng shared instance từ máy khác, không phải schema defect.
+
+**NOT RUN bởi TV3:** Hibernate validate/login ba roles,/auth/me, registration/email OTP/reset (TV4); CRUD/ownership/business deposit/state transaction/appointment/ledger (TV1); Frontend/system/screenshots/defect log (TV2); thực nhận SMTP/mailbox (chưa có verified credentials/access). SQL PASS không xác nhận API/security/system. TV5 sync ERD/DD/UML theo live catalog/code. 02/10 chỉ P0 repair bằng additive migration; không chức năng mới.
+
+Runner/lệnh/runtime/limitations đầy đủ: `database/guides/Final_Acceptance_Handoff.md`, `database/tests/run_final_acceptance.py`.
+Final TV3 commit và push receipt được ghi sau commit vào sanitized ignored `database/evidence/final_acceptance_20261001_091606/git_receipt.local.json`; kiểm tra bằng `git rev-parse HEAD` và `git ls-remote origin refs/heads/TV3`. Chỉ push TV3 cho manager, không main/force-push.
+
+---
+
+## Báo cáo lịch sử — superseded bởi acceptance chính thức phía trên
+
 # TV3 — DATA ENGINEERING & DATA PIPELINE REPORT
 
 **Project:** `Used-Car-Smart-System`

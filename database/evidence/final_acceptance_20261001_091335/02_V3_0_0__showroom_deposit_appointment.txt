@@ -1,0 +1,30 @@
+{"label": "02_V3_0_0__showroom_deposit_appointment", "file": "database/migrations/V3_0_0__showroom_deposit_appointment.sql", "sha256": "ca05475c02291155ab477ac4b52c298b2180dd366c0d2b86261abb9bf459ab6f", "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:13:47.321666+07:00", "end": "2026-10-01T09:13:47.479413+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+BEGIN
+CREATE TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+ALTER TABLE
+DO
+DO
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE TABLE
+CREATE INDEX
+INSERT 0 3
+3
+COMMIT

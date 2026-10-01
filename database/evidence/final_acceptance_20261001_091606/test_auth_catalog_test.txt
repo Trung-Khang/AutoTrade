@@ -1,0 +1,8 @@
+{"label": "test_auth_catalog_test", "file": "database/tests/auth_catalog_test.sql", "sha256": "75189e0df6ffef6fa3c2ac21da64b8081c2ae0bf13fe22ec5c031dc2caf197a2", "order": null, "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:16:15.846685+07:00", "end": "2026-10-01T09:16:16.060860+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+BEGIN
+SELECT 29
+SELECT 16
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_catalog_test.sql:38: NOTICE:  PASS exact 29 columns/defaults/PKs/4 FK policies/reset UNIQUE/OTP index; no duplicate token index or lifecycle trigger/time CHECK

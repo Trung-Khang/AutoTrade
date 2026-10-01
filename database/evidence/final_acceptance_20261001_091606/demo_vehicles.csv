@@ -1,0 +1,21 @@
+id,demo_key,brand,model,showroom_id,showroom_name,status
+
+1,DEMO-01,Toyota,Vios,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+2,DEMO-02,Honda,City,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+3,DEMO-03,Mazda,CX 5,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+4,DEMO-04,Hyundai,Accent,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+5,DEMO-05,Kia,Seltos,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+6,DEMO-06,Ford,Ranger,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+7,DEMO-07,Mitsubishi,Xpander,1,Showroom Sài Gòn - Thủ Đức,AVAILABLE
+
+8,DEMO-08,Suzuki,XL7,1,Showroom Sài Gòn - Thủ Đức,HOLD
+
+9,DEMO-09,Nissan,Navara,1,Showroom Sài Gòn - Thủ Đức,RESERVED
+
+10,DEMO-10,VinFast,VF 8,1,Showroom Sài Gòn - Thủ Đức,SOLD

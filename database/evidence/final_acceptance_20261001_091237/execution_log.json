@@ -1,0 +1,103 @@
+[
+  {
+    "label": "server_preflight",
+    "file": null,
+    "sha256": null,
+    "target_database": "postgres",
+    "server": null,
+    "start": "2026-10-01T09:12:37.395791+07:00",
+    "end": "2026-10-01T09:12:37.524762+07:00",
+    "exit_code": 0,
+    "verdict": "PASS"
+  },
+  {
+    "label": "create_database",
+    "file": null,
+    "sha256": null,
+    "target_database": "postgres",
+    "server": {
+      "host": "::1/128",
+      "port": 5432,
+      "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+      "username": "postgres",
+      "data_directory": "C:/Program Files/PostgreSQL/18/data",
+      "system_identifier": "7673721980907334164"
+    },
+    "start": "2026-10-01T09:12:37.604933+07:00",
+    "end": "2026-10-01T09:12:38.217619+07:00",
+    "exit_code": 0,
+    "verdict": "PASS"
+  },
+  {
+    "label": "created_database_identity",
+    "file": null,
+    "sha256": null,
+    "target_database": "postgres",
+    "server": {
+      "host": "::1/128",
+      "port": 5432,
+      "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+      "username": "postgres",
+      "data_directory": "C:/Program Files/PostgreSQL/18/data",
+      "system_identifier": "7673721980907334164"
+    },
+    "start": "2026-10-01T09:12:38.218620+07:00",
+    "end": "2026-10-01T09:12:38.301114+07:00",
+    "exit_code": 0,
+    "verdict": "PASS"
+  },
+  {
+    "label": "prove_empty",
+    "file": null,
+    "sha256": null,
+    "target_database": "autotrade_final",
+    "server": {
+      "host": "::1/128",
+      "port": 5432,
+      "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+      "username": "postgres",
+      "data_directory": "C:/Program Files/PostgreSQL/18/data",
+      "system_identifier": "7673721980907334164"
+    },
+    "start": "2026-10-01T09:12:38.301114+07:00",
+    "end": "2026-10-01T09:12:38.414435+07:00",
+    "exit_code": 0,
+    "verdict": "PASS"
+  },
+  {
+    "label": "empty_catalog",
+    "file": "database/tests/final_catalog.sql",
+    "sha256": null,
+    "target_database": "autotrade_final",
+    "server": {
+      "host": "::1/128",
+      "port": 5432,
+      "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+      "username": "postgres",
+      "data_directory": "C:/Program Files/PostgreSQL/18/data",
+      "system_identifier": "7673721980907334164"
+    },
+    "start": "2026-10-01T09:12:38.416436+07:00",
+    "end": "2026-10-01T09:12:38.520500+07:00",
+    "exit_code": 0,
+    "verdict": "PASS"
+  },
+  {
+    "label": "row_fingerprint",
+    "file": null,
+    "sha256": null,
+    "target_database": "autotrade_final",
+    "server": {
+      "host": "::1/128",
+      "port": 5432,
+      "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+      "username": "postgres",
+      "data_directory": "C:/Program Files/PostgreSQL/18/data",
+      "system_identifier": "7673721980907334164"
+    },
+    "start": "2026-10-01T09:12:38.522501+07:00",
+    "end": "2026-10-01T09:12:38.594452+07:00",
+    "exit_code": 0,
+    "verdict": "PASS"
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "secret_scan": "PASS",
+  "completed_stage_count": 9,
+  "operator_private_acl": "PASS",
+  "crawler_schema_existing_migrations_diff": "EMPTY (git diff origin/main -- crawler database/schema database/migrations)",
+  "required_tables": 10,
+  "required_auth_contract_columns": 29
+}

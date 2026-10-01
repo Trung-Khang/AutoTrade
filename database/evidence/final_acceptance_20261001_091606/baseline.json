@@ -1,0 +1,17 @@
+{
+  "origin_main": "ab43effaabe1bff4e40c5844fd45a7a61cfc6ef0",
+  "server": {
+    "host": "::1/128",
+    "port": 5432,
+    "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+    "username": "postgres",
+    "data_directory": "C:/Program Files/PostgreSQL/18/data",
+    "system_identifier": "7673721980907334164"
+  },
+  "configured_host": "localhost",
+  "database": "autotrade_final",
+  "database_oid": 26921,
+  "machine": "DESKTOP-42GEDK2",
+  "previous_evidence": "database/evidence/final_acceptance_20261001_091335",
+  "started": "2026-10-01T09:16:09.863686+07:00"
+}

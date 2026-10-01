@@ -1,0 +1,3 @@
+{"label": "schema_empty_guard", "file": null, "sha256": null, "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:13:46.417694+07:00", "end": "2026-10-01T09:13:46.496894+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+0

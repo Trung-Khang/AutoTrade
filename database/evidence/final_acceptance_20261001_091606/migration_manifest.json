@@ -1,0 +1,74 @@
+[
+  {
+    "order": 1,
+    "path": "database/schema/schema.sql",
+    "sha256": "4837afcd91bd711678d8df02d6be46d49c441a882198ebb237d3a9287563f4e4",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 2,
+    "path": "database/migrations/V3_0_0__showroom_deposit_appointment.sql",
+    "sha256": "ca05475c02291155ab477ac4b52c298b2180dd366c0d2b86261abb9bf459ab6f",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 3,
+    "path": "database/migrations/V3_0_1__archive_inventory_boundary.sql",
+    "sha256": "138b50b9a855c14789ad76af396a05c9f7030fa803f91056cd64ce0f2cf96d9a",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 4,
+    "path": "database/migrations/V3_0_2__deposit_integrity.sql",
+    "sha256": "8766be713a25c1b68a4cfb6206e9753285f02fed2a00f35a0f6c0fb757351b07",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 5,
+    "path": "database/migrations/V3_0_3__appointment_ledger_integrity.sql",
+    "sha256": "30816eb367f77403c94c3b0253cb15ce155a6cfb962417728c3fcef845013c27",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 6,
+    "path": "database/migrations/V3_0_4__auth_and_otp.sql",
+    "sha256": "bc366539308ddade3b305f09009e87760738535a540d4f0ffc49004f07c33e22",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 7,
+    "path": "database/migrations/V3_0_5__auth_identity_integrity.sql",
+    "sha256": "125668b0faa1a51d7222a31718e1b0154d49e3fb3f825c51f5020f0db910626b",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 8,
+    "path": "database/seed/demo_showroom_vehicles.sql",
+    "sha256": "cfe53cfed4790b36a64e1bd1e505541ea1481712b7b85d3ca5ddc2ab842aa9af",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  },
+  {
+    "order": 9,
+    "path": "database/seed/demo_auth_accounts.sql",
+    "sha256": "09bdef72b2fe3ad4ac169ee44b9f40d00457997d0fa3e866103a8acf9a7f2f96",
+    "verdict": "PASS",
+    "target_database": "autotrade_final",
+    "execution": "prior trusted checkpoint"
+  }
+]

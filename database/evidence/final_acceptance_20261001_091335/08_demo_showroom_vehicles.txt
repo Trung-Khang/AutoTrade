@@ -1,0 +1,5 @@
+{"label": "08_demo_showroom_vehicles", "file": "database/seed/demo_showroom_vehicles.sql", "sha256": "cfe53cfed4790b36a64e1bd1e505541ea1481712b7b85d3ca5ddc2ab842aa9af", "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:13:56.969222+07:00", "end": "2026-10-01T09:13:57.095975+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+BEGIN
+INSERT 0 10
+COMMIT
