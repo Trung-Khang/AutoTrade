@@ -18,11 +18,11 @@ Dependency còn thiếu: **SMTP_USERNAME, SMTP_PASSWORD**, mailbox access/recipi
 
 # ERD — Current Increment
 
-Ngày đồng bộ: 30/09/2026
+Ngày đồng bộ: 01/10/2026
 
 ## 1. Current relational model
 
-Nguồn đối chiếu: `database/schema/schema.sql` + `database/migrations/V3_0_0__showroom_deposit_appointment.sql` + current JPA entities.
+Nguồn đối chiếu: `database/schema/schema.sql`, migrations `V3_0_0`..`V3_0_4` và current JPA entities.
 
 ```mermaid
 erDiagram
@@ -35,6 +35,8 @@ erDiagram
     SHOWROOMS ||--o{ APPOINTMENTS : hosted_at
     DEPOSITS o|--o{ APPOINTMENTS : links
     DEPOSITS ||--o{ TRANSACTION_LEDGER : generates
+    APP_USERS ||--o{ AUTH_OTPS : owns
+    APP_USERS ||--o{ PASSWORD_RESET_SESSIONS : owns
 
     SOURCES {
       bigint id PK
@@ -63,6 +65,7 @@ erDiagram
       text description
       varchar status
       bigint showroom_id FK
+      varchar demo_key UK
       timestamptz created_at
     }
 
@@ -131,30 +134,80 @@ erDiagram
       varchar note
       timestamptz created_at
     }
+
+    APP_USERS {
+      bigint id PK
+      varchar username UK
+      varchar email UK
+      varchar password_hash
+      varchar full_name
+      varchar phone
+      varchar role
+      boolean active
+      boolean email_verified
+      boolean locked
+      timestamptz created_at
+      timestamptz updated_at
+    }
+
+    AUTH_OTPS {
+      bigint id PK
+      bigint user_id FK
+      varchar email
+      varchar purpose
+      varchar code_hash
+      timestamptz expires_at
+      timestamptz created_at
+      timestamptz consumed_at
+      timestamptz invalidated_at
+      int attempt_count
+      timestamptz last_sent_at
+    }
+
+    PASSWORD_RESET_SESSIONS {
+      bigint id PK
+      bigint user_id FK
+      varchar token_hash UK
+      timestamptz expires_at
+      timestamptz created_at
+      timestamptz consumed_at
+    }
 ```
+
+### Physical-FK caveat
+
+`deposits.user_id` và `appointments.user_id` hiện **chưa** có FK sang `app_users(id)` trong V3 migrations. Do đó ERD chỉ biểu diễn các FK thực tế; đây không phải omission.
 
 ## 2. Current state constraints
 
 ### Vehicle
 
-`AVAILABLE`, `HOLD`, `RESERVED`, `SOLD`
+`ARCHIVED`, `AVAILABLE`, `HOLD`, `RESERVED`, `SOLD`.
+
+`ARCHIVED` là boundary từ V3_0_1 cho cấu hình marketplace không có showroom; không phải inventory để deposit.
 
 ### Deposit
 
-`PENDING`, `DEPOSITED`, `CANCELLED`, `REFUNDED`
+`PENDING`, `DEPOSITED`, `CANCELLED`, `REFUNDED`.
 
 ### Appointment
 
-`PENDING`, `COMPLETED`, `CANCELLED`
+`PENDING`, `COMPLETED`, `CANCELLED`.
+
+### Auth
+
+- Role: `CUSTOMER`, `STAFF`, `ADMIN`.
+- OTP purpose: `VERIFY_EMAIL`, `RESET_PASSWORD`.
 
 ## 3. Important database findings
 
-1. `V3_0_0__showroom_deposit_appointment.sql` contains the current V3 business tables and vehicle extensions.
-2. `database/schema/schema.sql` is still a v2.0.1 destructive bootstrap containing only `sources`, `vehicles`, `listings`.
-3. Therefore the repository currently has **two schema layers that are not yet presented as one clear clean-bootstrap contract**.
-4. `user_id` in `deposits`/`appointments` has no `users` table or FK in the current V3 migration.
-5. The DB model has no role table/permission model yet because TV4 auth backend is not implemented.
-6. These DB implementation issues belong to **TV3**; TV5's task is to keep ERD/traceability accurate and report the discrepancy.
+1. `V3_0_0` bổ sung showroom/deposit/appointment/ledger.
+2. `V3_0_1` bổ sung archive boundary và `demo_key`.
+3. `V3_0_2` bổ sung unique index chống nhiều `DEPOSITED` trên cùng vehicle và `amount > 0`.
+4. `V3_0_3` bổ sung ledger CHECK và appointment indexes.
+5. `V3_0_4` tạo `app_users`, `auth_otps`, `password_reset_sessions`.
+6. `database/schema/schema.sql` vẫn là destructive v2.0.1 bootstrap cho 3 bảng market-data; muốn runtime hiện tại phải chạy thêm migration chain.
+7. `user_id` của deposit/appointment là identity scalar trong business tables và chưa có physical FK tới `app_users`.
 
 ## 4. TV5 status
 

@@ -3,192 +3,168 @@
 ## 1. Thông tin tài liệu
 
 - **Đề tài:** Xây dựng hệ thống quản lý kinh doanh ô tô đã qua sử dụng
-- **Ngày đồng bộ:** 30/09/2026
+- **Ngày đồng bộ:** 01/10/2026
 - **Scope:** Workflow 4 — Increment hiện tại
 - **Owner:** TV5
+- **Nguồn đối chiếu:** backend source, frontend source, PostgreSQL migrations, TV4 handoff/report và test files hiện có.
 
 ## 2. Mục tiêu
 
-Hệ thống cung cấp quy trình quản lý xe cũ gồm tra cứu xe, showroom, quản trị xe, đặt cọc giả lập, lịch hẹn, khóa xe khi cọc và quản lý giao dịch cọc.
+Hệ thống hỗ trợ tra cứu xe và quy trình showroom gồm quản lý xe, đặt cọc giả lập, lịch hẹn, khóa xe khi cọc, ledger/hoàn cọc và xác thực tài khoản.
 
-Phạm vi hiện tại giữ stack:
+Stack hiện tại:
 
-- Backend: Spring Boot + Spring Data JPA
+- Backend: Spring Boot + Spring Data JPA + Spring Security
 - Database: PostgreSQL
 - Frontend: React + Vite
 - API prefix: `/api/v1`
+- Authentication: JWT Bearer
+- OTP: six-digit SecureRandom, SHA-256 hash, Gmail SMTP khi được cấu hình
 
-Không đưa các module cũ về ML/regression/R Plumber/valuation/recommendation/comparison vào scope hiện tại.
+Không đưa ML/regression/R Plumber/valuation/recommendation/comparison/payment thật vào scope hiện hành.
 
 ## 3. Actor
 
-| Actor | Quyền/nhu cầu |
-|---|---|
-| Guest | Xem danh sách, tìm kiếm/lọc, xem chi tiết xe |
-| CUSTOMER | Đăng nhập, tạo đặt cọc, chọn showroom/ngày giờ, xem lịch sử cọc |
-| STAFF | Tra cứu và check-in lịch hẹn showroom |
-| ADMIN | CRUD xe, đổi trạng thái xe, xem ledger, duyệt hoàn cọc |
-| System | Tạo mã cọc/QR giả lập, xử lý state transition, transaction |
-
-> Auth/RBAC backend chưa có implementation trong repository hiện tại. Vì vậy quyền ở bảng trên là **requirement**, không được hiểu là đã được enforcement.
+| Actor | Nhu cầu/quyền | Hiện trạng |
+|---|---|---|
+| Guest | browse/search/detail, register, verify email, forgot password | Có UI/API tương ứng; auth flows có code |
+| CUSTOMER | login, deposit, appointment, my deposits | Có auth/RBAC; ownership deposit cần re-check qua JWT |
+| STAFF | xem lịch hẹn, check-in | Có API/UI; security matcher có |
+| ADMIN | CRUD/status xe, ledger/refund | Có API/UI; `/admin/**` được bảo vệ |
+| System | JWT, OTP, QR/reference, state transition, transaction | Có implementation phân tán qua security/auth/business services |
 
 ## 4. Functional Requirements
 
 ### FR-01 — Đăng ký tài khoản
 
-CUSTOMER có thể đăng ký tài khoản.
+`POST /api/v1/auth/register` tạo user role `CUSTOMER`, lưu BCrypt hash và phát OTP xác minh email.
 
-**Status:** PENDING — chưa có backend auth trong source hiện tại.
+**Status:** IMPLEMENTED. Runtime/browser E2E còn cần evidence đầy đủ.
 
-### FR-02 — Đăng nhập và phân quyền
+### FR-02 — Đăng nhập và RBAC
 
-Hệ thống xác thực người dùng và chặn API STAFF/ADMIN khi role không phù hợp.
+`POST /api/v1/auth/login` nhận `usernameOrEmail` + `password`, trả JWT và thông tin user. Security matcher bảo vệ API theo role.
 
-**Status:** PENDING — chưa có Spring Security/JWT/session backend.
+**Status:** IMPLEMENTED; runtime smoke được TV4 báo PASS, security regression ngày 3 còn mở.
 
 ### FR-03 — Quên mật khẩu/OTP
 
-Hệ thống hỗ trợ OTP hoặc fallback demo có hạn dùng theo contract của TV4.
+`POST /forgot-password` gửi OTP theo email; `POST /verify-reset-otp` cấp reset token; `POST /reset-password` đổi mật khẩu bằng reset token.
 
-**Status:** PENDING.
+OTP có lifetime 5 phút, resend cooldown 60 giây, tối đa 5 lần sai và single-use; không trả OTP qua API.
+
+**Status:** IMPLEMENTED; boundary/E2E regression còn cần evidence đầy đủ.
 
 ### FR-04 — Tìm kiếm/lọc xe
 
-API public cho phép tìm theo keyword và các filter như brand/model/variant, giá, năm, mileage, fuel type, transmission, body type, origin, location.
+`GET /api/v1/vehicles` và `GET /api/v1/listings` hỗ trợ paging/filter; `ListingSpecification` thực hiện filter.
 
-**API hiện có:** `GET /api/v1/listings`
+**Status:** IMPLEMENTED; có test code listing/specification.
 
-**Status:** IMPLEMENTED (đã có code; automated tests cho listing/specification tồn tại).
+### FR-05 — Xem chi tiết
 
-### FR-05 — Xem chi tiết xe/listing
+`GET /api/v1/vehicles/{id}` và `GET /api/v1/listings/{id}` tồn tại. Lưu ý `/vehicles/{id}` hiện map qua `ListingService`, nên API doc cần mô tả đúng semantics.
 
-Guest/CUSTOMER xem chi tiết một listing.
-
-**API:** `GET /api/v1/listings/{id}`
-
-**Status:** IMPLEMENTED (đã có code; integration test listing tồn tại).
+**Status:** IMPLEMENTED.
 
 ### FR-06 — Yêu thích
 
-CUSTOMER lưu/xóa/xem danh sách xe yêu thích.
+Không tìm thấy backend model/API.
 
-**Status:** PENDING — chưa có backend model/API.
+**Status:** PENDING.
 
-### FR-07 — Tạo đặt cọc và lịch hẹn
+### FR-07 — Tạo đặt cọc + lịch hẹn
 
-CUSTOMER chọn xe, showroom, ngày giờ và tùy chọn lái thử. Hệ thống tạo `Deposit` ở `PENDING` và `Appointment` ở `PENDING`, đồng thời tạo QR giả lập.
+`POST /api/v1/deposits` tạo Deposit `PENDING`, Appointment `PENDING`, QR giả lập và có tùy chọn `hasTestDrive`.
 
-**API:** `POST /api/v1/deposits`
+**Status:** PARTIAL — implementation có, nhưng controller hiện vẫn nhận `X-User-Id`; validation ngày hẹn quá khứ chưa được enforce trong service.
 
-**Status:** IMPLEMENTED ở backend; còn thiếu auth thật và validation ngày quá khứ.
+### FR-08 — Xác nhận cọc giả lập
 
-### FR-08 — Xác nhận thanh toán cọc giả lập
+`POST /api/v1/deposits/{id}/confirm` đổi xe `AVAILABLE -> HOLD`, cọc `PENDING -> DEPOSITED`, tạo receipt/contract và ledger.
 
-CUSTOMER xác nhận đã chuyển tiền. Hệ thống chuyển deposit sang `DEPOSITED` và tạo receipt/contract reference.
+**Status:** PARTIAL — implementation + unit test có; ownership current-user chưa được truyền vào confirm service.
 
-**API:** `POST /api/v1/deposits/{id}/confirm`
+### FR-09 — Chống cọc trùng
 
-**Status:** IMPLEMENTED ở code; chưa có automated test tương ứng trong repo audit.
+`VehicleRepository.updateVehicleStatusIfAvailable()` thực hiện atomic update; V3_0_2 có unique index cho `DEPOSITED` theo xe.
 
-### FR-09 — Khóa xe và chống cọc trùng
+**Status:** IMPLEMENTED; full concurrent HTTP evidence chưa có trong repository snapshot.
 
-Chỉ xe `AVAILABLE` mới được confirm deposit thành công. Confirm phải thực hiện atomic update để không có hai giao dịch cùng giữ một xe.
+### FR-10 — Biên lai
 
-**Vehicle states:** `AVAILABLE`, `HOLD`, `RESERVED`, `SOLD`.
+`GET /api/v1/deposits/{id}/receipt` trả receipt/contract data.
 
-**Status:** IMPLEMENTED ở code deposit flow; chưa có automated concurrency test trong repo audit.
-
-### FR-10 — Biên lai/hợp đồng
-
-Sau khi confirm có receipt code/contract number; UI có thể hiển thị reference.
-
-**API:** `GET /api/v1/deposits/{id}/receipt`
-
-**Status:** PARTIAL — response tồn tại nhưng tài liệu API hiện tại có field example chưa khớp code; tải PDF/file thật thuộc P2.
+**Status:** PARTIAL — code có nhưng ownership và API contract phải sync.
 
 ### FR-11 — Liên hệ
 
-Hiển thị contact/showroom link cơ bản.
+UI/contact yêu cầu cơ bản; chưa có backend contract riêng.
 
 **Status:** PENDING/P2.
 
-### FR-12 — Quản lý lịch hẹn STAFF
+### FR-12 — Staff appointment
 
-STAFF xem lịch hẹn theo showroom/trạng thái và check-in khách.
+`GET /api/v1/staff/appointments`, `PUT /api/v1/staff/appointments/{id}/check-in`.
 
-**APIs:**
+**Status:** IMPLEMENTED; test HTTP/security regression còn cần hoàn thiện.
 
-- `GET /api/v1/staff/appointments`
-- `PUT /api/v1/staff/appointments/{id}/check-in`
+### FR-13 — Admin vehicle CRUD/status
 
-**Appointment states:** `PENDING`, `COMPLETED`, `CANCELLED`.
+`POST/PUT/PATCH/DELETE /api/v1/admin/vehicles/**` có implementation và security matcher.
 
-**Status:** IMPLEMENTED ở code; chưa có security enforcement và automated test.
+**Status:** PARTIAL — delete service chưa có guard 409 như mô tả trong API spec; PATCH CORS cần bổ sung.
 
-### FR-13 — Admin CRUD xe
+### FR-14 — Admin ledger/refund
 
-ADMIN thêm, sửa, đổi trạng thái và xóa xe.
+`GET /api/v1/admin/ledger`, `POST /api/v1/admin/ledger/{depositId}/refund`.
 
-**APIs:**
+**Status:** PARTIAL — implementation có; automated HTTP evidence và API examples cần sync.
 
-- `POST /api/v1/admin/vehicles`
-- `PUT /api/v1/admin/vehicles/{id}`
-- `PATCH /api/v1/admin/vehicles/{id}/status?status=...`
-- `DELETE /api/v1/admin/vehicles/{id}`
+### FR-15 — Account/profile/statistics
 
-**Status:** IMPLEMENTED ở code; authorization chưa có. Delete chưa có guard 409 rõ ràng trong service.
-
-### FR-14 — Admin ledger/hoàn cọc
-
-ADMIN xem ledger và duyệt refund.
-
-**APIs:**
-
-- `GET /api/v1/admin/ledger`
-- `POST /api/v1/admin/ledger/{depositId}/refund`
-
-**Status:** IMPLEMENTED ở code; authorization chưa có; response example cần TV1 sync với code.
-
-### FR-15 — Tài khoản/quản trị người dùng/thống kê
-
-Các chức năng quản trị account/statistics thuộc P1/P2 theo contract nhóm.
+Chưa thấy backend endpoint/model tương ứng ngoài current-user.
 
 **Status:** PENDING.
 
 ## 5. Business Rules
 
-1. Chỉ `Vehicle.status = AVAILABLE` được tạo/confirm đặt cọc thành công.
-2. Xác nhận cọc phải đồng thời chuyển xe sang `HOLD` trong transaction.
-3. Nếu atomic lock thất bại thì không được tạo một deposit thành công thứ hai.
-4. Deposit statuses: `PENDING` → `DEPOSITED` → `REFUNDED` hoặc `CANCELLED`.
-5. Appointment statuses: `PENDING` → `COMPLETED` hoặc `CANCELLED`.
-6. Vehicle statuses: `AVAILABLE` → `HOLD`/`RESERVED` → `AVAILABLE` hoặc `SOLD` theo nghiệp vụ thực tế.
-7. `deposit_code` là UNIQUE trong database.
-8. Không có thanh toán tiền thật; QR chỉ là mô phỏng.
-9. Lái thử chỉ là thuộc tính `hasTestDrive` của Appointment, không phải workflow/module độc lập.
-10. Auth/RBAC là requirement nhưng chưa được đánh dấu hoàn thành khi backend chưa có security implementation.
+1. Chỉ vehicle `AVAILABLE` mới được create/confirm deposit thành công theo business service.
+2. Confirm dùng atomic update `AVAILABLE -> HOLD` trong transaction.
+3. Nếu atomic update trả 0 row, deposit được chuyển `CANCELLED` và conflict 409 được trả về.
+4. Deposit: `PENDING -> DEPOSITED -> REFUNDED` hoặc `CANCELLED`.
+5. Appointment: `PENDING -> COMPLETED` hoặc `CANCELLED`.
+6. Vehicle: `AVAILABLE`, `HOLD`, `RESERVED`, `SOLD`; database migration V3_0_1 còn có `ARCHIVED` cho marketplace configurations không gắn showroom.
+7. `deposit_code` unique.
+8. QR là mô phỏng, không có payment gateway thật.
+9. `hasTestDrive` là boolean trên Appointment, không phải workflow độc lập.
+10. JWT là nguồn identity chính thức theo security contract; `X-User-Id` còn sót trong controller là mismatch cần owner sửa.
 
 ## 6. Non-Functional Requirements
 
-| ID | Yêu cầu |
-|---|---|
-| NFR-01 | Search/filter có mục tiêu phản hồi dưới 2 giây trong điều kiện demo bình thường. |
-| NFR-02 | Deposit/vehicle state transition phải transaction-safe. |
-| NFR-03 | Backend phải có authentication, password hashing và authorization trước khi đánh dấu P0 hoàn thành. |
-| NFR-04 | React responsive trên desktop/mobile. |
-| NFR-05 | Database migration/seed phải tái lập được từ môi trường sạch. |
+| ID | Yêu cầu | Status |
+|---|---|---|
+| NFR-01 | Search/filter phản hồi phù hợp trong demo bình thường | IMPLEMENTED/needs runtime benchmark |
+| NFR-02 | Deposit/vehicle transition transaction-safe | IMPLEMENTED in service |
+| NFR-03 | Authentication + password hashing + authorization | IMPLEMENTED; regression pending |
+| NFR-04 | Responsive React | IMPLEMENTED by UI; responsive evidence owned by TV2 |
+| NFR-05 | Clean bootstrap + repeatable seed | PARTIAL — migration chain có nhưng bootstrap chưa gộp |
 
 ## 7. Phạm vi loại bỏ
 
-- Machine Learning / Regression
-- R Plumber
-- Valuation tự động
+- Machine Learning / Regression / R Plumber
+- Automatic valuation
 - Recommendation
 - Comparison
-- Thanh toán thật / VNPay / MoMo thật
+- Real payment gateway
 - Shopping cart
 - Standalone test-drive workflow
 
-## 8. Traceability status
+## 8. Traceability status rule
 
-Nguồn kiểm tra chính: source code, migration, API contract và test files hiện có. `IMPLEMENTED` = có code; `VERIFIED` chỉ dùng khi có evidence test thật.
+- `IMPLEMENTED`: source implementation tồn tại.
+- `PARTIAL`: source có nhưng còn security/contract/validation/evidence gap.
+- `VERIFIED`: có execution evidence thật được chỉ rõ nguồn.
+- `PENDING`: chưa có implementation tương ứng.
+
+Không chuyển `IMPLEMENTED` thành `VERIFIED` chỉ dựa vào việc class/endpoint tồn tại.
