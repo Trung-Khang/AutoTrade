@@ -31,20 +31,33 @@ $env:JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
 
 ## Database
 
-Database tích hợp chính thức là `autotrade_final` do TV3 quản lý. Chỉ kết nối khi TV3 đã cấp Radmin VPN/tunnel, địa chỉ máy chủ và tài khoản database riêng. Từ máy thành viên, **không chạy** `schema.sql`, migration, seed hoặc acceptance runner trên database này. Backend chỉ được chạy với:
+Database tích hợp chính thức là `autotrade_final` do TV3 quản lý. Thành viên phải join cùng mạng Radmin VPN và chỉ dùng cấu hình sau. Từ máy thành viên, **không chạy** `schema.sql`, migration, seed hoặc acceptance runner trên database này.
 
 ```powershell
-$env:DB_HOST = '<dia-chi-TV3-cap>'
+$env:DB_HOST = '26.181.182.25'
 $env:DB_PORT = '5432'
 $env:DB_NAME = 'autotrade_final'
-$env:DB_USERNAME = '<tai-khoan-TV3-cap>'
+$env:DB_USERNAME = 'autotrade_app'
 $env:DB_PASSWORD = Read-Host 'Nhập DB_PASSWORD'
 $env:HIBERNATE_DDL_AUTO = 'validate'
 ```
 
-Khi chưa có route tới database tích hợp, dùng `used_car_db` local để phát triển và kiểm thử riêng. Đây không phải database bàn giao cuối.
+Trước khi chạy Backend, xác nhận kết nối Radmin và PostgreSQL. Nhập mật khẩu của
+`autotrade_app` do TV3 cấp tại prompt, không nhập mật khẩu PostgreSQL local:
 
-### Chỉ bootstrap database local mới
+```powershell
+Test-NetConnection 26.181.182.25 -Port 5432
+psql -X -W -h 26.181.182.25 -p 5432 -U autotrade_app -d autotrade_final `
+  -v ON_ERROR_STOP=1 -c "SELECT current_database(), current_user, version();"
+```
+
+Expected: `TcpTestSucceeded : True`, database `autotrade_final`, user
+`autotrade_app` và PostgreSQL 18.6.
+
+`used_car_db` chỉ là database local lịch sử/isolated. Không dùng nó khi kiểm thử
+tích hợp hoặc báo PASS hệ thống.
+
+### Chỉ bootstrap database local mới (không áp dụng integration)
 
 Chỉ thực hiện phần này khi `used_car_db` chưa tồn tại hoặc là database local mới hoàn toàn. `database/schema/schema.sql` có `DROP TABLE`, nên tuyệt đối không chạy trên database có dữ liệu cần giữ.
 
@@ -79,19 +92,28 @@ if (Test-Path $tomcatSetenv) {
 }
 ```
 
-Chạy local với database `used_car_db`:
+Chạy integration với database chung TV3:
 
 ```powershell
 cd backend
-$env:DB_HOST = 'localhost'
+$env:DB_HOST = '26.181.182.25'
 $env:DB_PORT = '5432'
-$env:DB_NAME = 'used_car_db'
-$env:DB_USERNAME = 'postgres'
-$env:DB_PASSWORD = Read-Host 'Nhập DB_PASSWORD'
+$env:DB_NAME = 'autotrade_final'
+$env:DB_USERNAME = 'autotrade_app'
+$secureDbPassword = Read-Host 'Nhập DB_PASSWORD của autotrade_app' -AsSecureString
+$dbPasswordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureDbPassword)
+try {
+  $env:DB_PASSWORD = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($dbPasswordPointer)
+}
+finally {
+  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($dbPasswordPointer)
+}
 $env:DB_SSLMODE = 'disable'
 $env:HIBERNATE_DDL_AUTO = 'validate'
-$bytes = [byte[]]::new(48)
-[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+$bytes = New-Object byte[] 48
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($bytes)
+$rng.Dispose()
 $env:JWT_SECRET = [Convert]::ToBase64String($bytes)
 $env:JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
 
@@ -99,7 +121,7 @@ mvn clean package -DskipTests
 java -jar target/backend-0.0.1-SNAPSHOT.war
 ```
 
-Backend dùng embedded Spring Boot server tại `http://localhost:8080`; không cần khởi động external Tomcat để phát triển local. Mở trực tiếp URL gốc có thể trả `401 Unauthorized`, đó là hành vi bình thường của Spring Security.
+Backend dùng embedded Spring Boot server tại `http://localhost:8080`; không cần khởi động external Tomcat. Giữ `HIBERNATE_DDL_AUTO=validate`. Chỉ tiếp tục test API khi log có `Started BackendApplication` và không có Hibernate validation error. Mở trực tiếp URL gốc có thể trả `401 Unauthorized`, đó là hành vi bình thường của Spring Security.
 
 Các biến SMTP cần có để gửi OTP thật là `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_STARTTLS` và tùy chọn `SMTP_FROM_NAME=AutoTrade`. Xem thêm [backend/README.md](backend/README.md). Không commit hoặc gửi các secret này qua chat.
 
