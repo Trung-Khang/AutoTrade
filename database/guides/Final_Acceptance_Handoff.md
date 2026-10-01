@@ -5,6 +5,63 @@ Database acceptance: **PASS** trên instance `DESKTOP-42GEDK2`, PostgreSQL 18.6.
 
 ## Kết nối đúng instance
 
+### Radmin VPN — server cấu hình PASS, 01/10/2026 10:02 (Asia/Bangkok)
+
+Endpoint dùng chung: **DESKTOP-42GEDK2 / 26.181.182.25:5432**, database **autotrade_final**, username **autotrade_app**.
+
+```dotenv
+DB_NAME=autotrade_final
+DB_HOST=26.181.182.25
+DB_PORT=5432
+DB_USERNAME=autotrade_app
+HIBERNATE_DDL_AUTO=validate
+```
+
+JDBC: `jdbc:postgresql://26.181.182.25:5432/autotrade_final`.
+Password ứng dụng chỉ nằm trong file local protected/ignored `.env.tv3-app.private.json`, ACL operator DELL, account thực thi và SYSTEM; operator tự bàn giao riêng và cấp `DB_PASSWORD` qua environment. Không password trong báo cáo, URL hoặc arguments.
+
+| Thành viên | Radmin IP được phép | TCP từ máy thành viên | psql từ máy thành viên |
+|---|---|---|---|
+| TV1 | 26.79.139.16/32 | NOT RUN | NOT RUN |
+| TV2 | 26.252.98.44/32 | NOT RUN | NOT RUN |
+| TV4 | 26.91.16.138/32 | NOT RUN | NOT RUN |
+
+**NOT RUN** vì TV3 không có phiên thực thi trên các máy đó; server-side PASS không chứng minh route chiều vào của từng thành viên. Không tự gửi tin nhắn cho teammate.
+
+Đã áp dụng qua worker Windows Administrator được operator duyệt UAC:
+
+- Cấu hình thực: `C:\Program Files\PostgreSQL\18\data\postgresql.conf`, `pg_hba.conf`.
+- `listen_addresses='localhost,26.181.182.25'`; live listeners đúng `127.0.0.1`, `::1`, `26.181.182.25`, TCP5432; không wildcard/Wi-Fi/Internet listener.
+- Cuối HBA chỉ thêm ba rule dưới đây; giữ nguyên loopback rules cũ. Auth là SCRAM-SHA-256, scope đúng database và app user.
+- Firewall rule `AutoTrade-Final-Radmin-TCP5432`: Inbound Allow TCP5432, local IP `26.181.182.25`, interface `Radmin VPN`, program PostgreSQL18 `postgres.exe`, ba remote IP đơn lẻ tương đương `/32`, profile **Private**, EdgeTraversal Block. Không cho Public hoặc cả mạng VPN.
+- Chỉ chuyển adapter Radmin (index20) từ Public sang Private; không đổi Wi-Fi profile. Service `postgresql-x64-18` restart và Running.
+- `autotrade_app`: LOGIN/SCRAM; CONNECT database, USAGE public schema, SELECT/INSERT/UPDATE/DELETE public tables, USAGE/SELECT sequences. Không SUPERUSER/CREATEDB/CREATEROLE/REPLICATION/BYPASSRLS hoặc CREATE schema. Đây là DB runtime user dùng chung theo yêu cầu, không phải ba demo app identities.
+- **PASS** login local của postgres và autotrade_app sau restart; HBA/config parser không lỗi. Trước restart, listen setting có thông báo cần restart; sau restart error count=0.
+- **PASS** physical catalog và full-row fingerprints mọi public table trước–sau khớp; vẫn 10 xe và 3 demo accounts. Chỉ role/GRANT/network settings đổi; không reset, không schema.sql/migration/acceptance runner, không sửa used_car_db/crawler.
+
+```text
+host    autotrade_final    autotrade_app    26.79.139.16/32    scram-sha-256
+host    autotrade_final    autotrade_app    26.252.98.44/32    scram-sha-256
+host    autotrade_final    autotrade_app    26.91.16.138/32    scram-sha-256
+```
+
+Backup riêng có ACL, ignored: `database/backups/radmin_access_20261001_100217/` (cùng backup ban đầu `vpn_access_20261001_094702/`).
+Sanitized evidence: `database/evidence/radmin_access_20261001_100217/result.json`, `independent_verification.json`, `independent_network_verification.json`, before/after catalog và row fingerprints.
+Hai lần thử trước đã rollback cấu hình an toàn: kiểm tra setting cần restart, sau đó tranh chấp file nhật ký; role/password được giữ nguyên. Worker cuối ghi nhật ký atomic và hoàn tất. Không replay migration/seed.
+Worker nguồn phục vụ operator review: `database/tests/Enable-FinalDatabaseRadmin.ps1`; không chạy lại nếu managed HBA/firewall đã có, phải review state trước. Credential vận chuyển riêng không thuộc Git; password admin tạm đã xóa khỏi file transport sau khi worker kết thúc.
+
+Mỗi thành viên tự chạy từ đúng máy đã allowlist, trong lúc Radmin hai đầu online:
+
+```powershell
+Test-NetConnection 26.181.182.25 -Port 5432
+psql -X -W -h 26.181.182.25 -p 5432 -U autotrade_app -d autotrade_final -c "SELECT current_database(), current_user, version();"
+```
+
+`-W` hỏi password riêng, không đưa password vào command. Gửi lại TcpTestSucceeded và database/user/version, không gửi credential.
+Nếu lỗi: kiểm tra Radmin online, profile/rule Firewall, listen_addresses và HBA; giữ nguyên từng `/32`, không nới rule để thử. Hibernate/API/system integration vẫn do các thành viên thực hiện và chưa được TV3 đánh dấu PASS.
+
+### Kết nối local của operator đã nghiệm thu
+
 ```dotenv
 DB_NAME=autotrade_final
 DB_HOST=localhost
@@ -18,9 +75,8 @@ JDBC: `jdbc:postgresql://localhost:5432/autotrade_final`.
 `localhost` ở cấu hình trên là **máy DESKTOP-42GEDK2**. `localhost` trên máy thành viên khác là instance khác và không được dùng để thay thế.
 
 Radmin VPN của máy database: `26.181.182.25`; Wi-Fi tại thời điểm kiểm tra: `172.16.30.179`.
-Kết nối local đã xác minh DB/OID/server ID. Probe từ máy database đến địa chỉ Radmin bị từ chối bởi `pg_hba.conf` (chỉ có loopback); **BLOCKED** route liên máy.
-Thử từ máy thành viên: **NOT RUN**, không có phiên truy cập máy thành viên. Không sửa HBA/firewall/listen_addresses, không mở database ra Internet.
-Operator cần thiết lập tunnel hoặc rule VPN giới hạn đúng máy/identity, rồi TV4/TV1/TV2 dùng cùng instance và xác minh lại server identity trong evidence.
+Kết nối local đã xác minh DB/OID/server ID. Probe Radmin tại acceptance ban đầu từng bị HBA loopback từ chối; cấu hình server hiện đã xử lý theo mục VPN phía trên.
+Thử từ máy thành viên vẫn **NOT RUN**; cần họ xác minh TCP/psql đúng shared instance, không tạo database khác để thay thế.
 
 ## Bootstrap và resume
 

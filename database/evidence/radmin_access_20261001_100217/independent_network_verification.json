@@ -1,0 +1,47 @@
+{
+  "RuleName": "AutoTrade-Final-Radmin-TCP5432",
+  "Profile": "Private",
+  "Enabled": "True",
+  "Direction": "Inbound",
+  "Action": "Allow",
+  "Ports": {
+    "Protocol": "TCP",
+    "LocalPort": "5432"
+  },
+  "Address": {
+    "LocalAddress": "26.181.182.25",
+    "RemoteAddress": [
+      "26.79.139.16",
+      "26.252.98.44",
+      "26.91.16.138"
+    ]
+  },
+  "Application": {
+    "Program": "C:\\Program Files\\PostgreSQL\\18\\bin\\postgres.exe"
+  },
+  "Interface": {
+    "InterfaceAlias": "Radmin VPN"
+  },
+  "VpnProfile": {
+    "InterfaceAlias": "Radmin VPN",
+    "NetworkCategory": 1
+  },
+  "Listeners": [
+    {
+      "LocalAddress": "::1",
+      "LocalPort": 5432
+    },
+    {
+      "LocalAddress": "127.0.0.1",
+      "LocalPort": 5432
+    },
+    {
+      "LocalAddress": "26.181.182.25",
+      "LocalPort": 5432
+    }
+  ],
+  "Service": {
+    "Name": "postgresql-x64-18",
+    "Status": 4
+  }
+}
