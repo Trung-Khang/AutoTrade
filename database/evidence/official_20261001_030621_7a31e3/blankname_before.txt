@@ -1,0 +1,38 @@
+exit=0
+BEGIN
+ snapshot_table | rows |           fingerprint            
+----------------+------+----------------------------------
+ app_users      |    3 | f407abe2f07590f1e3554b1a2b0a533c
+(1 row)
+
+ snapshot_table | rows |           fingerprint            
+----------------+------+----------------------------------
+ auth_otps      |    0 | d41d8cd98f00b204e9800998ecf8427e
+(1 row)
+
+     snapshot_table      | rows |           fingerprint            
+-------------------------+------+----------------------------------
+ password_reset_sessions |    0 | d41d8cd98f00b204e9800998ecf8427e
+(1 row)
+
+ snapshot_table | rows |           fingerprint            
+----------------+------+----------------------------------
+ deposits       |    0 | d41d8cd98f00b204e9800998ecf8427e
+(1 row)
+
+ snapshot_table | rows |           fingerprint            
+----------------+------+----------------------------------
+ appointments   |    0 | d41d8cd98f00b204e9800998ecf8427e
+(1 row)
+
+   snapshot_table   | rows |           fingerprint            
+--------------------+------+----------------------------------
+ transaction_ledger |    0 | d41d8cd98f00b204e9800998ecf8427e
+(1 row)
+
+        schema_fingerprint        
+----------------------------------
+ 0994c7714c1955708b0d171059599d25
+(1 row)
+
+ROLLBACK

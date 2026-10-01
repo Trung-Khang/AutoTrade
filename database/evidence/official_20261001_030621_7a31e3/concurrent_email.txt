@@ -1,0 +1,11 @@
+A=0; B=1
+BEGIN
+INSERT 0 1
+ pg_sleep 
+----------
+ 
+(1 row)
+
+COMMIT
+ERROR:  duplicate key value violates unique constraint "app_users_email_key"
+DETAIL:  Key (email)=(race.email@example.test) already exists.

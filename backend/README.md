@@ -1,3 +1,7 @@
+## TV3 consolidated schema
+
+Apply official V3_0_0..5 after clean schema.sql; existing V3_0_4 requires only V3_0_5. Keep `HIBERNATE_DDL_AUTO=validate`. See database/guides/Auth_Identity_Integration.md. OTP DB regression fixtures do not prove real SMTP delivery.
+
 # AutoTrade Backend
 
 ## Xác thực và phân quyền

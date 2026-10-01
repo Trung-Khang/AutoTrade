@@ -1,0 +1,1 @@
+PASS git diff origin/main -- crawler: empty; all tracked crawler source/dataset bytes unchanged by consolidation. PASS released V2_0_1/V3_0_0..4 Git content unchanged. Original AutoTrade local crawler edits remain exclusively in source checkout. No source folder deleted or .git copied. origin/TV3 5ba28b9 preserved by fast-forward to origin/main cb2c520.

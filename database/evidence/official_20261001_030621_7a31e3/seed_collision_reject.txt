@@ -1,0 +1,7 @@
+exit=3
+BEGIN
+SET
+LOCK TABLE
+SELECT 3
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/seed/demo_auth_accounts.sql:25: ERROR:  Demo identity collision: no account/password/role/state overwritten
+CONTEXT:  PL/pgSQL function inline_code_block line 12 at RAISE

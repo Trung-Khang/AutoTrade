@@ -1,0 +1,14 @@
+exit=3
+BEGIN
+SET
+SET
+ pg_advisory_xact_lock 
+-----------------------
+ 
+(1 row)
+
+DO
+SELECT 29
+DO
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/migrations/V3_0_5__auth_identity_integrity.sql:128: ERROR:  V3_0_5 preflight: invalid OTP/reset data; no rows repaired
+CONTEXT:  PL/pgSQL function inline_code_block line 13 at RAISE

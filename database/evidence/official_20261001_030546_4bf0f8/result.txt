@@ -1,0 +1,1 @@
+FAILED historical first official test run: expected CI email index name, but valid retained V3_0_4 app_users_email_key rejected duplicate first. Test now accepts either valid constraint; full fresh rerun official_20261001_030621_7a31e3 PASS. Do not interpret this run as final PASS.

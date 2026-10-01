@@ -22,6 +22,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class AuthService {
@@ -88,7 +89,7 @@ public class AuthService {
         return verificationDispatchMessage(otpService.issue(user, OtpPurpose.VERIFY_EMAIL, true));
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AuthException.class)
     public MessageResponse verifyEmail(String email, String code) {
         AppUser user = otpService.verify(email, requireOtp(code), OtpPurpose.VERIFY_EMAIL);
         if (user.isEmailVerified()) {
@@ -124,7 +125,7 @@ public class AuthService {
     @Transactional
     public MessageResponse requestPasswordReset(String email) {
         AppUser user = userRepository.findByEmailIgnoreCase(normalizeEmail(email)).orElse(null);
-        if (user != null && user.isActive() && user.isEmailVerified()) {
+        if (user != null && user.isActive() && !user.isLocked() && user.isEmailVerified()) {
             try {
                 otpService.issue(user, OtpPurpose.RESET_PASSWORD, true);
             } catch (AuthException ignored) {
@@ -134,7 +135,7 @@ public class AuthService {
         return new MessageResponse(GENERIC_FORGOT_MESSAGE, true, 0L);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = AuthException.class)
     public ResetVerificationResponse verifyPasswordResetOtp(String email, String code) {
         AppUser user = otpService.verify(email, requireOtp(code), OtpPurpose.RESET_PASSWORD);
         if (!user.isActive() || user.isLocked()) {
@@ -199,6 +200,9 @@ public class AuthService {
         if (!request.username().trim().matches("[A-Za-z0-9._-]{3,50}")) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Tên đăng nhập phải dài 3-50 ký tự và chỉ gồm chữ, số, dấu chấm, gạch dưới hoặc gạch ngang.");
         }
+        if (request.fullName().trim().length() > 120 || normalizeEmail(request.email()).length() > 254) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Tên hoặc email vượt quá độ dài cho phép.");
+        }
         if (!normalizeEmail(request.email()).matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Email không hợp lệ.");
         }
@@ -224,7 +228,7 @@ public class AuthService {
         return code;
     }
 
-    private String normalizeEmail(String email) { return email == null ? "" : email.trim().toLowerCase(); }
+    private String normalizeEmail(String email) { return email == null ? "" : email.trim().toLowerCase(Locale.ROOT); }
     private String blankToNull(String value) { return isBlank(value) ? null : value.trim(); }
     private boolean isBlank(String value) { return value == null || value.trim().isEmpty(); }
 }

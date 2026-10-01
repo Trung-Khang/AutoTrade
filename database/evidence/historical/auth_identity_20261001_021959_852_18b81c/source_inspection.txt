@@ -1,0 +1,5 @@
+Read supplied request attachment with full response contract. Physical mapping RESOLVED; not missing columns.
+Original response Markdown not separately present at provided locations; use exact mapping pasted in request.
+Original TV4 V3_0_4__auth_and_otp.sql absent in workspace; comparison NOT RUN, version/bootstrap not finalized.
+Inspected actual Git: main unborn, origin https://github.com/Trung-Khang/AutoTrade, all source untracked; no commit/fetch/stage/push/switch.
+No other member checkout searched/modified.
