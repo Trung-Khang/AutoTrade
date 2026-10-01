@@ -16,9 +16,9 @@ Các endpoint công khai nằm dưới `/api/v1/auth`:
 - `POST /login`, `POST /logout`, `GET /me`
 - `POST /forgot-password`, `POST /verify-reset-otp`, `POST /reset-password`
 
-Access token là JWT Bearer. API xe đọc công khai; API cọc yêu cầu
-`CUSTOMER` hoặc `ADMIN`, API staff yêu cầu `STAFF` hoặc `ADMIN`, và API admin
-yêu cầu `ADMIN`. Backend lấy danh tính từ JWT, không nhận `X-User-Id` từ client.
+Access token là JWT Bearer. API xe đọc công khai; API cọc yêu cầu `CUSTOMER`,
+API staff yêu cầu `STAFF`, và API admin yêu cầu `ADMIN`. Các role không kế thừa
+ngầm. Backend lấy danh tính từ JWT, không nhận `X-User-Id` từ client.
 
 ## Cấu hình môi trường
 
@@ -42,6 +42,11 @@ hiển thị mặc định là **AutoTrade**. Các tiêu đề email là:
 
 Nếu SMTP lỗi, tài khoản/OTP vẫn được lưu nhưng chưa xác minh sẽ không đăng
 nhập được. Người dùng có thể gửi lại OTP sau 60 giây.
+
+Khi SMTP gửi thành công, Gmail hoặc mail trường vẫn có thể phân loại OTP vào
+Spam, nhất là khi kiểm thử gửi lặp lại. `emailSent=true` chỉ xác nhận SMTP đã
+nhận yêu cầu gửi; người kiểm thử cần kiểm tra Inbox và Spam. Không thay đổi
+JWT, OTP hoặc database chỉ để xử lý việc phân loại thư của nhà cung cấp.
 
 ## Quy tắc OTP
 

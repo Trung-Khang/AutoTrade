@@ -1,6 +1,6 @@
 # TV4 - Báo cáo tiến độ xác thực và phân quyền AutoTrade
 
-Ngày cập nhật: 30/09/2026
+Ngày cập nhật: 01/10/2026
 Người phụ trách: TV4
 Phạm vi: Authentication, identity, authorization và tích hợp UI xác thực theo `TV4.md` và `Workflow_4_Increment.md`.
 
@@ -45,6 +45,8 @@ Không thuộc phạm vi TV4: CRUD xe, nghiệp vụ trạng thái deposit/appoi
 - Tên hiển thị: `AutoTrade <trungkhang98pth@gmail.com>`.
 - Tiêu đề: `[AUTOTRADE] Mã xác nhận tạo tài khoản` và `[AUTOTRADE] Mã xác nhận đặt lại mật khẩu`.
 - Đã quét source không phân biệt hoa/thường: không còn nhận diện thương hiệu cũ trong source triển khai AutoTrade.
+- Gmail SMTP đã chấp nhận các thư OTP đăng ký và đặt lại mật khẩu. Người dùng đã xác nhận nhận được thư; một số thư được Gmail phân loại vào mục Spam do gửi kiểm thử lặp lại nhiều lần.
+- `emailSent=true` được hiểu là Backend đã gửi thành công tới SMTP, không phải cam kết thư luôn nằm trong Inbox. Quyết định hiện tại là đóng băng luồng đang ổn định, không refactor thêm chỉ để xử lý phân loại Spam.
 
 ### 3. Đối chiếu với giao diện Login/Register
 
@@ -68,12 +70,14 @@ Không thuộc phạm vi TV4: CRUD xe, nghiệp vụ trạng thái deposit/appoi
 | Build Backend | PASS | `mvn package -DskipTests` tạo `backend-0.0.1-SNAPSHOT.war`. |
 | Build Frontend | PASS | `npm run build` hoàn thành Vite production build. |
 | BCrypt/OTP hash unit test | PASS | `AuthSecurityUnitTest`: 2/2 pass. |
-| Full Maven test | PASS | `mvn test`: 22/22 pass trên PostgreSQL thật với Java 17 và database UTF-8. Đã sửa compatibility cấu hình để Spring đọc được cả `DB_USERNAME` lẫn tên biến `DB_USER` đang có ở local. |
-| Migration PostgreSQL | PASS | Đã áp dụng `schema.sql`, `V3_0_0` và `V3_0_1` vào `used_car_db`; JPA `validate` khởi động thành công. |
+| Full Maven test | CẦN CHẠY LẠI NGÀY 3 | Mốc trước đã có `22/22` test pass. Sau khi merge migration chính thức V3.0.5 và các thay đổi tích hợp mới, chưa chạy lại toàn bộ suite trên database sạch chính thức. |
+| Database acceptance `autotrade_final` | PASS BY TV3 | PR #30 đã nghiệm thu PostgreSQL 18.6 trên `autotrade_final`: bootstrap/seed lặp lại, catalog, auth, deposit, appointment và ledger đều PASS. Instance hiện chỉ cho loopback; TV4 chưa kết nối để chạy integration auth trên cùng DB. |
 | Seed ba role demo | PASS | Đã tạo account demo thật `ADMIN`, `STAFF`, `CUSTOMER`, đều active và email verified. |
 | Runtime API/JWT/RBAC | PASS (smoke) | Đã chạy server từ WAR mới: public vehicles `200`; `/auth/me` không token `401`; CUSTOMER `/me` và `/deposits/my` `200`, Staff API `403`; STAFF appointments `200`, deposits/admin `403`; ADMIN ledger `200`, deposits `403`; logout CUSTOMER `200`. |
-| Gửi OTP Gmail thật | PASS | Đăng ký alias mailbox thật và resend sau cooldown đều trả `emailSent=true`; không đọc/log OTP, bản ghi test đã xóa. |
-| Browser E2E register/login/OTP/reset | IN PROGRESS | Frontend và backend đang chạy; cần kiểm thử click-through register/verify/reset tại browser để lưu ảnh bằng chứng. |
+| OTP email unit/transaction test | PASS | `OtpEmailDeliveryServiceTest` và `OtpServiceAfterCommitTest`: 7/7 test pass, không có failure/error. |
+| Gửi OTP Gmail thật | PASS - SMTP SUBMITTED | Chẩn đoán 9/9 lần submit thành công cho ba mailbox, gồm plain text, multipart và OTP đăng ký. Người dùng xác nhận thư đến nhưng có trường hợp nằm trong Spam. Không kết luận Inbox delivery chỉ từ kết quả SMTP. |
+| Browser E2E register/login/OTP/reset | PASS (TV4 kiểm thử thủ công) | TV4 đã chạy thành công đăng ký → nhận OTP → xác minh → đăng nhập và quên mật khẩu → nhận OTP → đặt mật khẩu mới trên giao diện thật. Cần TV2 lưu ảnh/test case vào Test Report chung. |
+| Build Frontend sau cập nhật | PASS | `npm run build`: 135 module được transform, production bundle tạo thành công. |
 
 Không có kết quả runtime nào bị ghi là PASS khi chưa chạy.
 
@@ -81,7 +85,7 @@ Không có kết quả runtime nào bị ghi là PASS khi chưa chạy.
 
 | Bên nhận/gửi | Nội dung cần nhận hoặc bàn giao | Trạng thái |
 |---|---|---|
-| TV3 -> TV4 | Schema auth đã được áp dụng local. TV3 cần đưa migration/seed vào quy trình bootstrap chung và xác nhận môi trường nhóm dùng database UTF-8. | Cần phối hợp. |
+| TV3 -> TV4 | TV3 đã nghiệm thu `autotrade_final`, khóa migration/seed/evidence và công bố route kết nối. TV3 cần cấp tunnel hoặc VPN allowlist theo IP để TV4 chạy Hibernate validate/auth integration trên đúng instance. | DATABASE ACCEPTANCE PASS; ROUTE LIÊN MÁY PENDING. |
 | TV4 -> TV1 | JWT/current-user contract, ma trận RBAC và ownership confirm/receipt đã áp dụng tối thiểu ở controller/service cọc. TV1 cần xác nhận contract, không dùng `X-User-Id`, và giữ invariant state/transaction khi tích hợp. | Đã bàn giao tại `TV4_Handoff.md`; chờ xác nhận. |
 | TV4 -> TV2 | Auth API payload/error, route OTP/reset, Bearer token usage; không bật lại mock fallback. | Sẵn sàng bàn giao. |
 | TV4 -> TV5 | Class/endpoint/auth state hiện có để vẽ Use Case, Sequence, Collaboration, Class Diagram và traceability. | Sẵn sàng bàn giao. |
@@ -93,7 +97,9 @@ Không có kết quả runtime nào bị ghi là PASS khi chưa chạy.
 2. External Tomcat không tự có `JWT_SECRET`; cần cấu hình ở môi trường chạy nhưng không commit secret.
 3. Authorization chủ sở hữu đã được thêm cho `confirm payment` và `receipt`; TV1 vẫn phải giữ nguyên invariant state/transaction và bổ sung test tích hợp cọc khi endpoint hoàn thiện.
 4. Test tự động/nghiệm thu Ngày 3 còn thiếu: token hết hạn, role sai theo toàn bộ ma trận, account locked, OTP sai/hết hạn/đã dùng, reset cross-account và ownership deposit qua HTTP thật.
-5. SMTP Gmail đã gửi thành công trong môi trường local; cần lưu ảnh inbox/browse flow khi TV2 test hệ thống.
+5. Gmail có thể đưa OTP vào Spam khi gửi thử liên tiếp. UI/Test Plan phải nhắc kiểm tra Spam; không tự động gửi dồn dập và không mô tả `emailSent=true` là chắc chắn đã vào Inbox.
+6. Không refactor thêm SMTP/OTP chỉ để xử lý Spam. Mọi thay đổi transaction, API, DTO hoặc database phải được review riêng và chạy regression đầy đủ trước khi merge.
+7. `autotrade_final` là database shared chính thức của TV3, không chạy `schema.sql`, migration, seed hay acceptance runner từ branch TV4/local DB. Chỉ kết nối với credential/route do TV3 cấp riêng.
 
 ## Phần II - Progress Log
 
@@ -103,13 +109,13 @@ Không có kết quả runtime nào bị ghi là PASS khi chưa chạy.
 | P0.2 - User/OTP schema | DONE | Tạo migration user, OTP, reset session; unique/check/FK/index phù hợp và đã áp dụng local. | `database/migrations/V3_0_4__auth_and_otp.sql`, PostgreSQL UTF-8. | TV3 tích hợp bootstrap chung. |
 | P0.3 - Login/JWT/RBAC | DONE (cần regression Ngày 3) | Spring Security, JWT filter, matcher theo method/role, current-user, `401/403`; không tự cấp quyền ADMIN cho CUSTOMER/STAFF hoặc ngược lại. | `SecurityConfig`, `JwtAuthenticationFilter`, `AuthController`. | Chạy lại ma trận role qua HTTP sau build cuối. |
 | P0.4 - Bỏ identity giả và ownership | DONE (cần integration test) | Gỡ mock auth và `X-User-Id`; create/my/confirm/receipt deposit lấy ID JWT; confirm/receipt kiểm tra chủ sở hữu. | `AuthContext.jsx`, `api.js`, `DepositController`, `DepositService`. | TV1 giữ transaction/state và test cọc end-to-end. |
-| P1.1 - Register và verify email | DONE (runtime local) | BCrypt, user unverified, OTP hash, verify, resend/cooldown, SMTP failure recovery. | `AuthService`, `OtpService`, `OtpMailService`. | TV2 thực hiện browser E2E/evidence. |
-| P1.2 - Forgot/reset password | DONE (source/build) | Generic response, verify reset OTP, reset token short-lived/single use, BCrypt password mới. | Auth endpoint và UI route `/forgot-password`. | E2E test, negative cases Ngày 3. |
+| P1.1 - Register và verify email | DONE (runtime local) | BCrypt, user unverified, OTP hash, verify, resend/cooldown và email Gmail thật đã chạy thành công. Thư có thể vào Spam. | `AuthService`, `OtpService`, email service và browser flow. | TV2 lưu screenshot/test evidence và thêm nhắc kiểm tra Spam. |
+| P1.2 - Forgot/reset password | DONE (runtime local) | Generic response, verify reset OTP, reset token short-lived/single use, BCrypt password mới; browser flow đã được TV4 kiểm thử thành công. | Auth endpoint và UI route `/forgot-password`. | TV2 test chéo; negative cases còn lại chạy Ngày 3. |
 | P1.3 - Đồng bộ UI | DONE | Login/Register khớp card giao diện tham chiếu; bổ sung verify/reset UI cùng style; làm rõ password 8 ký tự. | `LoginPage.jsx`, `RegisterPage.jsx`, `VerifyEmailPage.jsx`, `ForgotPasswordPage.jsx`. | TV2 browser/responsive test. |
 | P1.4 - Branding AutoTrade | DONE | Email subject/body, sender display config, UI/footer/backend run message dùng AutoTrade; không còn nhận diện thương hiệu cũ. | `OtpMailService`, `application.properties`, UI. | Review lại trước commit. |
 | P2.1 - Unit/build check | DONE | Backend package, frontend production build, BCrypt/OTP hash test. | Maven/Vite output, `AuthSecurityUnitTest`. | Giữ evidence cho TV2/TV5. |
-| P2.2 - DB migration/runtime API | DONE | Database UTF-8, schema/migration và seed role demo đã sẵn sàng; JPA validate và full Maven test pass. | `mvn test`: 22/22 pass. | TV3 đưa vào bootstrap chung. |
-| P2.3 - SMTP/Tomcat live test | DONE (local) | Embedded Tomcat NIO2 chạy tại `8080`; đăng ký và resend OTP tới mailbox thật đều trả `emailSent=true`; bản ghi test đã xóa. | API `/login`, `/me`, Swagger và SMTP runtime. | Cấu hình JWT deploy lâu dài; TV2 chụp evidence browser. |
+| P2.2 - DB migration/runtime API | DONE BY TV3 / REGRESSION PENDING | TV3 đã khóa official migration đến V3.0.5 và có evidence `ddl-auto=validate`; TV4 chưa chạy lại full suite trên clean DB sau merge mới nhất. | `database/evidence/official_20261001_030621_7a31e3/`. | Chạy full regression ở Final Gate. |
+| P2.3 - SMTP/Tomcat live test | DONE (local) | Backend `8080`; 9/9 SMTP submissions được Gmail chấp nhận; đăng ký và reset OTP qua browser hoạt động. Một số thư vào Spam do kiểm thử lặp lại. | API auth, browser flow và SMTP diagnostic có địa chỉ được che. | TV2 bổ sung cảnh báo Spam và lưu evidence. |
 | P2.4 - Security regression | PENDING NGÀY 3 | Smoke HTTP của ma trận role mới đã PASS; còn expiry, lock account, OTP boundary, reset cross-account, ownership deposit qua HTTP và automated security test. | Test report do TV2 điều phối; TV4 bổ sung automated security test. | Chạy sau build/integration cuối; không ghi PASS trước khi chạy. |
 | P2.5 - Handoff Ngày 2 | DONE | Bàn giao contract, JWT/current-user, RBAC, frontend mapping, migration/seed requirements, known limitations và backlog Ngày 3. | `TV4_Handoff.md`, API specification, README. | Chờ TV1/TV2/TV3 xác nhận ngắn gọn. |
 
@@ -122,6 +128,8 @@ Không có kết quả runtime nào bị ghi là PASS khi chưa chạy.
 - [x] PostgreSQL migration và seed chạy trên database thật với UTF-8.
 - [x] JWT và ba role chạy end-to-end qua API thật.
 - [x] Gmail SMTP gửi OTP thật thành công; OTP không được in/log.
+- [x] Browser flow đăng ký/xác minh và quên/đặt lại mật khẩu đã được TV4 chạy thành công.
+- [x] Đã xác định thư thất lạc trước đây nằm trong Spam, không phải lỗi JWT/API/database.
 - [x] Auth Contract v3.1.0 và biên bản bàn giao TV4 đã tạo.
 - [x] RBAC strict theo matrix leader và ownership `confirm`/`receipt` đã được áp dụng ở phạm vi TV4.
 - [ ] TV2 test chéo và ghi Test Report/Defect Log.

@@ -26,7 +26,23 @@ Maven báo lỗi encoding, đặt thêm biến sau trong terminal đang chạy B
 $env:JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
 ```
 
-### Chuẩn bị PostgreSQL lần đầu
+### Chọn môi trường PostgreSQL
+
+Database shared chính thức đã được TV3 nghiệm thu là `autotrade_final` trên máy
+TV3. Chỉ dùng khi TV3 đã cấp route VPN/tunnel giới hạn và credential riêng.
+Không chạy `schema.sql`, migration, seed hoặc acceptance runner lên database
+shared từ máy thành viên. Khi được cấp quyền, chỉ cấu hình Backend như sau:
+
+```powershell
+$env:DB_HOST = '<host-or-vpn-ip-do-TV3-cap>'
+$env:DB_PORT = '5432'
+$env:DB_NAME = 'autotrade_final'
+$env:DB_USERNAME = '<username-do-TV3-cap>'
+$env:HIBERNATE_DDL_AUTO = 'validate'
+```
+
+`used_car_db` dưới đây chỉ là database local, độc lập và disposable để mỗi thành
+viên tự phát triển khi chưa có route tới instance shared.
 
 Database local tên `used_car_db` phải dùng encoding **UTF8**. TV3 quản lý
 schema/migration chính thức. Chỉ tạo database khi nó chưa tồn tại:
@@ -81,7 +97,7 @@ hình; API đăng ký sẽ trả `emailSent=false` khi thiếu biến SMTP.
 cd backend
 $env:DB_HOST = 'localhost'
 $env:DB_PORT = '5432'
-$env:DB_NAME = 'used_car_db'
+$env:DB_NAME = 'used_car_db' # Local isolated DB; dùng autotrade_final khi TV3 cấp route
 $env:DB_USERNAME = 'postgres'
 $env:DB_PASSWORD = Read-Host 'Nhập DB_PASSWORD'
 $env:DB_SSLMODE = 'disable'
@@ -99,6 +115,10 @@ thêm các biến `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
 dẫn [backend/README.md](backend/README.md). Không chia sẻ các secret này trong
 chat hoặc commit chúng vào repository.
 
+Mở trực tiếp `http://localhost:8080/` có thể trả JSON `401 Unauthorized`. Đây là
+hành vi bình thường của Spring Security, không phải Backend chưa chạy. Dùng
+Swagger hoặc các endpoint public/auth ở phần dưới để kiểm tra ứng dụng.
+
 ### Mở Frontend
 
 Mở PowerShell thứ hai tại thư mục dự án:
@@ -108,6 +128,22 @@ cd frontend
 npm install
 npm run dev
 ```
+
+Nếu Vite hiển thị trang trắng và terminal báo không tìm thấy `/src/main.jsx`
+với đường dẫn bị lỗi ký tự tiếng Việt, tạo một junction có đường dẫn ASCII từ
+thư mục gốc dự án rồi chạy lại Frontend:
+
+```powershell
+$projectPath = (Resolve-Path '.').Path
+if (-not (Test-Path 'C:\AutoTrade')) {
+  New-Item -ItemType Junction -Path 'C:\AutoTrade' -Target $projectPath
+}
+Set-Location 'C:\AutoTrade\frontend'
+npm run dev
+```
+
+Junction chỉ là đường dẫn khác tới cùng workspace, không sao chép source hoặc
+tạo repository mới.
 
 ## Chạy thử giao diện và API
 
@@ -132,8 +168,12 @@ JSON và gửi thử.
 ## Kiểm thử OTP qua email
 
 1. Mở trang `/register` và đăng ký bằng một email bạn có thể truy cập.
-2. Mở hộp thư, lấy mã OTP sáu chữ số rồi nhập ở trang xác minh.
+2. Mở hộp thư, lấy mã OTP sáu chữ số rồi nhập ở trang xác minh. Nếu chưa thấy
+   thư trong Inbox, kiểm tra mục **Spam/Thư rác** và đánh dấu **Không phải spam**.
 3. Sau khi xác minh thành công, đăng nhập bằng tài khoản vừa tạo.
 4. Tại trang đăng nhập, chọn **Quên mật khẩu?** để kiểm thử OTP đặt lại mật khẩu.
 
 Lưu ý: mã OTP có hiệu lực năm phút, chỉ dùng một lần và gửi lại phải chờ 60 giây.
+Không bấm gửi lại liên tục vì các email có nội dung lặp lại dễ bị nhà cung cấp
+đưa vào Spam. `emailSent=true` xác nhận Backend đã gửi tới SMTP, không bảo đảm
+nhà cung cấp đặt thư trong Inbox.
