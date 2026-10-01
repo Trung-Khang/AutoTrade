@@ -1,0 +1,11 @@
+{"label": "connection_route", "file": null, "sha256": null, "order": null, "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:16:39.949763+07:00", "end": "2026-10-01T09:16:40.093289+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+autotrade_final|::1|5432|postgres
+*
+5432
+local|{all}|{all}||scram-sha-256|
+host|{all}|{all}|127.0.0.1|scram-sha-256|
+host|{all}|{all}|::1|scram-sha-256|
+local|{replication}|{all}||scram-sha-256|
+host|{replication}|{all}|127.0.0.1|scram-sha-256|
+host|{replication}|{all}|::1|scram-sha-256|

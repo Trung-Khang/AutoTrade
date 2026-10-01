@@ -1,0 +1,3 @@
+{"label": "rows_vehicles", "file": null, "sha256": null, "order": null, "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:16:38.816064+07:00", "end": "2026-10-01T09:16:39.304434+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+669eb703f8e40e73515fcac807ea4ac6|10

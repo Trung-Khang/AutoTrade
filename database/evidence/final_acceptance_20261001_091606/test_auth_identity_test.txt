@@ -1,0 +1,12 @@
+{"label": "test_auth_identity_test", "file": "database/evidence/final_acceptance_20261001_091606/auth_identity_test.acceptance.sql", "sha256": "417135ad19deda461288e0092decb98a7eaf4ca0cdf2be8a98dc069944423b4d", "order": null, "target_database": "autotrade_final", "server": {"host": "::1/128", "port": 5432, "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit", "username": "postgres", "data_directory": "C:/Program Files/PostgreSQL/18/data", "system_identifier": "7673721980907334164"}, "start": "2026-10-01T09:16:18.784058+07:00", "end": "2026-10-01T09:16:18.962413+07:00", "exit_code": 0, "verdict": "PASS"}
+DO
+BEGIN
+CREATE FUNCTION
+SELECT 1
+SAVEPOINT
+DO
+ROLLBACK
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/final_acceptance_20261001_091606/auth_identity_test.acceptance.sql:68: NOTICE:  PASS identity uniqueness/NULL/rules/defaults/FKs/RESTRICT/soft disable and unreferenced delete
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/final_acceptance_20261001_091606/auth_identity_test.acceptance.sql:76: NOTICE:  PASS auth transaction rollback

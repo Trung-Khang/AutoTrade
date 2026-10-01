@@ -1,0 +1,8 @@
+DB_NAME=autotrade_final
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+HIBERNATE_DDL_AUTO=validate
+JDBC_URL=jdbc:postgresql://localhost:5432/autotrade_final
+# DB_PASSWORD: supplied privately via runtime environment; not recorded.
+# localhost refers ONLY to DESKTOP-42GEDK2.

@@ -1,0 +1,1 @@
+PASS reviewed local checkpoint recovery from database/evidence/final_acceptance_20261001_091237; CREATE exit=0; same OID/server; still empty UTF8; no SQL scripts previously executed. Runner empty-row parser fixed; no schema repair needed.

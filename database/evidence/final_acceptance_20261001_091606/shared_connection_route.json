@@ -1,0 +1,12 @@
+{
+  "local_connection": "PASS localhost/::1:5432, autotrade_final, postgres",
+  "machine": "DESKTOP-42GEDK2",
+  "vpn_host": "26.181.182.25",
+  "vpn_probe_exit": 2,
+  "vpn_probe_verdict": "BLOCKED",
+  "diagnostic": "FATAL: no pg_hba.conf entry for host 26.181.182.25, user postgres, database autotrade_final, no encryption",
+  "pg_hba": "Only loopback host rules; listen_addresses already *; no server configuration changed",
+  "teammate_probe": "NOT RUN: no access session on teammate computer",
+  "wifi_at_probe": "172.16.30.179",
+  "next_step": "Operator provision restricted VPN route or tunnel; downstream teams verify same server identity; do not create another database"
+}
