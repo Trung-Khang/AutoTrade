@@ -1,0 +1,10 @@
+{
+  "allowlist": "PASS three exact IPv4/32",
+  "hba_scope": "PASS autotrade_final/autotrade_app/SCRAM",
+  "firewall": "PASS Private/Radmin interface/local VPN IP/PostgreSQL executable/TCP5432",
+  "listeners": "PASS localhost and exact VPN only",
+  "secrets": "PASS",
+  "admin_transport_password": "CLEARED",
+  "physical_schema_and_rows": "PASS exact before/after",
+  "member_TCP_psql": "NOT RUN pending outputs from member computers"
+}

@@ -1,0 +1,22 @@
+{
+  "server_configuration": "PASS",
+  "app_local_login": "PASS",
+  "app_local_identity": "autotrade_final|autotrade_app|PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+  "physical_catalog_preserved": "PASS",
+  "all_public_rows_preserved": "PASS",
+  "configuration": {
+    "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+    "accounts": 3,
+    "database": "autotrade_final",
+    "username": "postgres",
+    "vehicles": 10,
+    "hba_errors": 0,
+    "config_errors": 0,
+    "listen_addresses": "localhost,26.181.182.25"
+  },
+  "member_tests": {
+    "TV1": "NOT RUN: no execution session on TV1",
+    "TV2": "NOT RUN: no execution session on TV2",
+    "TV4": "NOT RUN: no execution session on TV4"
+  }
+}

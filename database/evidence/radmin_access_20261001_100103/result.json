@@ -1,0 +1,152 @@
+{
+  "started": "2026-10-01T10:01:03.0697510+07:00",
+  "database": "autotrade_final",
+  "host": "26.181.182.25",
+  "port": 5432,
+  "username": "autotrade_app",
+  "members": {
+    "TV2": "26.252.98.44/32",
+    "TV4": "26.91.16.138/32",
+    "TV1": "26.79.139.16/32"
+  },
+  "status": "BLOCKED",
+  "teammate_tcp": "NOT RUN: requires tests from the three member computers",
+  "teammate_psql": "NOT RUN: requires tests from the three member computers",
+  "steps": [
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:08.8201573+07:00",
+      "name": "identity",
+      "diagnostic": "autotrade_final|postgres|::1|5432|PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit"
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:11.1508651+07:00",
+      "name": "before_snapshot",
+      "diagnostic": "Live physical catalog and every public-table full-row fingerprint captured"
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:11.2335822+07:00",
+      "name": "private_configuration_backup",
+      "diagnostic": ""
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:11.7882714+07:00",
+      "name": "app_role_local_login",
+      "diagnostic": "autotrade_final|autotrade_app|PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit"
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:12.0912091+07:00",
+      "name": "restricted_postgresql_configuration",
+      "diagnostic": "localhost plus exact VPN server IP; app HBA contains exactly three member /32 rules"
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:19.5826196+07:00",
+      "name": "restricted_firewall",
+      "diagnostic": "Private profile, VPN interface/local IP, PostgreSQL executable, TCP5432, three exact /32 remotes"
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:26.9102396+07:00",
+      "name": "service_restart_local_connection",
+      "diagnostic": "autotrade_final|postgres|PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit"
+    },
+    {
+      "verdict": "PASS",
+      "time": "2026-10-01T10:01:33.8712492+07:00",
+      "name": "server_vpn_listener",
+      "diagnostic": "Exact VPN address listens; member route still requires tests on their computers"
+    }
+  ],
+  "updated": "2026-10-01T10:01:37.4992623+07:00",
+  "identity": "autotrade_final|postgres|::1|5432|PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+  "backup": "D:\\CONG_NGHE_PHAN_MEM\\AutoTrade-TV3\\database\\backups\\radmin_access_20261001_100103",
+  "config_before_sha256": "E31465C3B4A4B261C3A10BCAC04807D8C09CCF91C69099DC28DAE610502B2407",
+  "hba_before_sha256": "0C8DC6E6E57399790417A6E13B3A8E1B5E27AA19708A2122148FBFE3BDCECD42",
+  "app_privileges": {
+    "login": true,
+    "createdb": false,
+    "bypassrls": false,
+    "superuser": false,
+    "createrole": false,
+    "replication": false,
+    "schema_create": false,
+    "all_tables_dml": true,
+    "password_is_scram": true,
+    "all_sequences_usage": true
+  },
+  "pre_restart_parse": {
+    "file_errors": [
+      {
+        "line": 59,
+        "name": "listen_addresses",
+        "error": "setting could not be applied",
+        "sourcefile": "C:/Program Files/PostgreSQL/18/data/postgresql.conf"
+      }
+    ],
+    "hba_error_count": 0
+  },
+  "hba_rules": [
+    {
+      "error": null,
+      "method": "scram-sha-256",
+      "address": "26.79.139.16",
+      "netmask": "255.255.255.255",
+      "database": [
+        "autotrade_final"
+      ],
+      "username": [
+        "autotrade_app"
+      ]
+    },
+    {
+      "error": null,
+      "method": "scram-sha-256",
+      "address": "26.252.98.44",
+      "netmask": "255.255.255.255",
+      "database": [
+        "autotrade_final"
+      ],
+      "username": [
+        "autotrade_app"
+      ]
+    },
+    {
+      "error": null,
+      "method": "scram-sha-256",
+      "address": "26.91.16.138",
+      "netmask": "255.255.255.255",
+      "database": [
+        "autotrade_final"
+      ],
+      "username": [
+        "autotrade_app"
+      ]
+    }
+  ],
+  "firewall": {
+    "interface": {
+      "InterfaceAlias": "Radmin VPN"
+    },
+    "ports": {
+      "Protocol": "TCP",
+      "LocalPort": "5432"
+    },
+    "address": {
+      "LocalAddress": "26.181.182.25",
+      "RemoteAddress": [
+        "26.79.139.16",
+        "26.252.98.44",
+        "26.91.16.138"
+      ]
+    },
+    "profile": "Private",
+    "action": "Allow"
+  },
+  "rollback": "PASS restored only this invocation configuration/firewall/profile; app role, if committed, retained",
+  "blocker": "The process cannot access the file 'D:\\CONG_NGHE_PHAN_MEM\\AutoTrade-TV3\\database\\evidence\\radmin_access_20261001_100103\\result.json' because it is being used by another process."
+}
