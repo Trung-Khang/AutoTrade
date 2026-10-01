@@ -11,7 +11,7 @@ const VerifyEmailPage = () => {
   const [error, setError] = useState(location.state?.emailSent === false ? location.state.message : ''); const [busy, setBusy] = useState(false);
   const verify = async (event) => {
     event.preventDefault(); setBusy(true); setError('');
-    try { const result = await apiClient.post('/auth/verify-email', { email, code }); setMessage(result.message); setTimeout(() => navigate('/login'), 1000); }
+    try { const result = await apiClient.post('/auth/verify-email', { email, code }, { timeout: 50000 }); setMessage(result.message); setTimeout(() => navigate('/login'), 1000); }
     catch (err) { setError(err.message); } finally { setBusy(false); }
   };
   const resend = async () => {
