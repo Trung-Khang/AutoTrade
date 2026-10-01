@@ -1,0 +1,11 @@
+exit=0
+BEGIN
+CREATE FUNCTION
+SELECT 1
+SAVEPOINT
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_identity_test.sql:67: NOTICE:  PASS identity uniqueness/NULL/rules/defaults/FKs/RESTRICT/soft disable and unreferenced delete
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_identity_test.sql:75: NOTICE:  PASS auth transaction rollback
+DO
+ROLLBACK

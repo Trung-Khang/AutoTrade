@@ -1,0 +1,6 @@
+PASS packaged Backend started with Hibernate ddl-auto=validate against isolated official V3_0_5; public vehicles HTTP 200.
+PASS actual HTTP demo login and /auth/me: CUSTOMER; seeded identity matched JWT user.
+PASS actual HTTP demo login and /auth/me: STAFF; seeded identity matched JWT user.
+PASS actual HTTP demo login and /auth/me: ADMIN; seeded identity matched JWT user.
+PASS real registration persists unverified CUSTOMER; missing SMTP accurately returns emailSent=false; unverified login HTTP 403.
+NOT RUN real activation email receipt -> verify delivered OTP -> verified login -> /auth/me; missing SMTP_USERNAME and SMTP_PASSWORD. SMTP_FROM falls back to SMTP_USERNAME; SMTP_HOST/SMTP_PORT default smtp.gmail.com/587. No mailbox access or authorized recipient configured. NOT RUN real reset email delivery. No fake delivery, OTP disclosure or verification bypass.

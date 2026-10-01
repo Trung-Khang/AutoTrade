@@ -1,0 +1,18 @@
+exit=0
+BEGIN
+SET
+LOCK TABLE
+SELECT 3
+DO
+INSERT 0 3
+COMMIT
+SELECT 3
+BEGIN
+SET
+LOCK TABLE
+SELECT 3
+DO
+INSERT 0 0
+COMMIT
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_demo_repeat_test.sql:19: NOTICE:  PASS seed twice exactly three accounts, stable IDs/hashes/state
+DO

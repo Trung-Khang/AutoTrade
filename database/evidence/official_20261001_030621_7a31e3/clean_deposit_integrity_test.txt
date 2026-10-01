@@ -1,0 +1,6 @@
+exit=0
+BEGIN
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/clean_deposit_integrity_test.adapted.sql:61: NOTICE:  PASS: Chan coc DEPOSITED trung xe
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/evidence/official_20261001_030621_7a31e3/clean_deposit_integrity_test.adapted.sql:61: NOTICE:  PASS: Chan tien coc bang 0
+DO
+ROLLBACK

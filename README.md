@@ -40,11 +40,17 @@ Khi bootstrap một database development mới, chạy theo thứ tự:
 ```powershell
 psql -h localhost -p 5432 -U postgres -d used_car_db -f database/schema/schema.sql
 psql -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_0__showroom_deposit_appointment.sql
-psql -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_4__auth_and_otp.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_1__archive_inventory_boundary.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_2__deposit_integrity.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_3__appointment_ledger_integrity.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_4__auth_and_otp.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_5__auth_identity_integrity.sql
 ```
 
 > Cảnh báo: `database/schema/schema.sql` là bootstrap/reset và có `DROP TABLE`.
 > Không chạy file này trên database đã có dữ liệu cần giữ.
+
+Sau migration, seed showroom và auth theo [hướng dẫn TV3](database/guides/Auth_Identity_Integration.md); credential demo chỉ qua environment. V2_0_1 không chạy sau clean schema.
 
 ### Mở Backend
 

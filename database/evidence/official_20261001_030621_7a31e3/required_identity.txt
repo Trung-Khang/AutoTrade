@@ -1,0 +1,4 @@
+BEGIN
+DO
+ROLLBACK
+psql:D:/CONG_NGHE_PHAN_MEM/AutoTrade-TV3/database/tests/auth_required_identity_test.sql:22: NOTICE:  PASS required identity CHECK: invalid email, blank name/hash rejected
