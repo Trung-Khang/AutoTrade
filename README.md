@@ -2,13 +2,17 @@
 
 Đồ án cuối kỳ môn Công nghệ phần mềm - HCMUTE.
 
-## Môi trường và khởi động local
+AutoTrade gồm Backend Spring Boot, Frontend React/Vite và PostgreSQL. Hệ thống hỗ trợ showroom xe, tài khoản JWT theo vai trò `CUSTOMER`/`STAFF`/`ADMIN`, đăng ký và OTP email, đặt lại mật khẩu, đặt cọc giả lập, lịch hẹn và các màn hình quản trị tối thiểu.
 
-Mỗi thành viên cần cài Java JDK 17, Maven 3.9 trở lên, Node.js 20 trở lên,
-PostgreSQL 17 và Git. Backend là Spring Boot/Maven, Frontend là React/Vite,
-database là PostgreSQL; không cần chạy external Tomcat để phát triển local.
+## Môi trường cần có
 
-Kiểm tra môi trường trong PowerShell:
+- Java JDK 17
+- Maven 3.9 trở lên, chạy bằng Java 17
+- Node.js 20 trở lên và npm
+- PostgreSQL 17 trở lên
+- Git
+
+Kiểm tra trong PowerShell:
 
 ```powershell
 java -version
@@ -19,43 +23,36 @@ psql --version
 Test-NetConnection localhost -Port 5432
 ```
 
-Maven phải hiển thị Java 17. Nếu máy dùng đường dẫn workspace có tiếng Việt và
-Maven báo lỗi encoding, đặt thêm biến sau trong terminal đang chạy Backend:
+`mvn -version` phải hiển thị Java 17. Nếu workspace có đường dẫn tiếng Việt và Maven báo lỗi encoding, đặt biến sau trong terminal chạy Backend:
 
 ```powershell
 $env:JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
 ```
 
-### Chọn môi trường PostgreSQL
+## Database
 
-Database shared chính thức đã được TV3 nghiệm thu là `autotrade_final` trên máy
-TV3. Chỉ dùng khi TV3 đã cấp route VPN/tunnel giới hạn và credential riêng.
-Không chạy `schema.sql`, migration, seed hoặc acceptance runner lên database
-shared từ máy thành viên. Khi được cấp quyền, chỉ cấu hình Backend như sau:
+Database tích hợp chính thức là `autotrade_final` do TV3 quản lý. Chỉ kết nối khi TV3 đã cấp Radmin VPN/tunnel, địa chỉ máy chủ và tài khoản database riêng. Từ máy thành viên, **không chạy** `schema.sql`, migration, seed hoặc acceptance runner trên database này. Backend chỉ được chạy với:
 
 ```powershell
-$env:DB_HOST = '<host-or-vpn-ip-do-TV3-cap>'
+$env:DB_HOST = '<dia-chi-TV3-cap>'
 $env:DB_PORT = '5432'
 $env:DB_NAME = 'autotrade_final'
-$env:DB_USERNAME = '<username-do-TV3-cap>'
+$env:DB_USERNAME = '<tai-khoan-TV3-cap>'
+$env:DB_PASSWORD = Read-Host 'Nhập DB_PASSWORD'
 $env:HIBERNATE_DDL_AUTO = 'validate'
 ```
 
-`used_car_db` dưới đây chỉ là database local, độc lập và disposable để mỗi thành
-viên tự phát triển khi chưa có route tới instance shared.
+Khi chưa có route tới database tích hợp, dùng `used_car_db` local để phát triển và kiểm thử riêng. Đây không phải database bàn giao cuối.
 
-Database local tên `used_car_db` phải dùng encoding **UTF8**. TV3 quản lý
-schema/migration chính thức. Chỉ tạo database khi nó chưa tồn tại:
+### Chỉ bootstrap database local mới
+
+Chỉ thực hiện phần này khi `used_car_db` chưa tồn tại hoặc là database local mới hoàn toàn. `database/schema/schema.sql` có `DROP TABLE`, nên tuyệt đối không chạy trên database có dữ liệu cần giữ.
 
 ```powershell
 psql -h localhost -p 5432 -U postgres -d postgres -c "CREATE DATABASE used_car_db WITH ENCODING 'UTF8' TEMPLATE template0;"
-```
 
-Khi bootstrap một database development mới, chạy theo thứ tự:
-
-```powershell
-psql -h localhost -p 5432 -U postgres -d used_car_db -f database/schema/schema.sql
-psql -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_0__showroom_deposit_appointment.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/schema/schema.sql
+psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_0__showroom_deposit_appointment.sql
 psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_1__archive_inventory_boundary.sql
 psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_2__deposit_integrity.sql
 psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_3__appointment_ledger_integrity.sql
@@ -63,20 +60,13 @@ psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f da
 psql -X -v ON_ERROR_STOP=1 -h localhost -p 5432 -U postgres -d used_car_db -f database/migrations/V3_0_5__auth_identity_integrity.sql
 ```
 
-> Cảnh báo: `database/schema/schema.sql` là bootstrap/reset và có `DROP TABLE`.
-> Không chạy file này trên database đã có dữ liệu cần giữ.
+Hướng dẫn seed showroom và tài khoản demo nằm trong [database/guides/Auth_Identity_Integration.md](database/guides/Auth_Identity_Integration.md). Không tự ghi hoặc chia sẻ password/hash seed trong Git.
 
-Sau migration, seed showroom và auth theo [hướng dẫn TV3](database/guides/Auth_Identity_Integration.md); credential demo chỉ qua environment. V2_0_1 không chạy sau clean schema.
+## Chạy Backend
 
-### Mở Backend
+Mở PowerShell thứ nhất tại **đúng thư mục repository hiện tại**. Không chạy backend từ một bản sao cũ như `C:\AutoTrade`, vì frontend có thể kết nối nhầm backend/database đang chiếm cổng `8080`.
 
-Mở PowerShell thứ nhất tại thư mục dự án. Cấu hình thông tin database từ môi
-trường local của bạn, không ghi password/SMTP App Password vào source hoặc Git.
-`JWT_SECRET` dưới đây được tạo ngẫu nhiên cho phiên chạy local hiện tại.
-
-Nếu máy đã lưu cấu hình Gmail SMTP trong Tomcat `setenv.bat`, phải nạp các biến
-đó vào chính PowerShell chạy `java -jar`. Chạy đoạn sau trước khi build/start;
-đoạn lệnh không in SMTP password ra màn hình:
+Nếu máy đã có cấu hình SMTP trong `C:\apache-tomcat-11.0.25\bin\setenv.bat`, nạp riêng các biến `SMTP_*` vào terminal hiện tại. Lệnh dưới đây không in SMTP password ra màn hình:
 
 ```powershell
 $tomcatSetenv = 'C:\apache-tomcat-11.0.25\bin\setenv.bat'
@@ -89,39 +79,33 @@ if (Test-Path $tomcatSetenv) {
 }
 ```
 
-Thành viên không có file trên phải tự cấu hình các biến `SMTP_*` bằng Gmail và
-App Password của mình. Chỉ chạy được Backend không có nghĩa SMTP đã được cấu
-hình; API đăng ký sẽ trả `emailSent=false` khi thiếu biến SMTP.
+Chạy local với database `used_car_db`:
 
 ```powershell
 cd backend
 $env:DB_HOST = 'localhost'
 $env:DB_PORT = '5432'
-$env:DB_NAME = 'used_car_db' # Local isolated DB; dùng autotrade_final khi TV3 cấp route
+$env:DB_NAME = 'used_car_db'
 $env:DB_USERNAME = 'postgres'
 $env:DB_PASSWORD = Read-Host 'Nhập DB_PASSWORD'
 $env:DB_SSLMODE = 'disable'
+$env:HIBERNATE_DDL_AUTO = 'validate'
 $bytes = [byte[]]::new(48)
 [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
 $env:JWT_SECRET = [Convert]::ToBase64String($bytes)
 $env:JAVA_TOOL_OPTIONS = '-Dfile.encoding=UTF-8'
+
 mvn clean package -DskipTests
 java -jar target/backend-0.0.1-SNAPSHOT.war
 ```
 
-Backend chạy tại `http://localhost:8080`. Muốn gửi/xác minh OTP email, cấu hình
-thêm các biến `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`,
-`SMTP_FROM`, `SMTP_STARTTLS` và tùy chọn `SMTP_FROM_NAME=AutoTrade` theo hướng
-dẫn [backend/README.md](backend/README.md). Không chia sẻ các secret này trong
-chat hoặc commit chúng vào repository.
+Backend dùng embedded Spring Boot server tại `http://localhost:8080`; không cần khởi động external Tomcat để phát triển local. Mở trực tiếp URL gốc có thể trả `401 Unauthorized`, đó là hành vi bình thường của Spring Security.
 
-Mở trực tiếp `http://localhost:8080/` có thể trả JSON `401 Unauthorized`. Đây là
-hành vi bình thường của Spring Security, không phải Backend chưa chạy. Dùng
-Swagger hoặc các endpoint public/auth ở phần dưới để kiểm tra ứng dụng.
+Các biến SMTP cần có để gửi OTP thật là `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_STARTTLS` và tùy chọn `SMTP_FROM_NAME=AutoTrade`. Xem thêm [backend/README.md](backend/README.md). Không commit hoặc gửi các secret này qua chat.
 
-### Mở Frontend
+## Chạy Frontend
 
-Mở PowerShell thứ hai tại thư mục dự án:
+Mở PowerShell thứ hai từ đúng repository đang chạy Backend:
 
 ```powershell
 cd frontend
@@ -129,51 +113,34 @@ npm install
 npm run dev
 ```
 
-Nếu Vite hiển thị trang trắng và terminal báo không tìm thấy `/src/main.jsx`
-với đường dẫn bị lỗi ký tự tiếng Việt, tạo một junction có đường dẫn ASCII từ
-thư mục gốc dự án rồi chạy lại Frontend:
+Mở giao diện tại [http://localhost:5173/](http://localhost:5173/). Nếu trang trắng hoặc dữ liệu không khớp, kiểm tra xem cổng `5173`/`8080` có đang bị một process từ thư mục khác chiếm không:
 
 ```powershell
-$projectPath = (Resolve-Path '.').Path
-if (-not (Test-Path 'C:\AutoTrade')) {
-  New-Item -ItemType Junction -Path 'C:\AutoTrade' -Target $projectPath
-}
-Set-Location 'C:\AutoTrade\frontend'
-npm run dev
+Get-NetTCPConnection -LocalPort 5173,8080 -State Listen -ErrorAction SilentlyContinue |
+  Select-Object LocalPort, OwningProcess
 ```
 
-Junction chỉ là đường dẫn khác tới cùng workspace, không sao chép source hoặc
-tạo repository mới.
+Dừng đúng terminal/process cũ, sau đó chạy lại Backend và Frontend từ repository này. Không tạo hoặc dùng một thư mục `C:\AutoTrade` độc lập để chạy Vite.
 
-## Chạy thử giao diện và API
+## Kiểm tra API và các luồng chính
 
-- Giao diện web: [http://127.0.0.1:5173/login](http://127.0.0.1:5173/login)
+- Giao diện: [http://localhost:5173/login](http://localhost:5173/login)
 - Swagger API: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-Swagger là giao diện tài liệu và kiểm thử API của Backend. Công cụ này giúp xem
-toàn bộ endpoint như `/auth/login`, `/auth/register`, `/vehicles`; request/
-response mẫu; field bắt buộc; mã lỗi; và gửi request trực tiếp mà không cần giao
-diện React. Swagger hữu ích khi demo hoặc kiểm thử phân quyền JWT, `401`,
-`403`, đăng ký và OTP. Mở Swagger UI, chọn API rồi bấm **Try it out** để nhập
-JSON và gửi thử.
+Swagger là giao diện tài liệu và kiểm thử API. Dùng **Try it out** để gửi request trực tiếp, xem payload/response và kiểm tra các mã lỗi `401`/`403` mà không cần đi qua React.
 
-## Tài khoản demo
+Các endpoint xác thực hiện có:
 
-| Vai trò | Tên đăng nhập | Mật khẩu |
-|---|---|---|
-| `ADMIN` | `admin` | `AutoTrade@Admin2026` |
-| `STAFF` | `staff` | `AutoTrade@Staff2026` |
-| `CUSTOMER` | `customer` | `AutoTrade@Customer2026` |
+- `POST /api/v1/auth/register`, `/verify-email`, `/resend-verification`
+- `POST /api/v1/auth/login`, `/logout`, `GET /api/v1/auth/me`
+- `POST /api/v1/auth/forgot-password`, `/verify-reset-otp`, `/reset-password`
 
-## Kiểm thử OTP qua email
+Kiểm thử OTP theo thứ tự: đăng ký → kiểm tra Inbox và **Spam/Thư rác** → xác minh OTP → đăng nhập → quên mật khẩu → xác minh OTP → đặt mật khẩu khác mật khẩu cũ → đăng nhập lại. OTP có sáu chữ số, hết hạn sau năm phút, dùng một lần; gửi lại OTP phải chờ cooldown. `emailSent=true` chỉ xác nhận SMTP đã nhận yêu cầu gửi, không bảo đảm email xuất hiện ở Inbox.
 
-1. Mở trang `/register` và đăng ký bằng một email bạn có thể truy cập.
-2. Mở hộp thư, lấy mã OTP sáu chữ số rồi nhập ở trang xác minh. Nếu chưa thấy
-   thư trong Inbox, kiểm tra mục **Spam/Thư rác** và đánh dấu **Không phải spam**.
-3. Sau khi xác minh thành công, đăng nhập bằng tài khoản vừa tạo.
-4. Tại trang đăng nhập, chọn **Quên mật khẩu?** để kiểm thử OTP đặt lại mật khẩu.
+## Phân quyền
 
-Lưu ý: mã OTP có hiệu lực năm phút, chỉ dùng một lần và gửi lại phải chờ 60 giây.
-Không bấm gửi lại liên tục vì các email có nội dung lặp lại dễ bị nhà cung cấp
-đưa vào Spam. `emailSent=true` xác nhận Backend đã gửi tới SMTP, không bảo đảm
-nhà cung cấp đặt thư trong Inbox.
+- `CUSTOMER`: xem xe và thực hiện các luồng đặt cọc của khách hàng.
+- `STAFF`: xem/check-in lịch hẹn.
+- `ADMIN`: quản lý xe và xem/hoàn tiền ledger theo endpoint quản trị.
+
+Backend lấy danh tính từ JWT Bearer token, không nhận `X-User-Id` do client tự gửi. Role không kế thừa ngầm: endpoint yêu cầu role nào phải đăng nhập bằng role đó.
