@@ -135,6 +135,20 @@ public class AuthService {
         return new MessageResponse(GENERIC_FORGOT_MESSAGE, true, 0L);
     }
 
+    @Transactional
+    public MessageResponse requestPasswordResetByUsername(String username) {
+        String normalizedUsername = username == null ? "" : username.trim();
+        AppUser user = userRepository.findByUsernameIgnoreCase(normalizedUsername).orElse(null);
+        if (user == null || !user.isActive() || user.isLocked() || !user.isEmailVerified()) {
+            return new MessageResponse(GENERIC_FORGOT_MESSAGE, true, 0L);
+        }
+        OtpService.OtpDispatch dispatch = otpService.issue(user, OtpPurpose.RESET_PASSWORD, true);
+        String message = dispatch.emailSent()
+                ? "Mã xác thực đã được gửi tới email " + maskEmail(user.getEmail()) + ". Vui lòng kiểm tra Hộp thư đến và Spam."
+                : "Không thể gửi email xác thực lúc này. Vui lòng thử lại sau.";
+        return new MessageResponse(message, dispatch.emailSent(), dispatch.retryAfterSeconds());
+    }
+
     @Transactional(noRollbackFor = AuthException.class)
     public ResetVerificationResponse verifyPasswordResetOtp(String email, String code) {
         AppUser user = otpService.verify(email, requireOtp(code), OtpPurpose.RESET_PASSWORD);
@@ -154,6 +168,24 @@ public class AuthService {
         session.setExpiresAt(now.plusSeconds(resetSessionMinutes * 60));
         resetSessionRepository.save(session);
         return new ResetVerificationResponse("Mã OTP hợp lệ. Vui lòng đặt mật khẩu mới.", resetToken);
+    }
+
+    @Transactional(noRollbackFor = AuthException.class)
+    public ResetVerificationResponse verifyPasswordResetOtpByUsername(String username, String code) {
+        String normalizedUsername = username == null ? "" : username.trim();
+        AppUser user = userRepository.findByUsernameIgnoreCase(normalizedUsername)
+                .orElseThrow(() -> new AuthException(HttpStatus.BAD_REQUEST, "Mã OTP không hợp lệ hoặc đã hết hạn."));
+        return verifyPasswordResetOtp(user.getEmail(), code);
+    }
+
+    private String maskEmail(String email) {
+        int at = email == null ? -1 : email.indexOf('@');
+        if (at <= 0) {
+            return "***";
+        }
+        String local = email.substring(0, at);
+        String visible = local.substring(0, Math.min(2, local.length()));
+        return visible + "***" + email.substring(at);
     }
 
     @Transactional

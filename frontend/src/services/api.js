@@ -74,6 +74,8 @@ apiClient.interceptors.response.use(
             errorMessage = `Lỗi từ máy chủ (HTTP ${status}). Vui lòng thử lại.`;
         }
       }
+    } else if (error.code === 'ECONNABORTED') {
+      errorMessage = 'Yêu cầu xử lý quá lâu và đã hết thời gian chờ. Vui lòng kiểm tra trạng thái tài khoản trước khi thử lại.';
     } else if (error.request) {
       errorMessage = 'Không nhận được phản hồi từ Backend (Spring Boot chưa khởi động hoặc gặp sự cố mạng).';
     }

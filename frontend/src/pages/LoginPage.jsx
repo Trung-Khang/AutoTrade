@@ -33,7 +33,7 @@ const LoginPage = () => {
       <div className="form-group"><label htmlFor="password">Mật khẩu</label><input id="password" type="password" placeholder="Nhập mật khẩu..." value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></div>
       <button type="submit" className="auth-submit-btn" disabled={isSubmitting}>{isSubmitting ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>
     </form>
-    <div className="auth-footer"><Link to="/forgot-password">Quên mật khẩu?</Link><br />Chưa có tài khoản? <Link to="/register">Đăng ký tài khoản mới</Link></div>
+    <div className="auth-footer"><Link to="/forgot-password" state={{ username: usernameOrEmail.includes('@') ? '' : usernameOrEmail }}>Quên mật khẩu?</Link><br />Chưa có tài khoản? <Link to="/register">Đăng ký tài khoản mới</Link></div>
   </div></div>;
 };
 export default LoginPage;

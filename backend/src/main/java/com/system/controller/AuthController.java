@@ -49,14 +49,14 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     @Operation(summary = "Yêu cầu OTP đặt lại mật khẩu, không tiết lộ email tồn tại")
-    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody EmailRequest request) {
-        return ResponseEntity.ok(authService.requestPasswordReset(request.email()));
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(authService.requestPasswordResetByUsername(request.username()));
     }
 
     @PostMapping("/verify-reset-otp")
     @Operation(summary = "Xác minh OTP quên mật khẩu và cấp reset token ngắn hạn")
-    public ResponseEntity<ResetVerificationResponse> verifyResetOtp(@RequestBody OtpVerificationRequest request) {
-        return ResponseEntity.ok(authService.verifyPasswordResetOtp(request.email(), request.code()));
+    public ResponseEntity<ResetVerificationResponse> verifyResetOtp(@RequestBody ResetOtpVerificationRequest request) {
+        return ResponseEntity.ok(authService.verifyPasswordResetOtpByUsername(request.username(), request.code()));
     }
 
     @PostMapping("/reset-password")
