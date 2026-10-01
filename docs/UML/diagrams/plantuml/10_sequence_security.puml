@@ -1,0 +1,25 @@
+@startuml
+actor "Browser" as A
+boundary "React UI" as UI
+control "JwtAuthenticationFilter" as JF
+control "SecurityConfig" as SC
+control "Controller" as C
+database "PostgreSQL" as DB
+
+== Xác thực JWT & Phân quyền Request ==
+A -> UI : 1. Gửi request + Authorization: Bearer JWT
+UI -> JF : 2. HTTP request
+JF -> JF : 3. Verify signature + extract user id
+JF -> DB : 4. Load AppUser
+DB --> JF : 5. AppUser / state
+JF -> SC : 6. Authenticated principal + authorities
+
+alt Đủ quyền
+  SC -> C : 7a. Allow (Cho phép truy cập)
+  C --> UI : 8a. 2xx Success Response
+else Thiếu / sai quyền
+  SC --> UI : 7b. 401 Unauthorized / 403 Forbidden
+end
+
+UI --> A : 9. Hiển thị kết quả / thông báo lỗi
+@enduml

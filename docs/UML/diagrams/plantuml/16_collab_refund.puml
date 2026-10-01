@@ -1,0 +1,30 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+
+actor "Quản trị viên" as U
+boundary "Giao diện Ledger\n(AdminLedgerPage)" as UI
+control "AdminLedgerController" as C
+control "AdminLedgerService" as S
+entity "DepositRepository" as DR
+entity "VehicleRepository" as VR
+entity "TransactionLedgerRepository" as LR
+database "Cơ sở dữ liệu" as DB
+
+U --> UI : 1. yêu cầu hoàn cọc
+UI --> C : 2. POST /admin/ledger/{depositId}/refund
+C --> S : 3. refundDeposit(depositId,...)
+S --> DR : 4. load deposit
+DR --> DB : 5. SELECT deposit
+DB --> DR : 6. deposit data
+S --> DR : 7. save REFUNDED
+DR --> DB : 8. UPDATE deposit
+S --> VR : 9. set vehicle AVAILABLE
+VR --> DB : 10. UPDATE vehicle
+S --> LR : 11. save negative REFUND
+LR --> DB : 12. INSERT ledger
+DB --> LR : 13. saved ledger
+S --> C : 14. refund result
+C --> UI : 15. 200 OK
+UI --> U : 16. hiển thị đã hoàn cọc
+@enduml
