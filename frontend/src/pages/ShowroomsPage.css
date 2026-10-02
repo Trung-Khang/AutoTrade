@@ -239,7 +239,27 @@
 }
 
 @media (max-width: 768px) {
+  .showrooms-page {
+    padding: 24px 14px 60px;
+  }
+
+  .showrooms-hero h1 {
+    font-size: 26px;
+  }
+
+  .showrooms-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .showrooms-search {
+    max-width: 100%;
+  }
+
   .showrooms-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
+
