@@ -45,7 +45,7 @@
 
 .filter-grid-fields {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.2fr 1fr 1fr 1.2fr;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   align-items: flex-end;
 }
