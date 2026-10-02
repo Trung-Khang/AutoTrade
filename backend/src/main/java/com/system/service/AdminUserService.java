@@ -2,6 +2,7 @@ package com.system.service;
 
 import com.system.dto.PageResponse;
 import com.system.dto.UserSummaryResponse;
+import com.system.dto.request.UpdateProfileRequest;
 import com.system.entity.AppUser;
 import com.system.entity.Role;
 import com.system.exception.AuthException;
@@ -146,6 +147,33 @@ public class AdminUserService {
         return UserSummaryResponse.fromEntity(targetUser);
     }
 
+    @Transactional
+    public UserSummaryResponse updateCustomerProfile(Long targetUserId, UpdateProfileRequest request) {
+        if (request == null || request.fullName() == null || request.fullName().trim().isEmpty()) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Họ tên không được để trống.");
+        }
+        String fullName = request.fullName().trim();
+        if (fullName.length() > 120) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Họ tên không được vượt quá 120 ký tự.");
+        }
+        String phone = normalizePhone(request.phone());
+        if (phone == null || !phone.matches("(03|05|07|08|09)\\d{8}")) {
+            throw new AuthException(HttpStatus.BAD_REQUEST,
+                    "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
+        }
+        AppUser targetUser = userRepository.findLockedById(targetUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản với ID: " + targetUserId));
+        if (targetUser.getRole() != Role.CUSTOMER) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Chỉ được chỉnh sửa thông tin tài khoản CUSTOMER.");
+        }
+        if (!phone.equals(targetUser.getPhone()) && userRepository.existsByPhone(phone)) {
+            throw new AuthException(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng.");
+        }
+        targetUser.setFullName(fullName);
+        targetUser.setPhone(phone);
+        return UserSummaryResponse.fromEntity(userRepository.saveAndFlush(targetUser));
+    }
+
     /**
      * Xóa tài khoản người dùng
      * Ràng buộc nghiệp vụ:
@@ -182,5 +210,16 @@ public class AdminUserService {
                 "message", "Đã xóa tài khoản @" + targetUser.getUsername() + " thành công.",
                 "deletedUserId", targetUserId
         );
+    }
+
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return null;
+        }
+        String compact = phone.trim().replaceAll("[\\s().-]", "");
+        if (compact.startsWith("+84")) {
+            compact = "0" + compact.substring(3);
+        }
+        return compact;
     }
 }

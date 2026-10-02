@@ -100,6 +100,16 @@ const Navbar = () => {
             </NavLink>
           )}
 
+          {isAuthenticated && isCustomer && (
+            <NavLink
+              to="/profile"
+              className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+              onClick={closeMenu}
+            >
+              <FaUser /> Thông tin cá nhân
+            </NavLink>
+          )}
+
           {/* Staff Links */}
           {isAuthenticated && (isStaff || isAdmin) && (
             <NavLink

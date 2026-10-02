@@ -32,7 +32,7 @@ class CustomerDepositHistoryControllerTest {
     @Test
     void currentJwtPrincipalIdScopesTheHistoryQuery() {
         AppUserPrincipal principal = new AppUserPrincipal(73L, "customer", "hash", "Customer",
-                "customer@example.test", com.system.entity.Role.CUSTOMER, true, false);
+                "customer@example.test", "0900000000", com.system.entity.Role.CUSTOMER, true, false);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
         List<CustomerDepositResponse> expected = List.of();
@@ -54,7 +54,7 @@ class CustomerDepositHistoryControllerTest {
     @Test
     void staffCannotCreateOrConfirmDeposits() {
         AppUserPrincipal principal = new AppUserPrincipal(73L, "staff", "hash", "Staff",
-                "staff@example.test", com.system.entity.Role.STAFF, true, false);
+                "staff@example.test", "0900000001", com.system.entity.Role.STAFF, true, false);
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
 

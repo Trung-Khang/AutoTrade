@@ -2,6 +2,7 @@ package com.system.controller;
 
 import com.system.dto.PageResponse;
 import com.system.dto.UserSummaryResponse;
+import com.system.dto.request.UpdateProfileRequest;
 import com.system.service.AdminUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -80,6 +81,15 @@ public class AdminUserController {
 
         UserSummaryResponse response = adminUserService.updateUserRole(id, newRole);
         return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/profile")
+    @Operation(summary = "Cập nhật họ tên và số điện thoại Customer",
+               description = "Admin chỉ được cập nhật họ tên và số điện thoại của tài khoản CUSTOMER.")
+    public ResponseEntity<UserSummaryResponse> updateCustomerProfile(
+            @PathVariable Long id,
+            @RequestBody UpdateProfileRequest request) {
+        return ResponseEntity.ok(adminUserService.updateCustomerProfile(id, request));
     }
 
     /**
