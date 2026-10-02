@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { formatPrice, formatMileage, formatYear } from '../../utils/formatters';
 import { FaCalendarAlt, FaCheckCircle, FaLock, FaTimesCircle, FaHeart } from 'react-icons/fa';
 import { useFavorites } from '../../context/FavoritesContext';
@@ -8,6 +9,7 @@ import './VehicleCard.css';
 const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80';
 
 const VehicleCard = ({ vehicle }) => {
+  const { user, loading: authLoading } = useAuth();
   const [imgSrc, setImgSrc] = useState(vehicle?.imageUrl || vehicle?.image_url || DEFAULT_CAR_IMAGE);
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -30,6 +32,7 @@ const VehicleCard = ({ vehicle }) => {
   const price = vehicle.price;
   const seatCount = vehicle.seatCount || vehicle.seat_count;
   const status = (vehicle.status || 'AVAILABLE').toUpperCase();
+  const canSeeDepositFlow = !authLoading && (!user || user.role === 'CUSTOMER');
 
   // Xác định nhãn trạng thái kinh doanh
   let statusBadge = {
@@ -94,7 +97,7 @@ const VehicleCard = ({ vehicle }) => {
 
         <div className="card-price-row">
           <span className="card-price-val">{formatPrice(price)}</span>
-          <span className="card-deposit-rate">Cọc trước 20 triệu</span>
+          {canSeeDepositFlow && <span className="card-deposit-rate">Cọc trước 20 triệu</span>}
         </div>
 
         <div className="card-actions-row">
@@ -102,15 +105,15 @@ const VehicleCard = ({ vehicle }) => {
             Chi tiết
           </Link>
           
-          {statusBadge.canDeposit ? (
+          {canSeeDepositFlow && statusBadge.canDeposit ? (
             <Link to={`/deposit/${vehicle.id}`} className="card-btn-deposit">
               <FaCalendarAlt /> Đặt cọc & Hẹn
             </Link>
-          ) : (
+          ) : canSeeDepositFlow ? (
             <button className="card-btn-disabled" disabled title="Xe này hiện không thể nhận cọc">
               {statusBadge.text}
             </button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

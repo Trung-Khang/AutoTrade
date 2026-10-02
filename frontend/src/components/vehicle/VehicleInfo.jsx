@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   FaCalendarAlt,
   FaRoad,
@@ -25,6 +26,7 @@ import './VehicleInfo.css';
 const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80';
 
 const VehicleInfo = ({ vehicle }) => {
+  const { user, loading: authLoading } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [imgSrc, setImgSrc] = useState(
     vehicle?.imageUrl || vehicle?.image_url || DEFAULT_CAR_IMAGE
@@ -48,6 +50,7 @@ const VehicleInfo = ({ vehicle }) => {
   const engineSize = vehicle.engineSize || vehicle.engine_size;
   const description = vehicle.description;
   const status = (vehicle.status || 'AVAILABLE').toUpperCase();
+  const canSeeDepositFlow = !authLoading && (!user || user.role === 'CUSTOMER');
 
   const isAvailable = status === 'AVAILABLE';
   const isHold = status === 'HOLD' || status === 'RESERVED';
@@ -121,14 +124,16 @@ const VehicleInfo = ({ vehicle }) => {
               <span className="price-label">Giá niêm yết:</span>
               <span className="price-value">{formatFullPrice(price)}</span>
             </div>
-            <div className="deposit-hint-box">
-              <span className="deposit-tag">Số tiền đặt cọc giữ xe (10%):</span>
-              <strong className="deposit-amount">{formatFullPrice(Math.round((price || 0) * 0.1) || 10000000)}</strong>
-            </div>
+            {canSeeDepositFlow && (
+              <div className="deposit-hint-box">
+                <span className="deposit-tag">Số tiền đặt cọc giữ xe (10%):</span>
+                <strong className="deposit-amount">{formatFullPrice(Math.round((price || 0) * 0.1) || 10000000)}</strong>
+              </div>
+            )}
           </div>
 
           {/* Khối Action Đặt Cọc & Lịch Hẹn */}
-          <div className="detail-deposit-cta-card">
+          {canSeeDepositFlow && <div className="detail-deposit-cta-card">
             {isAvailable ? (
               <div className="cta-active-box">
                 <p className="cta-desc">
@@ -155,7 +160,7 @@ const VehicleInfo = ({ vehicle }) => {
                 </div>
               </div>
             )}
-          </div>
+          </div>}
         </div>
 
         <div className="specs-table-container">

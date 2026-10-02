@@ -50,4 +50,21 @@ class CustomerDepositHistoryControllerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, error.getStatus());
         verifyNoInteractions(depositService);
     }
+
+    @Test
+    void staffCannotCreateOrConfirmDeposits() {
+        AppUserPrincipal principal = new AppUserPrincipal(73L, "staff", "hash", "Staff",
+                "staff@example.test", com.system.entity.Role.STAFF, true, false);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+
+        AuthException createError = assertThrows(AuthException.class,
+                () -> controller.createDeposit(null));
+        AuthException confirmError = assertThrows(AuthException.class,
+                () -> controller.confirmPayment(10L));
+
+        assertEquals(HttpStatus.FORBIDDEN, createError.getStatus());
+        assertEquals(HttpStatus.FORBIDDEN, confirmError.getStatus());
+        verifyNoInteractions(depositService);
+    }
 }
