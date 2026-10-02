@@ -135,14 +135,29 @@ public class AdminLedgerService {
         Deposit deposit = appointment.getDepositId() == null ? null
                 : depositRepository.findById(appointment.getDepositId()).orElse(null);
         AppUser customer = appUserRepository.findById(appointment.getUserId()).orElse(null);
+        if (deposit != null && deposit.getUserId() != null
+                && !deposit.getUserId().equals(appointment.getUserId())) {
+            AppUser depositCustomer = appUserRepository.findById(deposit.getUserId()).orElse(null);
+            if (depositCustomer != null) {
+                customer = depositCustomer;
+            }
+        }
         Vehicle vehicle = vehicleRepository.findById(appointment.getVehicleId()).orElse(null);
+        if (deposit != null && deposit.getVehicleId() != null
+                && !deposit.getVehicleId().equals(appointment.getVehicleId())) {
+            Vehicle depositVehicle = vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+            if (depositVehicle != null) {
+                vehicle = depositVehicle;
+            }
+        }
         String vehicleInfo = vehicle == null ? "Xe #" + appointment.getVehicleId()
                 : String.join(" ", Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
                 .filter(value -> value != null && !value.isBlank()).toList());
         return new AppointmentResponse(appointment.getId(), appointment.getId(), appointment.getDepositId(),
                 deposit == null ? null : deposit.getDepositCode(), deposit == null ? null : deposit.getStatus(),
                 deposit == null ? null : deposit.getAmount(), customer == null ? "Khách hàng" : customer.getFullName(),
-                customer == null ? null : customer.getPhone(), vehicleInfo, appointment.getVehicleId(),
+                customer == null ? null : customer.getPhone(), vehicleInfo,
+                vehicle == null ? appointment.getVehicleId() : vehicle.getId(),
                 appointment.getAppointmentDate(), appointment.isHasTestDrive(), appointment.getStatus(),
                 appointment.getCustomerNote(), appointment.getStaffNote());
     }

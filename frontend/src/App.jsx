@@ -70,6 +70,14 @@ function App() {
                 }
               />
               <Route
+                path="/admin/appointments"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <StaffAppointmentPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/admin/deposits"
                 element={
                   <ProtectedRoute allowedRoles={['ADMIN']}>
