@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { formatPrice, formatMileage, formatYear } from '../../utils/formatters';
-import { FaCalendarAlt, FaCheckCircle, FaLock, FaTimesCircle } from 'react-icons/fa';
+import { FaCalendarAlt, FaCheckCircle, FaLock, FaTimesCircle, FaHeart } from 'react-icons/fa';
+import { useFavorites } from '../../context/FavoritesContext';
 import './VehicleCard.css';
 
 const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80';
@@ -10,8 +11,17 @@ const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79
 const VehicleCard = ({ vehicle }) => {
   const { user, loading: authLoading } = useAuth();
   const [imgSrc, setImgSrc] = useState(vehicle?.imageUrl || vehicle?.image_url || DEFAULT_CAR_IMAGE);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   if (!vehicle) return null;
+
+  const isFav = isFavorite(vehicle.id);
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(vehicle);
+  };
 
   const brand = vehicle.brand || '';
   const model = vehicle.model || '';
@@ -50,18 +60,29 @@ const VehicleCard = ({ vehicle }) => {
 
   return (
     <div className="vehicle-card-v2">
-      <Link to={`/vehicles/${vehicle.id}`} className="card-top-media">
-        <img
-          src={imgSrc}
-          alt={`${brand} ${model}`}
-          className="card-car-img"
-          onError={() => setImgSrc(DEFAULT_CAR_IMAGE)}
-          loading="lazy"
-        />
+      <div className="card-top-media">
+        <Link to={`/vehicles/${vehicle.id}`} className="card-media-link">
+          <img
+            src={imgSrc}
+            alt={`${brand} ${model}`}
+            className="card-car-img"
+            onError={() => setImgSrc(DEFAULT_CAR_IMAGE)}
+            loading="lazy"
+          />
+        </Link>
+        <button
+          type="button"
+          className={`card-favorite-btn ${isFav ? 'favorited' : ''}`}
+          onClick={handleFavoriteClick}
+          title={isFav ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+          aria-label={isFav ? 'Bỏ yêu thích' : 'Thêm vào yêu thích'}
+        >
+          <FaHeart />
+        </button>
         <span className={`card-status-badge ${statusBadge.className}`}>
           {statusBadge.icon} {statusBadge.text}
         </span>
-      </Link>
+      </div>
 
       <div className="card-body">
         <Link to={`/vehicles/${vehicle.id}`} className="card-car-title-link">

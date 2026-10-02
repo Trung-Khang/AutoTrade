@@ -17,7 +17,9 @@ import {
   FaTimesCircle,
   FaShieldAlt,
   FaHandshake,
+  FaHeart,
 } from 'react-icons/fa';
+import { useFavorites } from '../../context/FavoritesContext';
 import { formatFullPrice, formatMileage, formatYear } from '../../utils/formatters';
 import './VehicleInfo.css';
 
@@ -25,6 +27,7 @@ const DEFAULT_CAR_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79
 
 const VehicleInfo = ({ vehicle }) => {
   const { user, loading: authLoading } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [imgSrc, setImgSrc] = useState(
     vehicle?.imageUrl || vehicle?.image_url || DEFAULT_CAR_IMAGE
   );
@@ -52,6 +55,8 @@ const VehicleInfo = ({ vehicle }) => {
   const isAvailable = status === 'AVAILABLE';
   const isHold = status === 'HOLD' || status === 'RESERVED';
   const isSold = status === 'SOLD';
+
+  const isFav = isFavorite(vehicle.id);
 
   return (
     <div className="vehicle-info-container">
@@ -99,6 +104,15 @@ const VehicleInfo = ({ vehicle }) => {
                 <FaTimesCircle /> Đã hoàn tất bán
               </span>
             )}
+
+            <button
+              type="button"
+              className={`btn-favorite-detail ${isFav ? 'favorited' : ''}`}
+              onClick={() => toggleFavorite(vehicle)}
+              title={isFav ? "Bỏ yêu thích" : "Thêm vào danh sách yêu thích"}
+            >
+              <FaHeart /> {isFav ? "Đã lưu yêu thích" : "Yêu thích"}
+            </button>
           </div>
 
           <h1 className="info-title">
