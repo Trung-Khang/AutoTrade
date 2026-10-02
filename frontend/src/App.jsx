@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { FavoritesProvider } from './context/FavoritesContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
@@ -23,13 +24,16 @@ import ShowroomsPage from './pages/ShowroomsPage';
 import FaqPage from './pages/FaqPage';
 import PolicyPage from './pages/PolicyPage';
 import TermsPage from './pages/TermsPage';
+import AboutPage from './pages/AboutPage';
+import FavoritesPage from './pages/FavoritesPage';
 
 import './styles/global.css';
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <FavoritesProvider>
+        <Router>
         <div className="app-container">
           <Navbar />
           <main className="main-content">
@@ -44,9 +48,12 @@ function App() {
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/showrooms" element={<ShowroomsPage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/faq" element={<FaqPage />} />
               <Route path="/policy" element={<PolicyPage />} />
               <Route path="/terms" element={<TermsPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
+              <Route path="/customer/favorites" element={<FavoritesPage />} />
 
               {/* Customer Routes */}
               <Route
@@ -98,6 +105,7 @@ function App() {
           <Footer />
         </div>
       </Router>
+      </FavoritesProvider>
     </AuthProvider>
   );
 }
