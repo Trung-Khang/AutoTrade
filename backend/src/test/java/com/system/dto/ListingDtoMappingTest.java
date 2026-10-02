@@ -29,6 +29,7 @@ class ListingDtoMappingTest {
     void testFullMappingFromEntity() {
         Vehicle vehicle = new Vehicle("Toyota", "Vios", "1.5G", 2021, "Gasoline", "Automatic", 1.5, 5, "Domestic", "Sedan");
         vehicle.setId(10L);
+        vehicle.setStatus("ARCHIVED");
 
         Source source = new Source("bonbanh", "https://bonbanh.com");
         source.setId(1L);
@@ -63,6 +64,7 @@ class ListingDtoMappingTest {
         assertEquals(5, dto.getSeatCount());
         assertEquals("Domestic", dto.getOrigin());
         assertEquals("Sedan", dto.getBodyType());
+        assertEquals("AVAILABLE", dto.getStatus());
 
         // Source info
         assertEquals(1L, dto.getSourceId());

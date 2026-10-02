@@ -36,6 +36,7 @@ public class ListingResponseDto {
     private Integer seatCount;
     private String origin;
     private String bodyType;
+    private String status;
 
     // Thông tin nguồn sàn (Source)
     private Long sourceId;
@@ -76,6 +77,7 @@ public class ListingResponseDto {
             dto.setSeatCount(vehicle.getSeatCount());
             dto.setOrigin(vehicle.getOrigin());
             dto.setBodyType(vehicle.getBodyType());
+            dto.setStatus("ARCHIVED".equalsIgnoreCase(vehicle.getStatus()) ? "AVAILABLE" : vehicle.getStatus());
         }
 
         Source source = listing.getSource();
@@ -155,6 +157,9 @@ public class ListingResponseDto {
 
     public String getBodyType() { return bodyType; }
     public void setBodyType(String bodyType) { this.bodyType = bodyType; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public Long getSourceId() { return sourceId; }
     public void setSourceId(Long sourceId) { this.sourceId = sourceId; }

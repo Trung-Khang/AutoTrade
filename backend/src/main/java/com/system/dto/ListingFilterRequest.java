@@ -36,6 +36,9 @@ public class ListingFilterRequest {
     // Địa điểm
     private String location;
 
+    // Trạng thái kinh doanh của vehicle liên kết.
+    private String status;
+
     public ListingFilterRequest() {
     }
 
@@ -87,4 +90,7 @@ public class ListingFilterRequest {
 
     public String getLocation() { return location; }
     public void setLocation(String location) { this.location = location; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }
