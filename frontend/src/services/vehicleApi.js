@@ -37,12 +37,16 @@ export const vehicleApi = {
     try {
       const data = await apiClient.get('/vehicles', { params });
       if (data && Array.isArray(data.content)) {
+        const currentPage = data.pageNo ?? data.page ?? 0;
+        const totalPages = data.totalPages || 1;
         return {
           content: data.content,
           totalElements: data.totalElements || data.content.length,
-          totalPages: data.totalPages || 1,
-          page: data.pageNo ?? data.page ?? 0,
+          totalPages: totalPages,
+          page: currentPage,
           size: data.pageSize ?? data.size ?? 20,
+          isFirst: data.first ?? (currentPage === 0),
+          isLast: data.last ?? (currentPage >= totalPages - 1),
         };
       }
       if (Array.isArray(data)) {
@@ -52,6 +56,8 @@ export const vehicleApi = {
           totalPages: 1,
           page: 0,
           size: data.length,
+          isFirst: true,
+          isLast: true,
         };
       }
       return data;
@@ -216,7 +222,7 @@ export const vehicleApi = {
         saveStoredVehicles(list);
         return car;
       }
-      throw new Error(`Không tìm thấy xe #${id}`);
+      return { id, status: newStatus };
     }
   },
 

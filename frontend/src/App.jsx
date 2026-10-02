@@ -18,6 +18,7 @@ import CustomerDepositHistoryPage from './pages/CustomerDepositHistoryPage';
 import StaffAppointmentPage from './pages/StaffAppointmentPage';
 import AdminVehiclePage from './pages/AdminVehiclePage';
 import AdminDepositLedgerPage from './pages/AdminDepositLedgerPage';
+import AdminUserPage from './pages/AdminUserPage';
 
 import './styles/global.css';
 
@@ -73,6 +74,14 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['ADMIN']}>
                     <AdminDepositLedgerPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <ProtectedRoute allowedRoles={['ADMIN']}>
+                    <AdminUserPage />
                   </ProtectedRoute>
                 }
               />

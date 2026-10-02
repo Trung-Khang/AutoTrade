@@ -11,7 +11,8 @@ import {
   FaWarehouse,
   FaClipboardList,
   FaShieldAlt,
-  FaUserTie
+  FaUserTie,
+  FaUsers
 } from 'react-icons/fa';
 import './Navbar.css';
 
@@ -114,6 +115,13 @@ const Navbar = () => {
                 onClick={closeMenu}
               >
                 Sổ cái cọc
+              </NavLink>
+              <NavLink
+                to="/admin/users"
+                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                onClick={closeMenu}
+              >
+                <FaUsers /> Tài khoản
               </NavLink>
             </>
           )}

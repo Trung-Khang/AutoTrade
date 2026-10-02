@@ -80,9 +80,11 @@
   - `frontend/src/pages/StaffAppointmentPage.jsx` (Ghép nối Task TV2-06 Check-in)
   - `frontend/src/pages/AdminVehiclePage.jsx` & `AdminVehiclePage.css` (Ghép nối Task TV2-05 CRUD)
   - `frontend/src/pages/AdminDepositLedgerPage.jsx` (Ghép nối Admin Ledger & Refund)
+  - `frontend/src/pages/AdminUserPage.jsx` & `AdminUserPage.css` (Quản lý tài khoản & Phân quyền RBAC cho Admin)
   - `frontend/src/pages/LoginPage.jsx` & `LoginPage.css`
   - `frontend/src/pages/RegisterPage.jsx`
 - **Dữ liệu & API Services:**
+  - `frontend/src/services/userApi.js` (Mapping API quản lý tài khoản Admin kèm Mock Fallback)
   - `frontend/src/services/vehicleApi.js` (Khớp chuẩn 100% endpoint `/api/v1/vehicles` và `/api/v1/admin/vehicles`)
   - `frontend/src/services/depositApi.js` (Khớp chuẩn 100% endpoint `/api/v1/deposits`, `/staff/appointments`, `/admin/ledger`)
   - `frontend/src/utils/mockVehicles.js`

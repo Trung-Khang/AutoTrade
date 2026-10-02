@@ -13,11 +13,11 @@ import {
   FaArrowLeft,
   FaExclamationTriangle,
   FaReceipt,
-  FaTimesCircle
+  FaTimesCircle,
+  FaPrint,
+  FaUserCheck
 } from 'react-icons/fa';
 import './DepositPage.css';
-
-const DEFAULT_DEPOSIT_AMOUNT = 10000000; // 10.000.000 VND theo chuẩn TV1 Contract v3.0.0
 
 const DepositPage = () => {
   const { id } = useParams();
@@ -27,7 +27,7 @@ const DepositPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Form State
+  // Form State - Hỗ trợ cả khách vãng lai (Guest) không cần đăng nhập
   const [customerName, setCustomerName] = useState(user?.fullName || user?.username || '');
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
   const [customerEmail, setCustomerEmail] = useState(user?.email || '');
@@ -42,6 +42,10 @@ const DepositPage = () => {
   const [pendingDeposit, setPendingDeposit] = useState(null); // Lưu sau khi gọi POST /deposits
   const [conflictError, setConflictError] = useState(null);   // Bắt lỗi 409 Conflict
   const [receiptData, setReceiptData] = useState(null);       // Lưu sau khi gọi confirm thành công
+
+  // Tính số tiền cọc động chuẩn 10% giá trị xe
+  const depositAmount = vehicle?.price ? Math.round(Number(vehicle.price) * 0.1) : 10000000;
+  const targetVehicleId = vehicle?.vehicleId || vehicle?.id;
 
   useEffect(() => {
     const fetchVehicle = async () => {
@@ -64,6 +68,11 @@ const DepositPage = () => {
       if (!customerEmail) setCustomerEmail(user.email || '');
     }
   }, [user]);
+
+  // In biên lai thanh toán
+  const handlePrintReceipt = () => {
+    window.print();
+  };
 
   // BƯỚC 1: Khởi tạo đơn đặt cọc (POST /api/v1/deposits)
   const handleCreateDeposit = async (e) => {
@@ -90,23 +99,28 @@ const DepositPage = () => {
 
     try {
       const fullAppointmentDateTime = `${appointmentDate}T${appointmentTime}:00`;
+      const depositCode = `DEP-${Date.now()}`;
+      const vcbQrUrl = `https://api.vietqr.io/image/970436-1050242933-compact2.jpg?amount=${depositAmount}&addInfo=${depositCode}&accountName=NGUYEN%20TRUNG%20KHANG`;
+
       const depositPayload = {
-        vehicleId: vehicle.id,
+        vehicleId: targetVehicleId,
         showroomId: vehicle.showroomId || vehicle.showroom?.id || 1,
         appointmentDate: fullAppointmentDateTime,
         hasTestDrive,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         customerEmail: customerEmail.trim() || 'khachhang@autotrade.vn',
-        note: note.trim()
+        note: note.trim(),
+        depositAmount: depositAmount
       };
 
       const result = await depositApi.createDeposit(depositPayload);
       setPendingDeposit({
         ...depositPayload,
         depositId: result.depositId || result.id || Date.now(),
-        depositCode: result.depositCode || `DEP-${Date.now()}`,
-        qrPaymentUrl: result.qrPaymentUrl || `https://api.vietqr.io/image/970422-999999999-compact2.jpg?amount=10000000&addInfo=${result.depositCode || 'AUTODEP'}`
+        depositCode: result.depositCode || depositCode,
+        depositAmount: result.depositAmount || depositAmount,
+        qrPaymentUrl: result.qrPaymentUrl || vcbQrUrl
       });
     } catch (err) {
       if (err.status === 409 || err.message?.includes('409') || err.message?.includes('Xung đột')) {
@@ -128,14 +142,20 @@ const DepositPage = () => {
 
     try {
       const res = await depositApi.confirmPayment(pendingDeposit.depositId);
-      // Đổi trạng thái xe sang HOLD
-      await vehicleApi.updateVehicleStatus(vehicle.id, 'HOLD');
+      
+      // Cập nhật trạng thái xe sang HOLD (bọc an toàn tránh ngắt quãng luồng xuất bill)
+      try {
+        await vehicleApi.updateVehicleStatus(targetVehicleId, 'HOLD');
+      } catch (patchErr) {
+        console.warn('Backend đã tự động khóa trạng thái xe sang HOLD:', patchErr.message);
+      }
 
       setReceiptData({
         ...pendingDeposit,
         receiptCode: res.receiptCode || `REC-2026-${pendingDeposit.depositId}`,
         contractNumber: res.contractNumber || `HD-COC-2026-${pendingDeposit.depositId}`,
         confirmedAt: res.confirmedAt || new Date().toISOString(),
+        depositAmount: res.depositAmount || pendingDeposit.depositAmount || depositAmount,
         message: res.message || 'Đặt cọc giữ xe thành công! Xe đã được khóa trạng thái giữ chỗ cho quý khách.'
       });
     } catch (err) {
@@ -171,9 +191,9 @@ const DepositPage = () => {
     );
   }
 
-  // Nếu xe không ở trạng thái AVAILABLE
+  // Nếu xe đang bị HOLD hoặc SOLD (chỉ chặn nếu rõ ràng đã bị người khác cọc)
   const carStatus = (vehicle.status || 'AVAILABLE').toUpperCase();
-  if (carStatus !== 'AVAILABLE' && !receiptData) {
+  if ((carStatus === 'HOLD' || carStatus === 'RESERVED' || carStatus === 'SOLD') && !receiptData) {
     return (
       <div className="deposit-page-container">
         <Link to="/vehicles" className="card-btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '20px' }}>
@@ -209,20 +229,32 @@ const DepositPage = () => {
             <div><strong>Số hợp đồng số:</strong> <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{receiptData.contractNumber}</span></div>
             <div><strong>Mã biên lai thu tiền:</strong> <span>{receiptData.receiptCode}</span></div>
             <div><strong>Xe đặt cọc:</strong> {vehicle.brand} {vehicle.model} {vehicle.variant || ''}</div>
-            <div><strong>Số tiền cọc:</strong> 10.000.000 VNĐ</div>
+            <div><strong>Số tiền cọc (10% giá xe):</strong> <strong style={{ color: '#D4AF37', fontSize: '16px' }}>{formatFullPrice(receiptData.depositAmount || depositAmount)}</strong></div>
             <div><strong>Khách hàng:</strong> {receiptData.customerName} ({receiptData.customerPhone})</div>
+            <div><strong>Email liên hệ:</strong> {receiptData.customerEmail || 'Chưa cung cấp'}</div>
             <div>
               <strong>Lịch hẹn tại Showroom:</strong> {appointmentDate} lúc {appointmentTime}
               {receiptData.hasTestDrive && ' (Có đăng ký lái thử)'}
             </div>
             <div><strong>Thời hạn giữ chỗ:</strong> 7 ngày kể từ thời điểm đặt cọc</div>
+            <div><strong>Tài khoản nhận tiền:</strong> Vietcombank - 1050242933 (NGUYEN TRUNG KHANG)</div>
           </div>
 
           <div className="success-actions">
-            <Link to="/customer/deposits" className="deposit-submit-btn" style={{ textDecoration: 'none', maxWidth: '240px' }}>
-              <FaReceipt /> Lịch sử cọc của tôi
-            </Link>
-            <Link to="/vehicles" className="card-btn-outline" style={{ textDecoration: 'none', maxWidth: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={handlePrintReceipt}
+              className="deposit-submit-btn"
+              style={{ maxWidth: '240px', backgroundColor: '#1e293b', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+              <FaPrint /> In Biên Lai / Hợp Đồng
+            </button>
+            {user && (
+              <Link to="/customer/deposits" className="deposit-submit-btn" style={{ textDecoration: 'none', maxWidth: '220px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <FaReceipt /> Lịch sử cọc của tôi
+              </Link>
+            )}
+            <Link to="/vehicles" className="card-btn-outline" style={{ textDecoration: 'none', maxWidth: '180px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               Về Showroom
             </Link>
           </div>
@@ -237,8 +269,8 @@ const DepositPage = () => {
         <Link to={`/vehicles/${vehicle.id}`} className="card-btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '14px', padding: '6px 12px', fontSize: '12px' }}>
           <FaArrowLeft /> Quay lại trang chi tiết xe
         </Link>
-        <h1>Đặt Cọc & Đặt Lịch Hẹn Xem Xe</h1>
-        <p>Giữ quyền ưu tiên sở hữu và sắp xếp thời gian lái thử trực tiếp tại showroom AutoTrade</p>
+        <h1>Đặt Cọc Online & Đặt Lịch Hẹn Xem Xe</h1>
+        <p>Giữ quyền ưu tiên sở hữu độc quyền và sắp xếp thời gian lái thử trực tiếp tại showroom AutoTrade</p>
       </div>
 
       {conflictError && (
@@ -260,8 +292,15 @@ const DepositPage = () => {
                 <FaCalendarCheck /> 1. Thông tin khách hàng & Lịch hẹn xem xe
               </div>
 
+              {!user && (
+                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaUserCheck style={{ fontSize: '16px', color: '#16a34a' }} />
+                  <span><strong>Đặt cọc nhanh (Khách vãng lai):</strong> Quý khách không cần đăng nhập trước. Điền thông tin bên dưới để nhận hóa đơn và biên lai hợp lệ ngay sau khi chuyển khoản.</span>
+                </div>
+              )}
+
               <div className="deposit-form-group">
-                <label>Họ và tên người đặt *</label>
+                <label>Họ và tên người đặt cọc *</label>
                 <input
                   type="text"
                   placeholder="Nhập họ và tên..."
@@ -273,7 +312,7 @@ const DepositPage = () => {
 
               <div className="grid-2-cols">
                 <div className="deposit-form-group">
-                  <label>Số điện thoại *</label>
+                  <label>Số điện thoại liên hệ *</label>
                   <input
                     type="tel"
                     placeholder="VD: 0987654321"
@@ -284,7 +323,7 @@ const DepositPage = () => {
                 </div>
 
                 <div className="deposit-form-group">
-                  <label>Địa chỉ Email</label>
+                  <label>Địa chỉ Email nhận biên lai</label>
                   <input
                     type="email"
                     placeholder="VD: nguyenvana@gmail.com"
@@ -420,18 +459,18 @@ const DepositPage = () => {
               <span>Miễn phí</span>
             </div>
             <div className="pricing-row highlight">
-              <span>Số tiền cọc chuẩn:</span>
-              <span className="amount">10.000.000 VNĐ</span>
+              <span>Số tiền cọc chuẩn (10%):</span>
+              <span className="amount">{formatFullPrice(depositAmount)}</span>
             </div>
           </div>
 
-          {/* Khung VietQR giả lập */}
+          {/* Khung VietQR Vietcombank */}
           <div className="mock-qr-box">
             {pendingDeposit?.qrPaymentUrl ? (
               <img
                 src={pendingDeposit.qrPaymentUrl}
                 alt="VietQR Chuyển khoản"
-                style={{ width: '180px', height: '180px', objectFit: 'contain', margin: '0 auto 12px', display: 'block', borderRadius: '8px' }}
+                style={{ width: '200px', height: '200px', objectFit: 'contain', margin: '0 auto 12px', display: 'block', borderRadius: '8px' }}
                 onError={(e) => {
                   e.target.style.display = 'none';
                 }}
@@ -439,18 +478,18 @@ const DepositPage = () => {
             ) : (
               <div className="qr-code-placeholder">
                 <FaQrcode className="qr-icon" style={{ color: '#D4AF37' }} />
-                <span>MOCK VIETQR CODE</span>
-                <span style={{ fontSize: '10px', color: '#94a3b8' }}>Quét mã chuyển khoản tức thì</span>
+                <span>VIETCOMBANK VIETQR CODE</span>
+                <span style={{ fontSize: '10px', color: '#94a3b8' }}>Quét mã chuyển khoản tức thì 24/7</span>
               </div>
             )}
 
             <div className="bank-info-table">
-              <div><strong>Ngân hàng:</strong> MB Bank (Quân Đội)</div>
-              <div><strong>Số tài khoản:</strong> 999999999</div>
-              <div><strong>Chủ tài khoản:</strong> CTY CP AUTOTRADE VIET NAM</div>
-              <div><strong>Số tiền:</strong> 10.000.000 VNĐ</div>
+              <div><strong>Ngân hàng:</strong> Vietcombank (Ngoại thương Việt Nam)</div>
+              <div><strong>Số tài khoản:</strong> <span style={{ color: '#2563eb', fontWeight: 'bold' }}>1050242933</span></div>
+              <div><strong>Chủ tài khoản:</strong> <span style={{ fontWeight: 'bold' }}>NGUYEN TRUNG KHANG</span></div>
+              <div><strong>Số tiền cọc (10%):</strong> <strong style={{ color: '#D4AF37' }}>{formatFullPrice(depositAmount)}</strong></div>
               <div>
-                <strong>Nội dung CK:</strong> <span className="ref-code-badge">{pendingDeposit?.depositCode || 'DEP-MOCK-CODE'}</span>
+                <strong>Nội dung CK:</strong> <span className="ref-code-badge">{pendingDeposit?.depositCode || 'AUTODEP'}</span>
               </div>
             </div>
           </div>

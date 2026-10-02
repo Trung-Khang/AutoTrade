@@ -132,30 +132,135 @@ const VehicleListPage = () => {
         onRetry={fetchListings}
       />
 
-      {/* Thanh điều khiển phân trang */}
+      {/* Thanh điều khiển phân trang chuyên nghiệp */}
       {!isLoading && !error && pagination.totalPages > 1 && (
         <div className="pagination-wrapper">
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={pagination.isFirst}
-            onClick={() => handlePageChange(pagination.page - 1)}
-          >
-            <FaChevronLeft /> Trang trước
-          </button>
+          <div className="pagination-controls">
+            <button
+              type="button"
+              className="pagination-btn nav-btn"
+              disabled={pagination.page === 0}
+              onClick={() => handlePageChange(0)}
+              title="Về trang đầu tiên"
+            >
+              « Đầu
+            </button>
 
-          <span className="pagination-info">
-            Trang <strong>{pagination.page + 1}</strong> / <strong>{pagination.totalPages}</strong>
-          </span>
+            <button
+              type="button"
+              className="pagination-btn nav-btn"
+              disabled={pagination.page === 0}
+              onClick={() => handlePageChange(pagination.page - 1)}
+              title="Trang trước"
+            >
+              <FaChevronLeft /> Trước
+            </button>
 
-          <button
-            type="button"
-            className="pagination-btn"
-            disabled={pagination.isLast}
-            onClick={() => handlePageChange(pagination.page + 1)}
-          >
-            Trang sau <FaChevronRight />
-          </button>
+            {/* Danh sách các số trang thông minh */}
+            <div className="pagination-numbers">
+              {(() => {
+                const current = pagination.page;
+                const total = pagination.totalPages;
+                const delta = 2; // Hiển thị 2 trang trước và sau
+                const range = [];
+
+                for (let i = Math.max(0, current - delta); i <= Math.min(total - 1, current + delta); i++) {
+                  range.push(i);
+                }
+
+                return (
+                  <>
+                    {range[0] > 0 && (
+                      <>
+                        <button
+                          type="button"
+                          className={`page-num-btn ${current === 0 ? 'active' : ''}`}
+                          onClick={() => handlePageChange(0)}
+                        >
+                          1
+                        </button>
+                        {range[0] > 1 && <span className="pagination-ellipsis">...</span>}
+                      </>
+                    )}
+
+                    {range.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`page-num-btn ${current === p ? 'active' : ''}`}
+                        onClick={() => handlePageChange(p)}
+                      >
+                        {p + 1}
+                      </button>
+                    ))}
+
+                    {range[range.length - 1] < total - 1 && (
+                      <>
+                        {range[range.length - 1] < total - 2 && <span className="pagination-ellipsis">...</span>}
+                        <button
+                          type="button"
+                          className={`page-num-btn ${current === total - 1 ? 'active' : ''}`}
+                          onClick={() => handlePageChange(total - 1)}
+                        >
+                          {total}
+                        </button>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+            </div>
+
+            <button
+              type="button"
+              className="pagination-btn nav-btn"
+              disabled={pagination.page >= pagination.totalPages - 1}
+              onClick={() => handlePageChange(pagination.page + 1)}
+              title="Trang sau"
+            >
+              Sau <FaChevronRight />
+            </button>
+
+            <button
+              type="button"
+              className="pagination-btn nav-btn"
+              disabled={pagination.page >= pagination.totalPages - 1}
+              onClick={() => handlePageChange(pagination.totalPages - 1)}
+              title="Tới trang cuối cùng"
+            >
+              Cuối »
+            </button>
+          </div>
+
+          <div className="pagination-meta">
+            <span className="pagination-info">
+              Trang <strong>{pagination.page + 1}</strong> / <strong>{pagination.totalPages}</strong> (Tổng cộng <strong>{pagination.totalElements.toLocaleString('vi-VN')}</strong> xe)
+            </span>
+
+            {/* Chuyển trang nhanh */}
+            <form
+              className="pagination-jump-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const target = parseInt(e.target.elements.jumpPage.value, 10);
+                if (!isNaN(target) && target >= 1 && target <= pagination.totalPages) {
+                  handlePageChange(target - 1);
+                  e.target.reset();
+                }
+              }}
+            >
+              <span>Đến trang:</span>
+              <input
+                type="number"
+                name="jumpPage"
+                min={1}
+                max={pagination.totalPages}
+                placeholder={String(pagination.page + 1)}
+                className="jump-input"
+              />
+              <button type="submit" className="jump-btn">Đi</button>
+            </form>
+          </div>
         </div>
       )}
     </div>

@@ -67,8 +67,8 @@ export const depositApi = {
         status: 'PENDING',
         appointmentStatus: 'PENDING',
         createdAt: new Date().toISOString(),
-        depositAmount: 10000000,
-        qrPaymentUrl: `https://api.vietqr.io/image/970422-999999999-compact2.jpg?amount=10000000&addInfo=${code}`,
+        depositAmount: depositData.depositAmount || 10000000,
+        qrPaymentUrl: `https://api.vietqr.io/image/970436-1050242933-compact2.jpg?amount=${depositData.depositAmount || 10000000}&addInfo=${code}&accountName=NGUYEN%20TRUNG%20KHANG`,
         ...depositData
       };
       list.unshift(newDeposit);

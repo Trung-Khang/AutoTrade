@@ -52,6 +52,9 @@ class DepositServiceUnitTest {
     @Mock
     private TransactionLedgerRepository ledgerRepository;
 
+    @Mock
+    private com.system.repository.ListingRepository listingRepository;
+
     @InjectMocks
     private DepositService depositService;
 
