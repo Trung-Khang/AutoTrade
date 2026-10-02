@@ -1,17 +1,23 @@
 package com.system.dto;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record CustomerDepositResponse(
-        Long id,
+        Long depositId,
         String depositCode,
+        BigDecimal depositAmount,
+        String status,
+        String contractNumber,
         Long vehicleId,
         String vehicleTitle,
         BigDecimal vehiclePrice,
-        BigDecimal depositAmount,
-        String status,
+        Long showroomId,
+        String showroomName,
+        Long appointmentId,
         LocalDateTime appointmentDate,
         String appointmentStatus,
         boolean hasTestDrive,
-        String note) { }
+        String customerNote,
+        Instant createdAt) { }

@@ -249,17 +249,23 @@ public class DepositService {
     @Transactional(readOnly = true)
     public List<CustomerDepositResponse> getMyDeposits(Long userId) {
         return depositRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(deposit -> {
-            Vehicle vehicle = vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+            Vehicle vehicle = deposit.getVehicleId() == null
+                    ? null : vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+            Showroom showroom = deposit.getShowroomId() == null
+                    ? null : showroomRepository.findById(deposit.getShowroomId()).orElse(null);
             Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
-            String vehicleTitle = vehicle == null ? "Xe #" + deposit.getVehicleId()
+            String vehicleTitle = vehicle == null ? null
                     : String.join(" ", java.util.stream.Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
                     .filter(value -> value != null && !value.isBlank()).toList());
-            return new CustomerDepositResponse(deposit.getId(), deposit.getDepositCode(), deposit.getVehicleId(),
-                    vehicleTitle, vehicle == null ? null : vehicle.getPrice(), deposit.getAmount(), deposit.getStatus(),
+            return new CustomerDepositResponse(deposit.getId(), deposit.getDepositCode(), deposit.getAmount(),
+                    deposit.getStatus(), deposit.getContractNumber(), deposit.getVehicleId(), vehicleTitle,
+                    vehicle == null ? null : vehicle.getPrice(), deposit.getShowroomId(),
+                    showroom == null ? null : showroom.getName(),
+                    appointment == null ? null : appointment.getId(),
                     appointment == null ? null : appointment.getAppointmentDate(),
                     appointment == null ? null : appointment.getStatus(),
                     appointment != null && appointment.isHasTestDrive(),
-                    appointment == null ? null : appointment.getCustomerNote());
+                    appointment == null ? null : appointment.getCustomerNote(), deposit.getCreatedAt());
         }).toList();
     }
 
