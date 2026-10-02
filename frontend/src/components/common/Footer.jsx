@@ -25,16 +25,16 @@ const Footer = () => {
             <ul className="footer-nav-links">
               <li><Link to="/vehicles">Tìm xe</Link></li>
               <li><Link to="/vehicles">Kho xe showroom</Link></li>
-              <li><a href="#locations">Địa chỉ showroom</a></li>
+              <li><Link to="/showrooms">Địa chỉ showroom</Link></li>
             </ul>
           </div>
 
           <div className="footer-nav-col">
             <h4 className="footer-col-heading">Hỗ trợ</h4>
             <ul className="footer-nav-links">
-              <li><a href="#faq">FAQ</a></li>
-              <li><a href="#policy">Chính sách</a></li>
-              <li><a href="#terms">Điều khoản sử dụng</a></li>
+              <li><Link to="/faq">FAQ</Link></li>
+              <li><Link to="/policy">Chính sách</Link></li>
+              <li><Link to="/terms">Điều khoản sử dụng</Link></li>
             </ul>
           </div>
 

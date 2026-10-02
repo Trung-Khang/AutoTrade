@@ -19,6 +19,10 @@ import StaffAppointmentPage from './pages/StaffAppointmentPage';
 import AdminVehiclePage from './pages/AdminVehiclePage';
 import AdminDepositLedgerPage from './pages/AdminDepositLedgerPage';
 import AdminUserPage from './pages/AdminUserPage';
+import ShowroomsPage from './pages/ShowroomsPage';
+import FaqPage from './pages/FaqPage';
+import PolicyPage from './pages/PolicyPage';
+import TermsPage from './pages/TermsPage';
 
 import './styles/global.css';
 
@@ -39,6 +43,10 @@ function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/showrooms" element={<ShowroomsPage />} />
+              <Route path="/faq" element={<FaqPage />} />
+              <Route path="/policy" element={<PolicyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
 
               {/* Customer Routes */}
               <Route
