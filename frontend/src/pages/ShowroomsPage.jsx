@@ -12,7 +12,7 @@ import {
 import './ShowroomsPage.css';
 
 const SHOWROOMS_DATA = [
-  // Miền Bắc (12)
+  // ==================== MIỀN BẮC (21 TỈNH THÀNH) ====================
   {
     id: 1,
     name: 'AutoTrade Hà Nội - Cầu Giấy',
@@ -133,10 +133,100 @@ const SHOWROOMS_DATA = [
     hours: '08:00 - 19:00 (Hàng ngày)',
     amenities: ['Lái thử xe', 'Hỗ trợ vay mua xe']
   },
-
-  // Miền Trung (12)
   {
     id: 13,
+    name: 'AutoTrade Ninh Bình',
+    city: 'Ninh Bình',
+    region: 'north',
+    address: 'Số 88 Trần Hưng Đạo, Phường Vân Giang, TP. Ninh Bình, Ninh Bình',
+    hotline: '0229 387 1122',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Thẩm định 160 bước']
+  },
+  {
+    id: 14,
+    name: 'AutoTrade Hòa Bình',
+    city: 'Hòa Bình',
+    region: 'north',
+    address: 'Số 45 Cù Chính Lan, Phường Đồng Tiến, TP. Hòa Bình, Hòa Bình',
+    hotline: '0218 385 2233',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Bảo hành chính hãng']
+  },
+  {
+    id: 15,
+    name: 'AutoTrade Hà Giang',
+    city: 'Hà Giang',
+    region: 'north',
+    address: 'Số 12 Nguyễn Trãi, Phường Nguyễn Trãi, TP. Hà Giang, Hà Giang',
+    hotline: '0219 386 3344',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Vận chuyển liên tỉnh']
+  },
+  {
+    id: 16,
+    name: 'AutoTrade Sơn La',
+    city: 'Sơn La',
+    region: 'north',
+    address: 'Số 68 Giảng Lắc, Phường Quyết Thắng, TP. Sơn La, Sơn La',
+    hotline: '0212 385 4455',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Hỗ trợ kỹ thuật']
+  },
+  {
+    id: 17,
+    name: 'AutoTrade Hà Nam',
+    city: 'Hà Nam',
+    region: 'north',
+    address: 'Số 135 Lê Hoàn, Phường Quang Trung, TP. Phủ Lý, Hà Nam',
+    hotline: '0226 384 5566',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Thủ tục sang tên']
+  },
+  {
+    id: 18,
+    name: 'AutoTrade Lào Cai',
+    city: 'Lào Cai',
+    region: 'north',
+    address: 'Số 82 Hoàng Liên, Phường Cốc Lếu, TP. Lào Cai, Lào Cai',
+    hotline: '0214 382 6677',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Hỗ trợ đăng kiểm']
+  },
+  {
+    id: 19,
+    name: 'AutoTrade Tuyên Quang',
+    city: 'Tuyên Quang',
+    region: 'north',
+    address: 'Số 36 Bình Thuận, Phường Tân Quang, TP. Tuyên Quang, Tuyên Quang',
+    hotline: '0207 381 7788',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Đổi xe cũ lấy mới']
+  },
+  {
+    id: 20,
+    name: 'AutoTrade Điện Biên',
+    city: 'Điện Biên',
+    region: 'north',
+    address: 'Số 24 Võ Nguyên Giáp, Phường Mường Thanh, TP. Điện Biên Phủ, Điện Biên',
+    hotline: '0215 382 8899',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Giao xe tận nơi']
+  },
+  {
+    id: 21,
+    name: 'AutoTrade Bắc Kạn',
+    city: 'Bắc Kạn',
+    region: 'north',
+    address: 'Số 18 Trường Chinh, Phường Phùng Chí Kiên, TP. Bắc Kạn, Bắc Kạn',
+    hotline: '0209 387 9900',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Bảo hiểm xe']
+  },
+
+  // ==================== MIỀN TRUNG (18 TỈNH THÀNH) ====================
+  {
+    id: 22,
     name: 'AutoTrade Đà Nẵng - Hải Châu',
     city: 'Đà Nẵng',
     region: 'central',
@@ -146,7 +236,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Thẩm định 160 điểm', 'Giao xe tận nơi', 'Phòng chờ hạng sang']
   },
   {
-    id: 14,
+    id: 23,
     name: 'AutoTrade Nghệ An',
     city: 'Nghệ An',
     region: 'central',
@@ -156,7 +246,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Hỗ trợ trả góp', 'Kiểm tra pháp lý']
   },
   {
-    id: 15,
+    id: 24,
     name: 'AutoTrade Thanh Hóa',
     city: 'Thanh Hóa',
     region: 'central',
@@ -166,7 +256,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Thẩm định xe cũ']
   },
   {
-    id: 16,
+    id: 25,
     name: 'AutoTrade Thừa Thiên Huế',
     city: 'Thừa Thiên Huế',
     region: 'central',
@@ -176,7 +266,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Sang tên đổi chủ']
   },
   {
-    id: 17,
+    id: 26,
     name: 'AutoTrade Khánh Hòa - Nha Trang',
     city: 'Khánh Hòa',
     region: 'central',
@@ -186,7 +276,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Hỗ trợ du lịch nhận xe']
   },
   {
-    id: 18,
+    id: 27,
     name: 'AutoTrade Bình Định',
     city: 'Bình Định',
     region: 'central',
@@ -196,7 +286,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Rút hồ sơ toàn quốc']
   },
   {
-    id: 19,
+    id: 28,
     name: 'AutoTrade Quảng Nam',
     city: 'Quảng Nam',
     region: 'central',
@@ -206,7 +296,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Hỗ trợ ngân hàng']
   },
   {
-    id: 20,
+    id: 29,
     name: 'AutoTrade Quảng Ngãi',
     city: 'Quảng Ngãi',
     region: 'central',
@@ -216,7 +306,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Định giá xe tại nhà']
   },
   {
-    id: 21,
+    id: 30,
     name: 'AutoTrade Đắk Lắk',
     city: 'Đắk Lắk',
     region: 'central',
@@ -226,7 +316,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Hỗ trợ xe bán tải & SUV']
   },
   {
-    id: 22,
+    id: 31,
     name: 'AutoTrade Gia Lai',
     city: 'Gia Lai',
     region: 'central',
@@ -236,7 +326,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Vận chuyển liên tỉnh']
   },
   {
-    id: 23,
+    id: 32,
     name: 'AutoTrade Lâm Đồng - Đà Lạt',
     city: 'Lâm Đồng',
     region: 'central',
@@ -246,7 +336,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe đèo dốc', 'Bảo dưỡng chuẩn']
   },
   {
-    id: 24,
+    id: 33,
     name: 'AutoTrade Bình Thuận',
     city: 'Bình Thuận',
     region: 'central',
@@ -255,10 +345,70 @@ const SHOWROOMS_DATA = [
     hours: '08:00 - 19:00 (Hàng ngày)',
     amenities: ['Lái thử xe', 'Hỗ trợ giấy tờ 100%']
   },
-
-  // Miền Nam (10)
   {
-    id: 25,
+    id: 34,
+    name: 'AutoTrade Hà Tĩnh',
+    city: 'Hà Tĩnh',
+    region: 'central',
+    address: 'Số 48 Hà Huy Tập, Phường Nam Hà, TP. Hà Tĩnh, Hà Tĩnh',
+    hotline: '0239 385 1122',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Thẩm định khung gầm']
+  },
+  {
+    id: 35,
+    name: 'AutoTrade Quảng Bình',
+    city: 'Quảng Bình',
+    region: 'central',
+    address: 'Số 96 Hùng Vương, Phường Hải Đình, TP. Đồng Hới, Quảng Bình',
+    hotline: '0232 382 2233',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Hỗ trợ trả góp']
+  },
+  {
+    id: 36,
+    name: 'AutoTrade Quảng Trị',
+    city: 'Quảng Trị',
+    region: 'central',
+    address: 'Số 64 Lê Duẩn, Phường 1, TP. Đông Hà, Quảng Trị',
+    hotline: '0233 385 3344',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Rút hồ sơ gốc']
+  },
+  {
+    id: 37,
+    name: 'AutoTrade Phú Yên',
+    city: 'Phú Yên',
+    region: 'central',
+    address: 'Số 115 Hùng Vương, Phường 5, TP. Tuy Hòa, Phú Yên',
+    hotline: '0257 384 4455',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Đổi xe cũ lấy mới']
+  },
+  {
+    id: 38,
+    name: 'AutoTrade Kon Tum',
+    city: 'Kon Tum',
+    region: 'central',
+    address: 'Số 52 Phan Chu Trinh, Phường Thắng Lợi, TP. Kon Tum, Kon Tum',
+    hotline: '0260 386 5566',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Chăm sóc xe chuyên sâu']
+  },
+  {
+    id: 39,
+    name: 'AutoTrade Đắk Nông',
+    city: 'Đắk Nông',
+    region: 'central',
+    address: 'Số 38 Huỳnh Thúc Kháng, Phường Nghĩa Thành, TP. Gia Nghĩa, Đắk Nông',
+    hotline: '0261 354 6677',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Giao xe tận nơi']
+  },
+
+  // ==================== MIỀN NAM (18 SHOWROOM / 17 TỈNH THÀNH) ====================
+  {
+    id: 40,
     name: 'AutoTrade TP.HCM - Võ Thị Sáu',
     city: 'TP. Hồ Chí Minh',
     region: 'south',
@@ -268,7 +418,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Thẩm định 160 điểm', 'Phòng công chứng tại chỗ', 'Giao xe VIP']
   },
   {
-    id: 26,
+    id: 41,
     name: 'AutoTrade TP.HCM - Thủ Đức',
     city: 'TP. Hồ Chí Minh',
     region: 'south',
@@ -278,7 +428,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Kho xe lướt trên 200 chiếc', 'Xưởng dịch vụ']
   },
   {
-    id: 27,
+    id: 42,
     name: 'AutoTrade Bình Dương',
     city: 'Bình Dương',
     region: 'south',
@@ -288,7 +438,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Tư vấn vay ngân hàng duyệt trong ngày']
   },
   {
-    id: 28,
+    id: 43,
     name: 'AutoTrade Đồng Nai - Biên Hòa',
     city: 'Đồng Nai',
     region: 'south',
@@ -298,7 +448,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Khu thẩm định xe tự động']
   },
   {
-    id: 29,
+    id: 44,
     name: 'AutoTrade Bà Rịa - Vũng Tàu',
     city: 'Bà Rịa - Vũng Tàu',
     region: 'south',
@@ -308,7 +458,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Chăm sóc xe chuyên sâu']
   },
   {
-    id: 30,
+    id: 45,
     name: 'AutoTrade Cần Thơ - Ninh Kiều',
     city: 'Cần Thơ',
     region: 'south',
@@ -318,7 +468,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Trung tâm trung chuyển miền Tây']
   },
   {
-    id: 31,
+    id: 46,
     name: 'AutoTrade Long An',
     city: 'Long An',
     region: 'south',
@@ -328,7 +478,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Hỗ trợ sang tên']
   },
   {
-    id: 32,
+    id: 47,
     name: 'AutoTrade Tiền Giang',
     city: 'Tiền Giang',
     region: 'south',
@@ -338,7 +488,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Bảo hiểm xe']
   },
   {
-    id: 33,
+    id: 48,
     name: 'AutoTrade An Giang',
     city: 'An Giang',
     region: 'south',
@@ -348,7 +498,7 @@ const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Giao xe tận nơi']
   },
   {
-    id: 34,
+    id: 49,
     name: 'AutoTrade Kiên Giang',
     city: 'Kiên Giang',
     region: 'south',
@@ -356,6 +506,96 @@ const SHOWROOMS_DATA = [
     hotline: '0297 386 7788',
     hours: '08:00 - 19:00 (Hàng ngày)',
     amenities: ['Lái thử xe', 'Đăng kiểm trọn gói']
+  },
+  {
+    id: 50,
+    name: 'AutoTrade Tây Ninh',
+    city: 'Tây Ninh',
+    region: 'south',
+    address: 'Số 22 Cách Mạng Tháng 8, Phường 3, TP. Tây Ninh, Tây Ninh',
+    hotline: '0276 382 1122',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Hỗ trợ trả góp 70%']
+  },
+  {
+    id: 51,
+    name: 'AutoTrade Bình Phước',
+    city: 'Bình Phước',
+    region: 'south',
+    address: 'Số 75 Phú Riềng Đỏ, Phường Tân Phú, TP. Đồng Xoài, Bình Phước',
+    hotline: '0271 388 1122',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Thẩm định tại nhà']
+  },
+  {
+    id: 52,
+    name: 'AutoTrade Hậu Giang',
+    city: 'Hậu Giang',
+    region: 'south',
+    address: 'Số 29 Trần Hưng Đạo, Phường 5, TP. Vị Thanh, Hậu Giang',
+    hotline: '0293 387 2233',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Bảo dưỡng nhanh']
+  },
+  {
+    id: 53,
+    name: 'AutoTrade Vĩnh Long',
+    city: 'Vĩnh Long',
+    region: 'south',
+    address: 'Số 82 Phạm Thái Bường, Phường 4, TP. Vĩnh Long, Vĩnh Long',
+    hotline: '0270 382 3344',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Hỗ trợ đăng ký xe']
+  },
+  {
+    id: 54,
+    name: 'AutoTrade Trà Vinh',
+    city: 'Trà Vinh',
+    region: 'south',
+    address: 'Số 46 Điện Biên Phủ, Phường 2, TP. Trà Vinh, Trà Vinh',
+    hotline: '0294 385 4455',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Đổi xe cũ lấy mới']
+  },
+  {
+    id: 55,
+    name: 'AutoTrade Đồng Tháp',
+    city: 'Đồng Tháp',
+    region: 'south',
+    address: 'Số 63 Nguyễn Huệ, Phường 1, TP. Cao Lãnh, Đồng Tháp',
+    hotline: '0277 385 5566',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Hỗ trợ vay ngân hàng']
+  },
+  {
+    id: 56,
+    name: 'AutoTrade Bến Tre',
+    city: 'Bến Tre',
+    region: 'south',
+    address: 'Số 58 Đồng Văn Cống, Phường 7, TP. Bến Tre, Bến Tre',
+    hotline: '0275 382 6677',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Kiểm tra pháp lý']
+  },
+  {
+    id: 57,
+    name: 'AutoTrade Sóc Trăng',
+    city: 'Sóc Trăng',
+    region: 'south',
+    address: 'Số 32 Lê Hồng Phong, Phường 3, TP. Sóc Trăng, Sóc Trăng',
+    hotline: '0299 382 7788',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Giao xe tận nhà']
+  },
+  {
+    id: 58,
+    name: 'AutoTrade Cà Mau',
+    city: 'Cà Mau',
+    region: 'south',
+    address: 'Số 94 Phan Ngọc Hiển, Phường 5, TP. Cà Mau, Cà Mau',
+    hotline: '0290 383 8899',
+    hours: '08:00 - 19:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Rút hồ sơ gốc toàn quốc']
   }
 ];
 
