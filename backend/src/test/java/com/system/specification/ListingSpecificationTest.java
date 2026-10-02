@@ -127,4 +127,26 @@ class ListingSpecificationTest {
         assertEquals(1, results.size());
         assertEquals("CR-V", results.get(0).getVehicle().getModel());
     }
+
+    @Test
+    @DisplayName("Kho xe lọc chính xác trạng thái AVAILABLE và HOLD")
+    void testFilterByAdminStatus() {
+        vios.setStatus("AVAILABLE");
+        crv.setStatus("HOLD");
+        vf3.setStatus("SOLD");
+        vehicleRepository.saveAll(List.of(vios, crv, vf3));
+
+        ListingFilterRequest availableFilter = new ListingFilterRequest();
+        availableFilter.setStatus("AVAILABLE");
+        List<Listing> available = listingRepository.findAll(ListingSpecification.filterBy(availableFilter));
+
+        ListingFilterRequest holdFilter = new ListingFilterRequest();
+        holdFilter.setStatus("HOLD");
+        List<Listing> held = listingRepository.findAll(ListingSpecification.filterBy(holdFilter));
+
+        assertEquals(1, available.size());
+        assertEquals("Vios", available.get(0).getVehicle().getModel());
+        assertEquals(1, held.size());
+        assertEquals("CR-V", held.get(0).getVehicle().getModel());
+    }
 }

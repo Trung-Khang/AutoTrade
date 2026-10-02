@@ -128,6 +128,16 @@ public class ListingSpecification {
                 ));
             }
 
+            if (filter.getStatus() != null && !filter.getStatus().trim().isEmpty()
+                    && !"ALL".equalsIgnoreCase(filter.getStatus().trim())) {
+                String status = filter.getStatus().trim().toUpperCase();
+                if ("AVAILABLE".equals(status)) {
+                    predicates.add(vehicleJoin.get("status").in("AVAILABLE", "ARCHIVED"));
+                } else {
+                    predicates.add(criteriaBuilder.equal(vehicleJoin.get("status"), status));
+                }
+            }
+
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
     }

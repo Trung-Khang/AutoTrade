@@ -1,457 +1,281 @@
-import React, { useState, useEffect } from 'react';
-import vehicleApi from '../services/vehicleApi';
-import { formatFullPrice, formatMileage } from '../utils/formatters';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaSearch,
-  FaCar,
-  FaTimes,
-  FaCheck,
-  FaWarehouse
+  FaCheck, FaChevronLeft, FaChevronRight, FaEdit, FaPlus,
+  FaSearch, FaTimes, FaTrash, FaWarehouse,
 } from 'react-icons/fa';
+import adminListingApi from '../services/adminListingApi';
+import { formatFullPrice, formatMileage } from '../utils/formatters';
 import './AdminVehiclePage.css';
 
+const PAGE_SIZE = 20;
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80';
+const EMPTY_FORM = {
+  brand: '', model: '', variant: '', manufactureYear: new Date().getFullYear(),
+  price: '', mileage: '', fuelType: 'Gasoline', transmission: 'Automatic',
+  engineSize: '', seatCount: 5, origin: 'Domestic', bodyType: 'Sedan',
+  color: '', location: '', imageUrl: '', status: 'AVAILABLE',
+};
+
+const toForm = (listing) => ({
+  brand: listing.brand || '',
+  model: listing.model || '',
+  variant: listing.variant || '',
+  manufactureYear: listing.manufactureYear || listing.manufacture_year || new Date().getFullYear(),
+  price: listing.price ?? '',
+  mileage: listing.mileage ?? '',
+  fuelType: listing.fuelType || listing.fuel_type || 'Gasoline',
+  transmission: listing.transmission || 'Automatic',
+  engineSize: listing.engineSize || listing.engine_size || '',
+  seatCount: listing.seatCount || listing.seat_count || 5,
+  origin: listing.origin || 'Domestic',
+  bodyType: listing.bodyType || listing.body_type || 'Sedan',
+  color: listing.color || '',
+  location: listing.location || '',
+  imageUrl: listing.imageUrl || listing.image_url || '',
+  status: listing.status || 'AVAILABLE',
+});
+
+const buildPageNumbers = (current, total) => {
+  const pages = new Set([0, Math.max(0, total - 1)]);
+  for (let page = Math.max(0, current - 2); page <= Math.min(total - 1, current + 2); page += 1) {
+    pages.add(page);
+  }
+  return [...pages].sort((a, b) => a - b);
+};
 
 const AdminVehiclePage = () => {
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [listings, setListings] = useState([]);
+  const [pagination, setPagination] = useState({ page: 0, totalPages: 1, totalElements: 0, isFirst: true, isLast: true });
+  const [page, setPage] = useState(0);
+  const [keywordInput, setKeywordInput] = useState('');
   const [keyword, setKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
-  const [toastMessage, setToastMessage] = useState('');
-
-  // Modal State
+  const [status, setStatus] = useState('ALL');
+  const [jumpPage, setJumpPage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [busyId, setBusyId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingVehicle, setEditingVehicle] = useState(null);
-  const [formData, setFormData] = useState({
-    brand: '',
-    model: '',
-    variant: '',
-    manufactureYear: 2022,
-    price: 500000000,
-    mileage: 30000,
-    fuelType: 'Xăng',
-    transmission: 'Tự động',
-    bodyType: 'Sedan',
-    color: 'Trắng',
-    origin: 'Lắp ráp trong nước',
-    location: 'TP. Hồ Chí Minh',
-    status: 'AVAILABLE',
-    imageUrl: '',
-    description: ''
-  });
+  const [editingListing, setEditingListing] = useState(null);
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
-  const loadVehicles = async () => {
+  const loadListings = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
-      const res = await vehicleApi.getListings();
-      setVehicles(res.content || []);
+      const response = await adminListingApi.getListings({
+        page, size: PAGE_SIZE, sort: 'id,desc',
+        ...(keyword ? { keyword } : {}),
+        ...(status !== 'ALL' ? { status } : {}),
+      });
+      setListings(response.content);
+      setPagination(response);
     } catch (err) {
-      console.error('Lỗi khi tải kho xe:', err);
+      setListings([]);
+      setError(err.message || 'Không thể tải danh sách tin xe.');
     } finally {
       setLoading(false);
     }
+  }, [keyword, page, status]);
+
+  useEffect(() => { loadListings(); }, [loadListings]);
+
+  const pageNumbers = useMemo(
+    () => buildPageNumbers(pagination.page, pagination.totalPages),
+    [pagination.page, pagination.totalPages]
+  );
+
+  const showNotice = (message) => {
+    setNotice(message);
+    window.setTimeout(() => setNotice(''), 3000);
   };
 
-  useEffect(() => {
-    loadVehicles();
-  }, []);
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(''), 3000);
-  };
-
-  const handleOpenAddModal = () => {
-    setEditingVehicle(null);
-    setFormData({
-      brand: 'Toyota',
-      model: 'Camry',
-      variant: '2.5Q',
-      manufactureYear: 2022,
-      price: 850000000,
-      mileage: 28000,
-      fuelType: 'Xăng',
-      transmission: 'Tự động',
-      bodyType: 'Sedan',
-      color: 'Đen',
-      origin: 'Lắp ráp trong nước',
-      location: 'TP. Hồ Chí Minh',
-      status: 'AVAILABLE',
-      imageUrl: DEFAULT_IMAGE,
-      description: 'Xe đẹp nguyên bản, một chủ từ đầu, bảo dưỡng đầy đủ theo hãng.'
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleOpenEditModal = (car) => {
-    setEditingVehicle(car);
-    setFormData({
-      brand: car.brand || '',
-      model: car.model || '',
-      variant: car.variant || '',
-      manufactureYear: car.manufactureYear || car.manufacture_year || 2022,
-      price: car.price || 0,
-      mileage: car.mileage || 0,
-      fuelType: car.fuelType || car.fuel_type || 'Xăng',
-      transmission: car.transmission || 'Tự động',
-      bodyType: car.bodyType || car.body_type || 'Sedan',
-      color: car.color || 'Trắng',
-      origin: car.origin || 'Lắp ráp trong nước',
-      location: car.location || 'TP. Hồ Chí Minh',
-      status: car.status || 'AVAILABLE',
-      imageUrl: car.imageUrl || car.image_url || DEFAULT_IMAGE,
-      description: car.description || ''
-    });
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = async (id, name) => {
-    if (window.confirm(`Bạn có chắc muốn xoá chiếc xe "${name}" khỏi kho không?`)) {
-      try {
-        await vehicleApi.deleteVehicle(id);
-        showToast(`Đã xoá thành công xe #${id}`);
-        loadVehicles();
-      } catch (err) {
-        alert('Lỗi khi xoá: ' + err.message);
-      }
+  const changePage = (target) => {
+    if (target >= 0 && target < pagination.totalPages && target !== page) {
+      setPage(target);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const handleStatusChange = async (carId, newStatus) => {
-    try {
-      await vehicleApi.updateVehicleStatus(carId, newStatus);
-      showToast(`Đã cập nhật trạng thái xe #${carId} thành ${newStatus}`);
-      loadVehicles();
-    } catch (err) {
-      alert('Lỗi cập nhật trạng thái: ' + err.message);
-    }
+  const submitSearch = (event) => {
+    event.preventDefault();
+    setPage(0);
+    setKeyword(keywordInput.trim());
   };
 
-  const handleSaveModal = async (e) => {
-    e.preventDefault();
+  const openCreateModal = () => {
+    setEditingListing(null);
+    setFormData({ ...EMPTY_FORM });
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (listing) => {
+    setEditingListing(listing);
+    setFormData(toForm(listing));
+    setIsModalOpen(true);
+  };
+
+  const setField = (field, value) => setFormData((current) => ({ ...current, [field]: value }));
+
+  const saveListing = async (event) => {
+    event.preventDefault();
+    setBusyId(editingListing?.id || 'create');
+    setError('');
     try {
-      if (editingVehicle) {
-        await vehicleApi.updateVehicle(editingVehicle.id, formData);
-        showToast(`Đã cập nhật thành công xe #${editingVehicle.id}`);
+      const payload = {
+        ...formData,
+        manufactureYear: Number(formData.manufactureYear),
+        price: Number(formData.price),
+        mileage: formData.mileage === '' ? null : Number(formData.mileage),
+        engineSize: formData.engineSize === '' ? null : Number(formData.engineSize),
+        seatCount: formData.seatCount === '' ? null : Number(formData.seatCount),
+      };
+      if (editingListing) {
+        await adminListingApi.updateListing(editingListing.id, payload);
+        showNotice(`Đã cập nhật tin xe #${editingListing.id}.`);
       } else {
-        await vehicleApi.createVehicle(formData);
-        showToast('Đã thêm xe mới thành công vào kho hàng!');
+        await adminListingApi.createListing(payload);
+        showNotice('Đã thêm tin xe mới vào Kho xe và Showroom.');
+        setPage(0);
       }
       setIsModalOpen(false);
-      loadVehicles();
+      await loadListings();
     } catch (err) {
-      alert('Không thể lưu xe: ' + err.message);
+      setError(err.message || 'Không thể lưu tin xe.');
+    } finally {
+      setBusyId(null);
     }
   };
 
-  const filteredVehicles = vehicles.filter((v) => {
-    const matchStatus = statusFilter === 'ALL' || (v.status || 'AVAILABLE') === statusFilter;
-    const kw = keyword.toLowerCase().trim();
-    const matchSearch =
-      !kw ||
-      v.brand?.toLowerCase().includes(kw) ||
-      v.model?.toLowerCase().includes(kw) ||
-      v.variant?.toLowerCase().includes(kw) ||
-      v.location?.toLowerCase().includes(kw);
+  const updateStatus = async (listing, nextStatus) => {
+    setBusyId(listing.id);
+    setError('');
+    try {
+      await adminListingApi.updateStatus(listing.id, nextStatus);
+      showNotice(`Đã chuyển tin xe #${listing.id} sang ${nextStatus}.`);
+      await loadListings();
+    } catch (err) {
+      setError(err.message || 'Không thể cập nhật trạng thái tin xe.');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
-    return matchStatus && matchSearch;
-  });
+  const deleteListing = async (listing) => {
+    if (!window.confirm(`Xóa tin "${listing.brand} ${listing.model}" khỏi Kho xe và Showroom?`)) return;
+    setBusyId(listing.id);
+    setError('');
+    try {
+      await adminListingApi.deleteListing(listing.id);
+      showNotice(`Đã xóa tin xe #${listing.id}.`);
+      if (listings.length === 1 && page > 0) setPage(page - 1);
+      else await loadListings();
+    } catch (err) {
+      setError(err.message || 'Không thể xóa tin xe.');
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="admin-page-container">
       <div className="admin-header-row">
         <div>
-          <h1>
-            <FaWarehouse style={{ color: '#2563eb' }} /> Quản Lý Kho Xe & Trạng Thái Mở Bán
-          </h1>
-          <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-            Quản trị viên có toàn quyền thêm xe mới, điều chỉnh thông tin, giá bán và trạng thái (AVAILABLE / HOLD / SOLD)
-          </p>
+          <h1><FaWarehouse /> Quản Lý Kho Xe</h1>
+          <p>{pagination.totalElements.toLocaleString('vi-VN')} tin xe đang được quản lý và hiển thị trên Showroom</p>
         </div>
-        <button onClick={handleOpenAddModal} className="admin-btn-primary">
-          <FaPlus /> Thêm Xe Mới Vào Kho
-        </button>
+        <button type="button" onClick={openCreateModal} className="admin-btn-primary"><FaPlus /> Thêm xe</button>
       </div>
 
-      {toastMessage && (
-        <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', fontWeight: '600' }}>
-          ✓ {toastMessage}
-        </div>
-      )}
+      {notice && <div className="admin-message success">{notice}</div>}
+      {error && <div className="admin-message error">{error}</div>}
 
-      {/* Toolbar lọc và tìm kiếm */}
-      <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '20px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', minWidth: '240px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '8px 12px', background: '#f8fafc' }}>
-          <FaSearch style={{ color: '#94a3b8' }} />
-          <input
-            type="text"
-            placeholder="Tìm theo hãng, dòng xe, phiên bản, khu vực..."
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px' }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {['ALL', 'AVAILABLE', 'HOLD', 'SOLD'].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: '1px solid',
-                borderColor: statusFilter === st ? '#2563eb' : '#e2e8f0',
-                backgroundColor: statusFilter === st ? '#2563eb' : '#ffffff',
-                color: statusFilter === st ? '#ffffff' : '#64748b'
-              }}
-            >
-              {st === 'ALL' && 'Tất cả'}
-              {st === 'AVAILABLE' && 'Đang mở bán'}
-              {st === 'HOLD' && 'Đang giữ cọc'}
-              {st === 'SOLD' && 'Đã bán'}
+      <div className="admin-listing-toolbar">
+        <form className="admin-search-form" onSubmit={submitSearch}>
+          <FaSearch />
+          <input value={keywordInput} onChange={(event) => setKeywordInput(event.target.value)} placeholder="Tìm theo hãng, dòng xe, phiên bản, khu vực..." />
+          <button type="submit">Tìm</button>
+        </form>
+        <div className="admin-status-tabs" role="group" aria-label="Lọc trạng thái">
+          {[
+            ['ALL', 'Tất cả'], ['AVAILABLE', 'Đang mở bán'],
+            ['HOLD', 'Đang giữ cọc'], ['SOLD', 'Đã bán'],
+          ].map(([value, label]) => (
+            <button type="button" key={value} className={status === value ? 'active' : ''} onClick={() => { setStatus(value); setPage(0); }}>
+              {label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Bảng danh sách xe */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Đang tải danh sách kho xe...</div>
-      ) : (
-        <div className="admin-table-container">
-          <table className="admin-vehicle-table">
-            <thead>
-              <tr>
-                <th style={{ width: '80px' }}>Ảnh</th>
-                <th>Tên xe & Phiên bản</th>
-                <th>Năm SX</th>
-                <th>Giá niêm yết</th>
-                <th>Số km (ODO)</th>
-                <th>Trạng thái kinh doanh</th>
-                <th style={{ width: '110px' }}>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVehicles.map((car) => {
-                const currentStatus = car.status || 'AVAILABLE';
-                return (
-                  <tr key={car.id}>
-                    <td>
-                      <img
-                        src={car.imageUrl || car.image_url || DEFAULT_IMAGE}
-                        alt={car.model}
-                        className="admin-car-thumb"
-                      />
-                    </td>
-                    <td>
-                      <strong style={{ color: '#0f172a', fontSize: '14px' }}>
-                        {car.brand} {car.model}
-                      </strong>
-                      <div style={{ color: '#64748b', fontSize: '12px' }}>
-                        {car.variant || ''} · {car.transmission || 'Tự động'}
-                      </div>
-                    </td>
-                    <td>{car.manufactureYear || car.manufacture_year}</td>
-                    <td>
-                      <strong style={{ color: '#1e3a8a', fontSize: '14px' }}>
-                        {formatFullPrice(car.price)}
-                      </strong>
-                    </td>
-                    <td>{formatMileage(car.mileage)}</td>
-                    <td>
-                      <select
-                        className={`status-select ${currentStatus}`}
-                        value={currentStatus}
-                        onChange={(e) => handleStatusChange(car.id, e.target.value)}
-                      >
-                        <option value="AVAILABLE">AVAILABLE (Mở bán)</option>
-                        <option value="HOLD">HOLD (Giữ cọc)</option>
-                        <option value="SOLD">SOLD (Đã bán)</option>
-                      </select>
-                    </td>
-                    <td>
-                      <div className="action-buttons-cell">
-                        <button
-                          onClick={() => handleOpenEditModal(car)}
-                          className="admin-action-icon-btn edit"
-                          title="Sửa thông tin xe"
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(car.id, `${car.brand} ${car.model}`)}
-                          className="admin-action-icon-btn delete"
-                          title="Xoá xe"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      <div className="admin-table-container">
+        <table className="admin-vehicle-table">
+          <thead><tr><th>Ảnh</th><th>Tên xe & phiên bản</th><th>Năm SX</th><th>Giá niêm yết</th><th>ODO</th><th>Khu vực</th><th>Trạng thái kinh doanh</th><th>Thao tác</th></tr></thead>
+          <tbody>
+            {loading && <tr><td colSpan="8" className="admin-table-state">Đang tải kho xe...</td></tr>}
+            {!loading && listings.length === 0 && <tr><td colSpan="8" className="admin-table-state">Không có tin xe phù hợp.</td></tr>}
+            {!loading && listings.map((listing) => {
+              const currentStatus = listing.status || 'AVAILABLE';
+              const isBusy = busyId === listing.id;
+              return (
+                <tr key={listing.id}>
+                  <td><img src={listing.imageUrl || listing.image_url || DEFAULT_IMAGE} alt={`${listing.brand || ''} ${listing.model || ''}`} className="admin-car-thumb" onError={(event) => { event.currentTarget.src = DEFAULT_IMAGE; }} /></td>
+                  <td className="admin-listing-name"><strong>{listing.brand} {listing.model}</strong><span>{listing.variant || 'Tiêu chuẩn'} · {listing.transmission || 'Chưa xác định'}</span><small>Listing #{listing.id} · Vehicle #{listing.vehicleId}</small></td>
+                  <td>{listing.manufactureYear || listing.manufacture_year || '—'}</td>
+                  <td className="admin-price">{formatFullPrice(listing.price)}</td>
+                  <td>{formatMileage(listing.mileage)}</td>
+                  <td>{listing.location || 'Chưa xác định'}</td>
+                  <td><select className={`status-select ${currentStatus}`} value={currentStatus} disabled={isBusy} onChange={(event) => updateStatus(listing, event.target.value)}><option value="AVAILABLE">AVAILABLE (Mở bán)</option><option value="HOLD">HOLD (Giữ cọc)</option><option value="SOLD">SOLD (Đã bán)</option></select></td>
+                  <td><div className="action-buttons-cell"><button type="button" onClick={() => openEditModal(listing)} disabled={isBusy} title="Sửa tin xe"><FaEdit /></button><button type="button" onClick={() => deleteListing(listing)} disabled={isBusy} title="Xóa tin xe"><FaTrash /></button></div></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {!loading && pagination.totalPages > 1 && (
+        <div className="admin-pagination">
+          <div className="admin-pagination-buttons">
+            <button type="button" disabled={pagination.isFirst} onClick={() => changePage(0)}>« Đầu</button>
+            <button type="button" disabled={pagination.isFirst} onClick={() => changePage(page - 1)}><FaChevronLeft /> Trước</button>
+            {pageNumbers.map((number, index) => <React.Fragment key={number}>{index > 0 && number - pageNumbers[index - 1] > 1 && <span>...</span>}<button type="button" className={number === pagination.page ? 'active' : ''} onClick={() => changePage(number)}>{number + 1}</button></React.Fragment>)}
+            <button type="button" disabled={pagination.isLast} onClick={() => changePage(page + 1)}>Sau <FaChevronRight /></button>
+            <button type="button" disabled={pagination.isLast} onClick={() => changePage(pagination.totalPages - 1)}>Cuối »</button>
+          </div>
+          <div className="admin-pagination-meta">
+            <span>Trang <strong>{pagination.page + 1}</strong> / <strong>{pagination.totalPages}</strong> (Tổng cộng <strong>{pagination.totalElements.toLocaleString('vi-VN')}</strong> xe)</span>
+            <form onSubmit={(event) => { event.preventDefault(); const target = Number(jumpPage); if (target >= 1 && target <= pagination.totalPages) changePage(target - 1); setJumpPage(''); }}>
+              <label htmlFor="admin-jump-page">Đến trang:</label><input id="admin-jump-page" type="number" min="1" max={pagination.totalPages} value={jumpPage} onChange={(event) => setJumpPage(event.target.value)} /><button type="submit">Đi</button>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* Modal Thêm / Sửa xe */}
       {isModalOpen && (
-        <div className="admin-modal-backdrop">
-          <div className="admin-modal-content">
-            <div className="admin-modal-header">
-              <h2>{editingVehicle ? `Chỉnh sửa xe #${editingVehicle.id}` : 'Thêm xe mới vào hệ thống'}</h2>
-              <button onClick={() => setIsModalOpen(false)} className="close-modal-btn">
-                <FaTimes />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveModal}>
+        <div className="admin-modal-backdrop" role="presentation">
+          <div className="admin-modal-content" role="dialog" aria-modal="true" aria-labelledby="admin-listing-modal-title">
+            <div className="admin-modal-header"><h2 id="admin-listing-modal-title">{editingListing ? `Chỉnh sửa tin xe #${editingListing.id}` : 'Thêm tin xe mới'}</h2><button type="button" onClick={() => setIsModalOpen(false)}><FaTimes /></button></div>
+            <form onSubmit={saveListing}>
               <div className="admin-form-grid">
-                <div className="deposit-form-group">
-                  <label>Hãng xe (Brand) *</label>
-                  <input
-                    type="text"
-                    value={formData.brand}
-                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Dòng xe (Model) *</label>
-                  <input
-                    type="text"
-                    value={formData.model}
-                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Phiên bản (Variant)</label>
-                  <input
-                    type="text"
-                    value={formData.variant}
-                    onChange={(e) => setFormData({ ...formData, variant: e.target.value })}
-                  />
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Năm sản xuất *</label>
-                  <input
-                    type="number"
-                    value={formData.manufactureYear}
-                    onChange={(e) => setFormData({ ...formData, manufactureYear: Number(e.target.value) })}
-                    required
-                  />
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Giá bán (VNĐ) *</label>
-                  <input
-                    type="number"
-                    step="1000000"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                    required
-                  />
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Số km đã đi (ODO) *</label>
-                  <input
-                    type="number"
-                    value={formData.mileage}
-                    onChange={(e) => setFormData({ ...formData, mileage: Number(e.target.value) })}
-                    required
-                  />
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Nhiên liệu</label>
-                  <select
-                    value={formData.fuelType}
-                    onChange={(e) => setFormData({ ...formData, fuelType: e.target.value })}
-                  >
-                    <option value="Xăng">Xăng</option>
-                    <option value="Dầu (Diesel)">Dầu (Diesel)</option>
-                    <option value="Điện">Điện</option>
-                    <option value="Hybrid">Hybrid</option>
-                  </select>
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Hộp số</label>
-                  <select
-                    value={formData.transmission}
-                    onChange={(e) => setFormData({ ...formData, transmission: e.target.value })}
-                  >
-                    <option value="Tự động">Tự động</option>
-                    <option value="Số sàn">Số sàn</option>
-                  </select>
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Trạng thái kinh doanh *</label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  >
-                    <option value="AVAILABLE">AVAILABLE (Đang mở bán)</option>
-                    <option value="HOLD">HOLD (Đang giữ cọc)</option>
-                    <option value="SOLD">SOLD (Đã bán)</option>
-                  </select>
-                </div>
-
-                <div className="deposit-form-group">
-                  <label>Khu vực trưng bày</label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                  />
-                </div>
+                <label>Hãng xe *<input value={formData.brand} onChange={(event) => setField('brand', event.target.value)} required /></label>
+                <label>Dòng xe *<input value={formData.model} onChange={(event) => setField('model', event.target.value)} required /></label>
+                <label>Phiên bản<input value={formData.variant} onChange={(event) => setField('variant', event.target.value)} /></label>
+                <label>Năm sản xuất *<input type="number" min="1900" max="2100" value={formData.manufactureYear} onChange={(event) => setField('manufactureYear', event.target.value)} required /></label>
+                <label>Giá niêm yết *<input type="number" min="1" value={formData.price} onChange={(event) => setField('price', event.target.value)} required /></label>
+                <label>Số km đã đi<input type="number" min="0" value={formData.mileage} onChange={(event) => setField('mileage', event.target.value)} /></label>
+                <label>Nhiên liệu<select value={formData.fuelType} onChange={(event) => setField('fuelType', event.target.value)}><option value="Gasoline">Xăng</option><option value="Diesel">Dầu Diesel</option><option value="Hybrid">Hybrid</option><option value="Electric">Điện</option></select></label>
+                <label>Hộp số<select value={formData.transmission} onChange={(event) => setField('transmission', event.target.value)}><option value="Automatic">Tự động</option><option value="Manual">Số sàn</option><option value="CVT">CVT</option></select></label>
+                <label>Kiểu dáng<input value={formData.bodyType} onChange={(event) => setField('bodyType', event.target.value)} /></label>
+                <label>Xuất xứ<select value={formData.origin} onChange={(event) => setField('origin', event.target.value)}><option value="Domestic">Trong nước</option><option value="Imported">Nhập khẩu</option></select></label>
+                <label>Số chỗ<input type="number" min="2" max="60" value={formData.seatCount} onChange={(event) => setField('seatCount', event.target.value)} /></label>
+                <label>Dung tích động cơ<input type="number" min="0.1" step="0.1" value={formData.engineSize} onChange={(event) => setField('engineSize', event.target.value)} /></label>
+                <label>Màu sắc<input value={formData.color} onChange={(event) => setField('color', event.target.value)} /></label>
+                <label>Khu vực<input value={formData.location} onChange={(event) => setField('location', event.target.value)} /></label>
+                <label>Trạng thái<select value={formData.status} onChange={(event) => setField('status', event.target.value)}><option value="AVAILABLE">Đang mở bán</option><option value="HOLD">Đang giữ cọc</option><option value="SOLD">Đã bán</option></select></label>
+                <label className="admin-form-wide">URL hình ảnh<input type="url" value={formData.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} /></label>
               </div>
-
-              <div className="deposit-form-group" style={{ marginTop: '12px' }}>
-                <label>URL hình ảnh xe</label>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                />
-              </div>
-
-              <div className="deposit-form-group">
-                <label>Mô tả chi tiết tình trạng xe</label>
-                <textarea
-                  rows={3}
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                />
-              </div>
-
-              <div className="admin-modal-footer">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="card-btn-outline"
-                >
-                  Hủy bỏ
-                </button>
-                <button type="submit" className="admin-btn-primary">
-                  <FaCheck /> {editingVehicle ? 'Lưu thay đổi' : 'Thêm xe vào kho'}
-                </button>
-              </div>
+              <div className="admin-modal-footer"><button type="button" className="admin-btn-secondary" onClick={() => setIsModalOpen(false)}>Hủy</button><button type="submit" className="admin-btn-primary" disabled={busyId === 'create' || busyId === editingListing?.id}><FaCheck /> Lưu tin xe</button></div>
             </form>
           </div>
         </div>
