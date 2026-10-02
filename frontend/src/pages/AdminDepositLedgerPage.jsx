@@ -1,254 +1,126 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import depositApi from '../services/depositApi';
-import vehicleApi from '../services/vehicleApi';
 import { formatFullPrice } from '../utils/formatters';
-import {
-  FaBook,
-  FaSearch,
-  FaMoneyBillWave,
-  FaCheckCircle,
-  FaUndo,
-  FaFilter,
-  FaReceipt,
-  FaCar
-} from 'react-icons/fa';
 
-const AdminDepositLedgerPage = () => {
-  const [deposits, setDeposits] = useState([]);
+const dateValue = (value) => {
+  const date = new Date(value);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+};
+
+export default function AdminDepositLedgerPage() {
+  const [appointments, setAppointments] = useState([]);
+  const [ledger, setLedger] = useState({ transactions: [], totalHoldingAmount: 0 });
   const [loading, setLoading] = useState(true);
-  const [keyword, setKeyword] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [busyId, setBusyId] = useState(null);
+  const [keyword, setKeyword] = useState('');
 
-  const loadLedger = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
+    setError('');
     try {
-      const data = await depositApi.getAllAppointments();
-      setDeposits(data || []);
+      const [appointmentRows, ledgerData] = await Promise.all([
+        depositApi.getAdminAppointments(), depositApi.getAdminLedger()
+      ]);
+      setAppointments(appointmentRows || []);
+      setLedger(ledgerData || { transactions: [], totalHoldingAmount: 0 });
     } catch (err) {
-      console.error('Lỗi khi tải sổ cái cọc:', err);
+      setError(err.message || 'Không tải được dữ liệu từ backend.');
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    loadLedger();
   }, []);
 
-  const showNotice = (msg) => {
-    setNotice(msg);
-    setTimeout(() => setNotice(''), 3000);
+  useEffect(() => { load(); }, [load]);
+
+  const filtered = useMemo(() => {
+    const needle = keyword.trim().toLowerCase();
+    return appointments.filter((item) => !needle || [item.depositCode, item.customerName, item.customerPhone, item.vehicleInfo]
+      .some((value) => value?.toLowerCase().includes(needle)));
+  }, [appointments, keyword]);
+
+  const handleReschedule = async (item) => {
+    const proposed = prompt('Nhập ngày giờ mới (YYYY-MM-DDTHH:mm):', dateValue(item.appointmentDate));
+    if (!proposed) return;
+    const reason = prompt('Lý do đổi lịch (không bắt buộc):', '') ?? '';
+    setBusyId(item.id);
+    setError('');
+    try {
+      await depositApi.rescheduleAppointment(item.id, proposed, reason);
+      setNotice(`Đã cập nhật lịch hẹn ${item.depositCode || `#${item.id}`}. Lý do: ${reason.trim() || 'Không cung cấp'}.`);
+      await load();
+    } catch (err) { setError(err.message || 'Không đổi được lịch hẹn.'); }
+    finally { setBusyId(null); }
   };
 
-  const handleRefund = async (deposit) => {
-    if (window.confirm(`Xác nhận hoàn cọc 100% cho đơn "${deposit.depositCode}" của khách hàng ${deposit.customerName}? Xe sẽ được mở bán lại (AVAILABLE).`)) {
-      try {
-        await depositApi.updateDepositStatus(deposit.id, 'REFUNDED');
-        if (deposit.vehicleId) {
-          await vehicleApi.updateVehicleStatus(deposit.vehicleId, 'AVAILABLE');
-        }
-        showNotice(`Đã hoàn tất thủ tục hoàn cọc cho đơn ${deposit.depositCode}. Xe đã mở bán lại.`);
-        loadLedger();
-      } catch (err) {
-        alert('Lỗi hoàn cọc: ' + err.message);
-      }
-    }
+  const handleCancel = async (item) => {
+    const reason = prompt(`Lý do hủy lịch ${item.depositCode || `#${item.id}`} (bắt buộc):`, 'Theo yêu cầu khách hàng');
+    if (reason === null) return;
+    if (!reason.trim()) { setError('Vui lòng nhập lý do hủy lịch.'); return; }
+    if (!window.confirm('Hủy lịch và hoàn toàn bộ tiền cọc? Xe sẽ được mở lại.')) return;
+    setBusyId(item.id);
+    setError('');
+    try {
+      await depositApi.cancelAppointment(item.id, reason.trim());
+      setNotice(`Đã hủy lịch và ghi nhận hoàn cọc ${item.depositCode || `#${item.id}`}.`);
+      await load();
+    } catch (err) { setError(err.message || 'Không hủy được lịch hẹn.'); }
+    finally { setBusyId(null); }
   };
 
-  const filteredDeposits = deposits.filter((item) => {
-    const matchStatus = statusFilter === 'ALL' || item.status === statusFilter;
-    const kw = keyword.toLowerCase().trim();
-    const matchSearch =
-      !kw ||
-      item.depositCode?.toLowerCase().includes(kw) ||
-      item.customerName?.toLowerCase().includes(kw) ||
-      item.vehicleTitle?.toLowerCase().includes(kw) ||
-      item.customerPhone?.includes(kw);
+  const transactions = ledger.transactions || [];
+  const refundedCount = transactions.filter((item) => item.transactionType === 'REFUND').length;
 
-    return matchStatus && matchSearch;
-  });
-
-  // Tính toán KPI thống kê sổ cái
-  const totalAmount = deposits
-    .filter((d) => d.status === 'DEPOSITED')
-    .reduce((sum, d) => sum + (Number(d.depositAmount) || 20000000), 0);
-  const totalActiveDeposits = deposits.filter((d) => d.status === 'DEPOSITED').length;
-  const totalRefunded = deposits.filter((d) => d.status === 'REFUNDED').length;
-
-  return (
-    <div style={{ maxWidth: '1180px', margin: '36px auto', padding: '0 20px 60px' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <FaBook style={{ color: '#2563eb' }} /> Sổ Cái Quản Lý Đơn Đặt Cọc (Admin Deposit Ledger)
-        </h1>
-        <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-          Theo dõi tổng doanh số tiền cọc giữ chỗ, kiểm soát trạng thái giao dịch và xử lý hoàn trả cọc
-        </p>
-      </div>
-
-      {notice && (
-        <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', fontWeight: '600' }}>
-          ✓ {notice}
-        </div>
-      )}
-
-      {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '18px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-            <FaMoneyBillWave />
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Tổng tiền cọc đang giữ</div>
-            <strong style={{ fontSize: '18px', color: '#1e3a8a' }}>{formatFullPrice(totalAmount)}</strong>
-          </div>
-        </div>
-
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '18px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-            <FaReceipt />
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Số đơn cọc hợp lệ</div>
-            <strong style={{ fontSize: '18px', color: '#16a34a' }}>{totalActiveDeposits} đơn</strong>
-          </div>
-        </div>
-
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '18px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: '#fef2f2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
-            <FaUndo />
-          </div>
-          <div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>Đơn đã hoàn cọc</div>
-            <strong style={{ fontSize: '18px', color: '#dc2626' }}>{totalRefunded} đơn</strong>
-          </div>
-        </div>
-      </div>
-
-      {/* Toolbar tìm kiếm và lọc */}
-      <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '20px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1', minWidth: '240px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '8px 12px', background: '#f8fafc' }}>
-          <FaSearch style={{ color: '#94a3b8' }} />
-          <input
-            type="text"
-            placeholder="Tìm theo mã cọc, tên khách hàng, số điện thoại, tên xe..."
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '13px' }}
-          />
-        </div>
-
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {['ALL', 'DEPOSITED', 'REFUNDED'].map((st) => (
-            <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: '6px',
-                fontSize: '13px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                border: '1px solid',
-                borderColor: statusFilter === st ? '#2563eb' : '#e2e8f0',
-                backgroundColor: statusFilter === st ? '#2563eb' : '#ffffff',
-                color: statusFilter === st ? '#ffffff' : '#64748b'
-              }}
-            >
-              {st === 'ALL' && 'Tất cả'}
-              {st === 'DEPOSITED' && 'Đang giữ cọc'}
-              {st === 'REFUNDED' && 'Đã hoàn cọc'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Bảng danh sách đơn cọc */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Đang tải sổ cái đặt cọc...</div>
-      ) : filteredDeposits.length === 0 ? (
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '40px', textAlign: 'center', color: '#64748b' }}>
-          Không có đơn cọc nào phù hợp với bộ lọc.
-        </div>
-      ) : (
-        <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e2e8f0', color: '#475569' }}>
-                <th style={{ padding: '12px 16px' }}>Mã đơn cọc</th>
-                <th style={{ padding: '12px 16px' }}>Khách hàng</th>
-                <th style={{ padding: '12px 16px' }}>Xe đặt cọc</th>
-                <th style={{ padding: '12px 16px' }}>Số tiền cọc</th>
-                <th style={{ padding: '12px 16px' }}>Lịch hẹn</th>
-                <th style={{ padding: '12px 16px' }}>Trạng thái</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right' }}>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredDeposits.map((item) => (
-                <tr key={item.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '14px 16px', fontFamily: 'monospace', fontWeight: '700', color: '#0f172a' }}>
-                    {item.depositCode}
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <strong style={{ color: '#0f172a' }}>{item.customerName}</strong>
-                    <div style={{ color: '#64748b', fontSize: '12px' }}>{item.customerPhone}</div>
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0f172a', fontWeight: '600' }}>
-                      <FaCar style={{ color: '#2563eb' }} /> {item.vehicleTitle}
-                    </div>
-                  </td>
-                  <td style={{ padding: '14px 16px', color: '#ea580c', fontWeight: '700' }}>
-                    {formatFullPrice(item.depositAmount || 20000000)}
-                  </td>
-                  <td style={{ padding: '14px 16px', color: '#475569' }}>
-                    {item.appointmentDate} ({item.appointmentTime})
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    {item.status === 'DEPOSITED' ? (
-                      <span style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>
-                        ✓ Đang giữ cọc
-                      </span>
-                    ) : item.status === 'REFUNDED' ? (
-                      <span style={{ backgroundColor: '#f1f5f9', color: '#64748b', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>
-                        Đã hoàn cọc
-                      </span>
-                    ) : (
-                      <span style={{ backgroundColor: '#fef3c7', color: '#d97706', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>
-                        {item.status}
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'right' }}>
-                    {item.status === 'DEPOSITED' && (
-                      <button
-                        onClick={() => handleRefund(item)}
-                        style={{
-                          backgroundColor: '#ffffff',
-                          color: '#dc2626',
-                          border: '1px solid #fecaca',
-                          padding: '6px 12px',
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Hoàn tiền cọc
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+  return <div style={{ maxWidth: 1180, margin: '36px auto', padding: '0 20px 60px' }}>
+    <header style={{ marginBottom: 24 }}>
+      <h1 style={{ fontSize: 24, color: '#0f172a' }}>Quản lý lịch hẹn và sổ cái đặt cọc</h1>
+      <p style={{ color: '#64748b' }}>Lịch hẹn lấy từ PostgreSQL dùng chung với Staff.</p>
+    </header>
+    {error && <div role="alert" style={{ padding: 12, marginBottom: 16, color: '#b91c1c', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6 }}>{error}</div>}
+    {notice && <div role="status" style={{ padding: 12, marginBottom: 16, color: '#166534', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 6 }}>{notice}</div>}
+    <div style={{ display: 'flex', gap: 24, marginBottom: 24, flexWrap: 'wrap' }}>
+      <strong>Tiền cọc đang giữ: {formatFullPrice(ledger.totalHoldingAmount || 0)}</strong>
+      <span>Số bút toán: {ledger.totalTransactions || 0}</span><span>Số lần hoàn: {refundedCount}</span>
+      <button type="button" onClick={load}>Tải lại</button>
     </div>
-  );
-};
 
-export default AdminDepositLedgerPage;
+    <section>
+      <h2>Lịch hẹn ({appointments.length})</h2>
+      <input aria-label="Tìm lịch hẹn" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="Tìm mã cọc, khách hàng, xe..." style={{ marginBottom: 12, padding: 9, width: 'min(100%, 420px)' }} />
+      {loading ? <p>Đang tải lịch hẹn...</p> : filtered.length === 0 ? <p>Không có lịch hẹn phù hợp.</p> : <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead><tr>{['Mã cọc', 'Khách hàng', 'Xe', 'Ngày giờ', 'Cọc', 'Lịch hẹn', 'Thao tác'].map((label) => <th key={label} style={{ padding: 10, borderBottom: '1px solid #cbd5e1' }}>{label}</th>)}</tr></thead>
+          <tbody>{filtered.map((item) => <tr key={item.id}>
+            <td style={{ padding: 10 }}>{item.depositCode || `#${item.id}`}</td>
+            <td style={{ padding: 10 }}>{item.customerName}<br />{item.customerPhone}</td>
+            <td style={{ padding: 10 }}>{item.vehicleInfo}</td>
+            <td style={{ padding: 10 }}>{new Date(item.appointmentDate).toLocaleString()}</td>
+            <td style={{ padding: 10 }}>{item.depositStatus || '-'}<br />{item.depositAmount ? formatFullPrice(item.depositAmount) : ''}</td>
+            <td style={{ padding: 10 }}>{item.status}</td>
+            <td style={{ padding: 10, whiteSpace: 'nowrap' }}>{item.status === 'PENDING' && <>
+              <button type="button" disabled={busyId === item.id} onClick={() => handleReschedule(item)}>Đổi lịch</button>{' '}
+              <button type="button" disabled={busyId === item.id || item.depositStatus !== 'DEPOSITED'} onClick={() => handleCancel(item)}>Hủy và hoàn cọc</button>
+            </>}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>}
+    </section>
 
+    <section style={{ marginTop: 36 }}>
+      <h2>Bút toán sổ cái</h2>
+      {transactions.length === 0 ? <p>{loading ? 'Đang tải sổ cái...' : 'Chưa có bút toán.'}</p> : <div style={{ overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+          <thead><tr>{['Thời điểm', 'Mã đơn cọc', 'Loại', 'Số tiền', 'Trạng thái', 'Ghi chú'].map((label) => <th key={label} style={{ padding: 10, borderBottom: '1px solid #cbd5e1' }}>{label}</th>)}</tr></thead>
+          <tbody>{transactions.map((entry) => <tr key={entry.id}>
+            <td style={{ padding: 10 }}>{entry.createdAt ? new Date(entry.createdAt).toLocaleString() : '-'}</td>
+            <td style={{ padding: 10 }}>{appointments.find((item) => item.depositId === entry.depositId)?.depositCode || entry.depositId}</td>
+            <td style={{ padding: 10 }}>{entry.transactionType}</td><td style={{ padding: 10 }}>{formatFullPrice(entry.amount)}</td>
+            <td style={{ padding: 10 }}>{entry.status}</td><td style={{ padding: 10 }}>{entry.note}</td>
+          </tr>)}</tbody>
+        </table>
+      </div>}
+    </section>
+  </div>;
+}

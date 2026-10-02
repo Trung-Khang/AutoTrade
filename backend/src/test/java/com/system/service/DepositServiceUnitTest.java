@@ -1,6 +1,8 @@
 package com.system.service;
 
 import com.system.dto.CheckInRequest;
+import com.system.dto.AppointmentResponse;
+import com.system.dto.RescheduleAppointmentRequest;
 import com.system.dto.CreateDepositRequest;
 import com.system.dto.DepositResponse;
 import com.system.dto.ReceiptResponse;
@@ -12,6 +14,7 @@ import com.system.entity.Vehicle;
 import com.system.exception.VehicleAlreadyReservedException;
 import com.system.exception.VehicleNotAvailableException;
 import com.system.repository.AppointmentRepository;
+import com.system.repository.AppUserRepository;
 import com.system.repository.DepositRepository;
 import com.system.repository.ShowroomRepository;
 import com.system.repository.TransactionLedgerRepository;
@@ -48,6 +51,9 @@ class DepositServiceUnitTest {
 
     @Mock
     private AppointmentRepository appointmentRepository;
+
+    @Mock
+    private AppUserRepository appUserRepository;
 
     @Mock
     private TransactionLedgerRepository ledgerRepository;
@@ -140,12 +146,12 @@ class DepositServiceUnitTest {
     @Test
     @DisplayName("3. Xác nhận thanh toán cọc giả lập thành công & Khóa xe HOLD")
     void testConfirmPayment_Success() {
-        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
         // Giả lập câu lệnh UPDATE nguyên tử thành công (1 dòng được cập nhật)
         when(vehicleRepository.updateVehicleStatusIfAvailable(1L, "HOLD")).thenReturn(1);
         when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
 
-        ReceiptResponse receipt = depositService.confirmPayment(50L);
+        when(depositRepository.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
+        ReceiptResponse receipt = depositService.confirmPayment(50L, 100L);
 
         assertNotNull(receipt);
         assertEquals("DEPOSITED", receipt.getStatus(), "Trạng thái cọc phải chuyển thành DEPOSITED");
@@ -159,17 +165,27 @@ class DepositServiceUnitTest {
     @Test
     @DisplayName("4. CHỐNG CỌC TRÙNG: Khi xe vừa bị người khác cọc trước -> Ném ngoại lệ 409 Conflict")
     void testConfirmPayment_RaceCondition_VehicleAlreadyReserved() {
-        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(depositRepository.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
         // Giả lập UPDATE trả về 0 dòng vì xe đã bị người khác cọc trước trong cùng mili-giây
         when(vehicleRepository.updateVehicleStatusIfAvailable(1L, "HOLD")).thenReturn(0);
 
         assertThrows(VehicleAlreadyReservedException.class, () -> {
-            depositService.confirmPayment(50L);
+            depositService.confirmPayment(50L, 100L);
         });
 
         // Kiểm tra đơn cọc phải chuyển sang CANCELLED
         assertEquals("CANCELLED", sampleDeposit.getStatus());
         verify(depositRepository, times(1)).save(sampleDeposit);
+    }
+
+    @Test
+    @DisplayName("Không cho CUSTOMER khác confirm hoặc đọc biên lai đơn cọc")
+    void depositOwnerIsRequiredForConfirmAndReceipt() {
+        when(depositRepository.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
+        assertThrows(com.system.exception.AuthException.class, () -> depositService.confirmPayment(50L, 999L));
+        assertThrows(com.system.exception.AuthException.class, () -> depositService.getReceipt(50L, 999L));
+        verify(vehicleRepository, never()).updateVehicleStatusIfAvailable(any(), any());
     }
 
     @Test
@@ -182,7 +198,7 @@ class DepositServiceUnitTest {
         AppointmentRepository mockAppRepo = mock(AppointmentRepository.class);
         AppointmentService appService = new AppointmentService(mockAppRepo);
 
-        when(mockAppRepo.findById(88L)).thenReturn(Optional.of(appointment));
+        when(mockAppRepo.findLockedById(88L)).thenReturn(Optional.of(appointment));
         when(mockAppRepo.save(any(Appointment.class))).thenAnswer(i -> i.getArgument(0));
 
         CheckInRequest request = new CheckInRequest();
@@ -204,15 +220,107 @@ class DepositServiceUnitTest {
         DepositRepository mockDepRepo = mock(DepositRepository.class);
         VehicleRepository mockVehRepo = mock(VehicleRepository.class);
         TransactionLedgerRepository mockLedgerRepo = mock(TransactionLedgerRepository.class);
-        AdminLedgerService ledgerService = new AdminLedgerService(mockLedgerRepo, mockDepRepo, mockVehRepo);
+        AppointmentRepository mockAppointmentRepo = mock(AppointmentRepository.class);
+        AppUserRepository mockUserRepo = mock(AppUserRepository.class);
+        AdminLedgerService ledgerService = new AdminLedgerService(mockLedgerRepo, mockDepRepo, mockVehRepo,
+                mockAppointmentRepo, mockUserRepo);
 
-        when(mockDepRepo.findById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(mockDepRepo.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(mockAppointmentRepo.findLockedByDepositId(50L)).thenReturn(Optional.empty());
+        when(mockVehRepo.releaseVehicleHold(1L)).thenReturn(1);
 
         Map<String, Object> result = ledgerService.refundDeposit(50L, "Xe lỗi ngoại quan");
 
         assertEquals("REFUNDED", result.get("status"));
         assertEquals("AVAILABLE", result.get("vehicleStatus"));
-        verify(mockVehRepo, times(1)).updateVehicleStatus(1L, "AVAILABLE");
+        verify(mockVehRepo, times(1)).releaseVehicleHold(1L);
         verify(mockLedgerRepo, times(1)).save(any(TransactionLedger.class));
+    }
+
+    @Test
+    @DisplayName("Admin hủy lịch PENDING hoàn deposit, mở xe và ghi đúng một ledger âm")
+    void adminCancelRefundIsAtomicBusinessTransition() {
+        sampleDeposit.setStatus("DEPOSITED");
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L, LocalDateTime.now().plusDays(2), false, null);
+        appointment.setId(77L);
+        appointment.setStatus("PENDING");
+        when(depositRepository.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(appointmentRepository.findById(77L)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.findLockedById(77L)).thenReturn(Optional.of(appointment));
+        when(vehicleRepository.releaseVehicleHold(1L)).thenReturn(1);
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        adminLedgerService.cancelAppointment(77L, "Khách yêu cầu hủy");
+
+        assertEquals("CANCELLED", appointment.getStatus());
+        assertEquals("REFUNDED", sampleDeposit.getStatus());
+        verify(ledgerRepository).save(argThat(entry -> "REFUND".equals(entry.getTransactionType())
+                && entry.getAmount().compareTo(new BigDecimal("-10000000.00")) == 0
+                && "CONFIRMED".equals(entry.getStatus())));
+    }
+
+    @Test
+    @DisplayName("Không hoàn cọc lần hai và không ghi thêm ledger")
+    void repeatedRefundIsRejectedWithoutSecondLedger() {
+        sampleDeposit.setStatus("REFUNDED");
+        when(depositRepository.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(appointmentRepository.findLockedByDepositId(50L)).thenReturn(Optional.empty());
+
+        assertThrows(com.system.exception.AuthException.class,
+                () -> adminLedgerService.refundDeposit(50L, "Lặp lại"));
+        verify(ledgerRepository, never()).save(any(TransactionLedger.class));
+    }
+
+    @Test
+    @DisplayName("Lỗi cập nhật xe không ghi bút toán hoàn tiền")
+    void refundFailureDoesNotWriteLedger() {
+        sampleDeposit.setStatus("DEPOSITED");
+        when(depositRepository.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(appointmentRepository.findLockedByDepositId(50L)).thenReturn(Optional.empty());
+        when(vehicleRepository.releaseVehicleHold(1L)).thenReturn(0);
+        assertThrows(com.system.exception.AuthException.class, () -> adminLedgerService.refundDeposit(50L, "test"));
+        verify(ledgerRepository, never()).save(any(TransactionLedger.class));
+    }
+
+    @Test
+    @DisplayName("Staff không check-in lịch đã hủy")
+    void staffCannotCheckInCancelledAppointment() {
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L, LocalDateTime.now(), false, null);
+        appointment.setId(88L);
+        appointment.setStatus("CANCELLED");
+        when(appointmentRepository.findLockedById(88L)).thenReturn(Optional.of(appointment));
+        assertThrows(com.system.exception.AuthException.class,
+                () -> appointmentService.checkIn(88L, new CheckInRequest()));
+        verify(appointmentRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("Admin đổi lịch PENDING thành công và giữ nguyên status")
+    void adminReschedulesPendingAppointment() {
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L, LocalDateTime.now().plusDays(1), false, null);
+        appointment.setId(90L);
+        appointment.setStatus("PENDING");
+        LocalDateTime newDate = LocalDateTime.now().plusDays(4);
+        when(appointmentRepository.findLockedById(90L)).thenReturn(Optional.of(appointment));
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AppointmentResponse response = adminLedgerService.reschedule(90L,
+                new RescheduleAppointmentRequest(newDate, "Khách bận"));
+
+        assertEquals(newDate, response.appointmentDate());
+        assertEquals("PENDING", appointment.getStatus());
+        assertNotNull(appointment.getUpdatedAt());
+    }
+
+    @Test
+    @DisplayName("Không cho đổi lịch COMPLETED")
+    void completedAppointmentCannotBeRescheduled() {
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L, LocalDateTime.now(), false, null);
+        appointment.setId(91L);
+        appointment.setStatus("COMPLETED");
+        when(appointmentRepository.findLockedById(91L)).thenReturn(Optional.of(appointment));
+        assertThrows(com.system.exception.AuthException.class, () -> adminLedgerService.reschedule(91L,
+                new RescheduleAppointmentRequest(LocalDateTime.now().plusDays(2), "test")));
+        verify(appointmentRepository, never()).save(any(Appointment.class));
     }
 }

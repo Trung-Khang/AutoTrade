@@ -15,6 +15,6 @@ public interface TransactionLedgerRepository extends JpaRepository<TransactionLe
 
     List<TransactionLedger> findAllByOrderByCreatedAtDesc();
 
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM TransactionLedger t WHERE t.transactionType = 'DEPOSIT_RECEIVED' AND t.status = 'CONFIRMED'")
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM TransactionLedger t WHERE t.transactionType IN ('DEPOSIT_RECEIVED', 'REFUND') AND t.status = 'CONFIRMED'")
     BigDecimal getTotalHoldingDepositAmount();
 }

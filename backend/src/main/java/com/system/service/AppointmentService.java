@@ -3,6 +3,8 @@ package com.system.service;
 import com.system.dto.CheckInRequest;
 import com.system.entity.Appointment;
 import com.system.exception.ResourceNotFoundException;
+import com.system.exception.AuthException;
+import org.springframework.http.HttpStatus;
 import com.system.repository.AppointmentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,8 +40,12 @@ public class AppointmentService {
      */
     @Transactional
     public Appointment checkIn(Long appointmentId, CheckInRequest request) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
+        Appointment appointment = appointmentRepository.findLockedById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
+
+        if (!"PENDING".equalsIgnoreCase(appointment.getStatus())) {
+            throw new AuthException(HttpStatus.CONFLICT, "Chỉ lịch hẹn PENDING mới được check-in.");
+        }
 
         appointment.setStatus("COMPLETED");
         if (request.isTestDriveCompleted()) {

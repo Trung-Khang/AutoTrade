@@ -318,24 +318,71 @@
 }
 
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  html, body, #root, .app-container, .main-content {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
   body {
     background: #ffffff !important;
   }
-  .navbar, .footer, .success-actions, .card-btn-outline {
+
+  .navbar, .footer, .footer-exact, .success-actions, .card-btn-outline {
     display: none !important;
   }
+
   .deposit-page-container {
     margin: 0 !important;
     padding: 0 !important;
     max-width: 100% !important;
   }
+
   .deposit-success-card {
     border: none !important;
     box-shadow: none !important;
-    padding: 0 !important;
+    padding: 4mm !important;
+    margin: 0 auto !important;
+    max-width: 100% !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
+
+  .success-badge-icon {
+    font-size: 32px !important;
+    margin-bottom: 6px !important;
+  }
+
+  .deposit-success-card h2 {
+    font-size: 18px !important;
+    margin: 4px 0 !important;
+  }
+
+  .deposit-success-card > p {
+    margin: 4px 0 8px !important;
+    font-size: 10pt !important;
+  }
+
   .success-summary-box {
     border: 1px solid #333 !important;
-    font-size: 14px !important;
+    font-size: 9pt !important;
+    gap: 5px !important;
+    padding: 8px !important;
+    margin: 8px 0 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import vehicleApi from '../services/vehicleApi';
 import depositApi from '../services/depositApi';
@@ -14,14 +14,15 @@ import {
   FaExclamationTriangle,
   FaReceipt,
   FaTimesCircle,
-  FaPrint,
-  FaUserCheck
+  FaPrint
 } from 'react-icons/fa';
 import './DepositPage.css';
 
 const DepositPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [vehicle, setVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +78,15 @@ const DepositPage = () => {
   // BƯỚC 1: Khởi tạo đơn đặt cọc (POST /api/v1/deposits)
   const handleCreateDeposit = async (e) => {
     e.preventDefault();
+    if (!user) {
+      alert('Vui lòng đăng nhập tài khoản để thực hiện đặt cọc và giữ xe');
+      navigate('/login', { state: { from: { pathname: location.pathname }, message: 'Vui lòng đăng nhập tài khoản để thực hiện đặt cọc và giữ xe.' } });
+      return;
+    }
+    if (user.role !== 'CUSTOMER') {
+      setError('Chỉ tài khoản CUSTOMER mới được đặt cọc.');
+      return;
+    }
     if (!vehicle) return;
 
     if (!appointmentDate) {
@@ -99,9 +109,6 @@ const DepositPage = () => {
 
     try {
       const fullAppointmentDateTime = `${appointmentDate}T${appointmentTime}:00`;
-      const depositCode = `DEP-${Date.now()}`;
-      const vcbQrUrl = `https://api.vietqr.io/image/970436-1050242933-compact2.jpg?amount=${depositAmount}&addInfo=${depositCode}&accountName=NGUYEN%20TRUNG%20KHANG`;
-
       const depositPayload = {
         vehicleId: targetVehicleId,
         showroomId: vehicle.showroomId || vehicle.showroom?.id || 1,
@@ -110,17 +117,21 @@ const DepositPage = () => {
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
         customerEmail: customerEmail.trim() || 'khachhang@autotrade.vn',
-        note: note.trim(),
-        depositAmount: depositAmount
+        customerNote: note.trim()
       };
 
       const result = await depositApi.createDeposit(depositPayload);
+      if (!result?.depositId || !result?.depositCode || !result?.qrPaymentUrl) {
+        throw new Error('Backend không trả đủ thông tin đơn cọc. Vui lòng tải lại và kiểm tra trạng thái đơn.');
+      }
       setPendingDeposit({
         ...depositPayload,
-        depositId: result.depositId || result.id || Date.now(),
-        depositCode: result.depositCode || depositCode,
-        depositAmount: result.depositAmount || depositAmount,
-        qrPaymentUrl: result.qrPaymentUrl || vcbQrUrl
+        depositId: result.depositId,
+        depositCode: result.depositCode,
+        depositAmount: result.depositAmount,
+        qrPaymentUrl: result.qrPaymentUrl,
+        appointmentDate: result.appointmentDate,
+        hasTestDrive: result.hasTestDrive
       });
     } catch (err) {
       if (err.status === 409 || err.message?.includes('409') || err.message?.includes('Xung đột')) {
@@ -143,20 +154,13 @@ const DepositPage = () => {
     try {
       const res = await depositApi.confirmPayment(pendingDeposit.depositId);
       
-      // Cập nhật trạng thái xe sang HOLD (bọc an toàn tránh ngắt quãng luồng xuất bill)
-      try {
-        await vehicleApi.updateVehicleStatus(targetVehicleId, 'HOLD');
-      } catch (patchErr) {
-        console.warn('Backend đã tự động khóa trạng thái xe sang HOLD:', patchErr.message);
-      }
-
       setReceiptData({
         ...pendingDeposit,
-        receiptCode: res.receiptCode || `REC-2026-${pendingDeposit.depositId}`,
-        contractNumber: res.contractNumber || `HD-COC-2026-${pendingDeposit.depositId}`,
-        confirmedAt: res.confirmedAt || new Date().toISOString(),
-        depositAmount: res.depositAmount || pendingDeposit.depositAmount || depositAmount,
-        message: res.message || 'Đặt cọc giữ xe thành công! Xe đã được khóa trạng thái giữ chỗ cho quý khách.'
+        receiptCode: res.receiptCode,
+        contractNumber: res.contractNumber,
+        confirmedAt: res.confirmedAt,
+        depositAmount: res.depositAmount,
+        message: res.message
       });
     } catch (err) {
       if (err.status === 409 || err.message?.includes('409') || err.message?.includes('cọc trước') || err.message?.includes('Xung đột')) {
@@ -292,12 +296,7 @@ const DepositPage = () => {
                 <FaCalendarCheck /> 1. Thông tin khách hàng & Lịch hẹn xem xe
               </div>
 
-              {!user && (
-                <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', marginBottom: '16px', fontSize: '13px', color: '#166534', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FaUserCheck style={{ fontSize: '16px', color: '#16a34a' }} />
-                  <span><strong>Đặt cọc nhanh (Khách vãng lai):</strong> Quý khách không cần đăng nhập trước. Điền thông tin bên dưới để nhận hóa đơn và biên lai hợp lệ ngay sau khi chuyển khoản.</span>
-                </div>
-              )}
+              {error && <div className="auth-error-alert" role="alert">{error}</div>}
 
               <div className="deposit-form-group">
                 <label>Họ và tên người đặt cọc *</label>
