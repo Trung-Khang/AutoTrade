@@ -314,6 +314,36 @@
 @media (max-width: 868px) {
   .deposit-layout-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .deposit-page-container {
+    padding: 0 14px 48px;
+    margin: 18px auto;
+  }
+
+  .deposit-card {
+    padding: 16px;
+  }
+
+  .grid-2-cols {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .deposit-header h1 {
+    font-size: 22px;
+  }
+
+  .test-drive-checkbox-label {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .deposit-success-card {
+    padding: 24px 16px;
   }
 }
 

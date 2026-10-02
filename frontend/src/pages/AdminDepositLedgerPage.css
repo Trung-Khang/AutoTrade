@@ -658,3 +658,53 @@
 .btn-danger:hover {
   background: #b91c1c;
 }
+
+/* Mobile & Tablet Responsive */
+@media (max-width: 768px) {
+  .admin-ledger-page {
+    padding: 0 14px;
+    margin: 20px auto 60px;
+  }
+
+  .ledger-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .ledger-refresh-btn {
+    align-self: flex-start;
+  }
+
+  .ledger-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .ledger-tab-btn {
+    padding: 10px 14px;
+    font-size: 13.5px;
+    flex-shrink: 0;
+  }
+
+  .ledger-filter-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box-wrapper {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .status-filter-select {
+    width: 100%;
+  }
+
+  .modal-container {
+    max-width: calc(100vw - 32px);
+  }
+}
+
