@@ -390,10 +390,7 @@ export default function ShowroomsPage() {
         <div className="showrooms-hero-badge">
           <FaWarehouse /> Mạng Lưới Toàn Quốc
         </div>
-        <h1>Hệ Thống Showroom AutoTrade Trên 34 Tỉnh Thành</h1>
-        <p>
-          Hệ thống showroom đạt chuẩn quốc tế tại 34 tỉnh thành trọng điểm trên toàn quốc. Sẵn sàng phục vụ lái thử, thẩm định xe 160 bước và giao xe tận nhà.
-        </p>
+        <h1>Hệ Thống Showroom AutoTrade Toàn Quốc</h1>
       </div>
 
       <div className="showrooms-controls">
