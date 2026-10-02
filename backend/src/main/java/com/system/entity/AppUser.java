@@ -61,6 +61,8 @@ public class AppUser {
     public boolean isActive() { return active; }
     public boolean isEmailVerified() { return emailVerified; }
     public boolean isLocked() { return locked; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
     public void setUsername(String username) { this.username = username; }
     public void setEmail(String email) { this.email = email; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }

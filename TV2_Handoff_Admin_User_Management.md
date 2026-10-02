@@ -29,6 +29,7 @@ Bảo mật bắt buộc: `@PreAuthorize("hasRole('ADMIN')")` kèm `Authorizatio
 | 1 | `GET` | `/api/v1/admin/users` | `keyword`, `role`, `status`, `page`, `size` | Tìm kiếm, lọc và phân trang danh sách người dùng |
 | 2 | `PATCH` | `/api/v1/admin/users/{id}/status` | `locked` (boolean) | Khóa hoặc Mở khóa tài khoản người dùng |
 | 3 | `PATCH` | `/api/v1/admin/users/{id}/role` | `role` (CUSTOMER, STAFF, ADMIN) | Chuyển đổi vai trò / Phân quyền tài khoản |
+| 4 | `DELETE` | `/api/v1/admin/users/{id}` | - | Xóa tài khoản (Ràng buộc: chỉ xóa khi KHÔNG CÓ lịch hẹn và đơn cọc) |
 
 ---
 
@@ -132,6 +133,24 @@ Bảo mật bắt buộc: `@PreAuthorize("hasRole('ADMIN')")` kèm `Authorizatio
   "username": "ngochuy",
   "role": "STAFF",
   "message": "Cập nhật vai trò tài khoản thành công."
+}
+```
+
+---
+
+### 3.4. API Xóa tài khoản người dùng
+- **Endpoint:** `DELETE /api/v1/admin/users/{id}`
+- **Quyền:** `ADMIN`
+- **Quy tắc nghiệp vụ & Ràng buộc bắt buộc (Business Constraints):**
+  - Không cho phép Admin tự xóa tài khoản của chính mình (so sánh với `SecurityUtils.currentUser().id()`).
+  - **Ràng buộc:** Chỉ cho phép xóa tài khoản khi người dùng **KHÔNG CÓ lịch hẹn (`appointments`)** và **KHÔNG CÓ đơn đặt cọc (`deposits`)**.
+  - Nếu tài khoản có bất kỳ đơn cọc hoặc lịch hẹn nào -> Trả về lỗi `400 Bad Request`: *"Không thể xóa tài khoản này vì người dùng đang có lịch hẹn hoặc đơn đặt cọc trên hệ thống. Bạn có thể sử dụng chức năng Khóa tài khoản thay thế."*
+- **Response thành công (`200 OK`):**
+```json
+{
+  "success": true,
+  "message": "Đã xóa tài khoản @customer thành công.",
+  "deletedUserId": 3
 }
 ```
 

@@ -37,7 +37,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
      * - Nếu trả về 0: Xe đã bị khách hàng khác cọc trước (Race Condition), throw Conflict!
      */
     @Modifying
-    @Query("UPDATE Vehicle v SET v.status = :newStatus WHERE v.id = :id AND v.status = 'AVAILABLE'")
+    @Query("UPDATE Vehicle v SET v.status = :newStatus WHERE v.id = :id AND (v.status = 'AVAILABLE' OR v.status = 'ARCHIVED')")
     int updateVehicleStatusIfAvailable(@Param("id") Long id, @Param("newStatus") String newStatus);
 
     @Modifying

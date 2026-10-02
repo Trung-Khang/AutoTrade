@@ -208,6 +208,29 @@ export const userApi = {
     }
     throw new Error('Không tìm thấy tài khoản người dùng.');
   },
+
+  /**
+   * Xóa tài khoản người dùng (chỉ được xóa khi không có lịch hẹn hoặc đơn cọc)
+   * Target endpoint Backend: DELETE /api/v1/admin/users/{id}
+   */
+  deleteUser: async (userId) => {
+    try {
+      const result = await apiClient.delete(`/admin/users/${userId}`);
+      return result;
+    } catch (err) {
+      if (err.response?.data?.message) {
+        throw new Error(err.response.data.message);
+      }
+      if (err.message && !err.message.includes('Network Error')) {
+        throw err;
+      }
+      // Fallback local storage
+      let list = getStoredUsers();
+      list = list.filter((u) => u.id !== Number(userId));
+      saveStoredUsers(list);
+      return { success: true, message: 'Đã xóa tài khoản trong kho dữ liệu cục bộ.' };
+    }
+  },
 };
 
 export default userApi;

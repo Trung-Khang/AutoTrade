@@ -108,8 +108,8 @@ const VehicleInfo = ({ vehicle }) => {
               <span className="price-value">{formatFullPrice(price)}</span>
             </div>
             <div className="deposit-hint-box">
-              <span className="deposit-tag">Số tiền đặt cọc giữ xe:</span>
-              <strong className="deposit-amount">20.000.000 VNĐ</strong>
+              <span className="deposit-tag">Số tiền đặt cọc giữ xe (10%):</span>
+              <strong className="deposit-amount">{formatFullPrice(Math.round((price || 0) * 0.1) || 10000000)}</strong>
             </div>
           </div>
 

@@ -388,6 +388,32 @@
   background: #dcfce7;
 }
 
+.btn-user-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  transition: all 0.2s ease;
+}
+
+.btn-user-delete:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.btn-user-delete:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 /* Empty State */
 .table-empty-state {
   padding: 48px 20px;
