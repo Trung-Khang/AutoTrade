@@ -16,6 +16,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long>, JpaSpec
     Optional<AppUser> findByUsernameIgnoreCaseOrEmailIgnoreCase(String username, String email);
     boolean existsByUsernameIgnoreCase(String username);
     boolean existsByEmailIgnoreCase(String email);
+    boolean existsByPhone(String phone);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from AppUser u where u.id = :id")

@@ -51,7 +51,8 @@ public class AuthService {
 
     @Transactional
     public MessageResponse register(RegisterRequest request) {
-        validateRegistration(request);
+        String phone = normalizePhone(request == null ? null : request.phone());
+        validateRegistration(request, phone);
         String username = request.username().trim();
         String email = normalizeEmail(request.email());
         AppUser existingByEmail = userRepository.findByEmailIgnoreCase(email).orElse(null);
@@ -70,7 +71,7 @@ public class AuthService {
         user.setUsername(username);
         user.setEmail(email);
         user.setFullName(request.fullName().trim());
-        user.setPhone(blankToNull(request.phone()));
+        user.setPhone(phone);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(Role.CUSTOMER);
         user.setActive(true);
@@ -227,7 +228,7 @@ public class AuthService {
         return new MessageResponse(message, dispatch.emailSent(), dispatch.retryAfterSeconds());
     }
 
-    private void validateRegistration(RegisterRequest request) {
+    private void validateRegistration(RegisterRequest request, String normalizedPhone) {
         if (request == null || isBlank(request.username()) || isBlank(request.fullName()) || isBlank(request.email())
                 || isBlank(request.phone()) || isBlank(request.password())) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Vui lòng nhập đầy đủ các trường bắt buộc.");
@@ -241,10 +242,14 @@ public class AuthService {
         if (!normalizeEmail(request.email()).matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Email không hợp lệ.");
         }
-        if (!request.phone().trim().matches("[0-9+() .-]{8,30}")) {
-            throw new AuthException(HttpStatus.BAD_REQUEST, "Số điện thoại không hợp lệ.");
+        if (normalizedPhone == null || !normalizedPhone.matches("(03|05|07|08|09)\\d{8}")) {
+            throw new AuthException(HttpStatus.BAD_REQUEST,
+                    "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
         }
         passwordPolicyValidator.validate(request.password(), request.confirmPassword(), request.username(), request.email());
+        if (userRepository.existsByPhone(normalizedPhone)) {
+            throw new AuthException(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng.");
+        }
     }
 
     private String requireOtp(String code) {
@@ -255,6 +260,16 @@ public class AuthService {
     }
 
     private String normalizeEmail(String email) { return email == null ? "" : email.trim().toLowerCase(Locale.ROOT); }
+    private String normalizePhone(String phone) {
+        if (phone == null) {
+            return null;
+        }
+        String compact = phone.trim().replaceAll("[\\s().-]", "");
+        if (compact.startsWith("+84")) {
+            compact = "0" + compact.substring(3);
+        }
+        return compact;
+    }
     private String blankToNull(String value) { return isBlank(value) ? null : value.trim(); }
     private boolean isBlank(String value) { return value == null || value.trim().isEmpty(); }
 }

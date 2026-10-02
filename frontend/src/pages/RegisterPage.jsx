@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import PasswordPolicyChecklist from '../components/auth/PasswordPolicyChecklist';
 import { getPasswordPolicy, isPasswordCompliant } from '../utils/passwordPolicy';
+import { normalizeVietnamesePhone, validateVietnamesePhone } from '../utils/phonePolicy';
 import { FaEye, FaEyeSlash, FaCheck, FaTimes, FaInfoCircle } from 'react-icons/fa';
 import './LoginPage.css';
 
@@ -17,15 +18,20 @@ const RegisterPage = () => {
   const handleChange = (event) => setFormData({ ...formData, [event.target.name]: event.target.value });
   const passwordRules = getPasswordPolicy(formData.password);
   const isCompliant = isPasswordCompliant(formData.password);
+  const phoneValidation = validateVietnamesePhone(formData.phone);
   const isMatching = formData.confirmPassword && formData.password === formData.confirmPassword;
   const passwordReady = isCompliant && isMatching;
 
   const submit = async (event) => {
     event.preventDefault(); setError('');
+    if (!phoneValidation.normalized || phoneValidation.state !== 'success') {
+      setError('Số điện thoại chưa đúng định dạng.');
+      return;
+    }
     if (!passwordReady) { setError('Mật khẩu chưa đáp ứng đầy đủ yêu cầu.'); return; }
     setIsSubmitting(true);
     try {
-      const result = await register(formData);
+      const result = await register({ ...formData, phone: normalizeVietnamesePhone(formData.phone) });
       navigate('/verify-email', { state: { email: formData.email, message: result.message, emailSent: result.emailSent } });
     } catch (err) { setError(err.message || 'Đăng ký không thành công.'); }
     finally { setIsSubmitting(false); }
@@ -35,7 +41,25 @@ const RegisterPage = () => {
     <div className="auth-header"><h1>Đăng ký tài khoản</h1><p>Tạo tài khoản khách hàng để đặt cọc và đặt lịch hẹn xem xe</p></div>
     {error && <div className="auth-error-alert">{error}</div>}
     <form onSubmit={submit} className="auth-form">
-      {[['username', 'Tên đăng nhập *', 'text', 'VD: nguyenvana'], ['fullName', 'Họ và tên *', 'text', 'VD: Nguyễn Văn A'], ['email', 'Địa chỉ Email *', 'email', 'VD: vana@example.com'], ['phone', 'Số điện thoại *', 'tel', 'VD: 0912345678']].map(([name, label, type, placeholder]) => <div className="form-group" key={name}><label htmlFor={name}>{label}</label><input id={name} name={name} type={type} placeholder={placeholder} value={formData[name]} onChange={handleChange} required /></div>)}
+      {[['username', 'Tên đăng nhập *', 'text', 'VD: nguyenvana'], ['fullName', 'Họ và tên *', 'text', 'VD: Nguyễn Văn A'], ['email', 'Địa chỉ Email *', 'email', 'VD: vana@example.com']].map(([name, label, type, placeholder]) => <div className="form-group" key={name}><label htmlFor={name}>{label}</label><input id={name} name={name} type={type} placeholder={placeholder} value={formData[name]} onChange={handleChange} required /></div>)}
+      <div className="form-group">
+        <label htmlFor="phone">Số điện thoại *</label>
+        <input
+          id="phone"
+          name="phone"
+          type="tel"
+          placeholder="VD: 0912345678 hoặc +84912345678"
+          value={formData.phone}
+          onChange={handleChange}
+          className={formData.phone ? (phoneValidation.state === 'success' ? 'input-success' : 'input-error') : ''}
+          required
+          autoComplete="tel"
+        />
+        <div className={`password-hint-msg ${phoneValidation.state}`}>
+          {phoneValidation.state === 'success' ? <FaCheck className="hint-icon success" /> : phoneValidation.state === 'error' ? <FaTimes className="hint-icon error" /> : <FaInfoCircle className="hint-icon info" />}
+          <span>{phoneValidation.message}</span>
+        </div>
+      </div>
       
       <div className="form-group">
         <label htmlFor="password">Mật khẩu *</label>
