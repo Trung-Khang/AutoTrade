@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import CustomerOnlyRoute from './components/common/CustomerOnlyRoute';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 
@@ -38,7 +39,14 @@ function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/vehicles" element={<VehicleListPage />} />
               <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
-              <Route path="/deposit/:id" element={<DepositPage />} />
+              <Route
+                path="/deposit/:id"
+                element={
+                  <CustomerOnlyRoute>
+                    <DepositPage />
+                  </CustomerOnlyRoute>
+                }
+              />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
@@ -52,7 +60,7 @@ function App() {
               <Route
                 path="/customer/deposits"
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'STAFF', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <CustomerDepositHistoryPage />
                   </ProtectedRoute>
                 }

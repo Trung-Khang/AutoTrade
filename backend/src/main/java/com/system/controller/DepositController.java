@@ -6,6 +6,9 @@ import com.system.dto.CustomerDepositResponse;
 import com.system.dto.ReceiptResponse;
 import com.system.service.DepositService;
 import com.system.security.SecurityUtils;
+import com.system.security.AppUserPrincipal;
+import com.system.entity.Role;
+import com.system.exception.AuthException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -31,7 +34,8 @@ public class DepositController {
                description = "Khách hàng chọn xe, chọn showroom, ngày giờ hẹn và tùy chọn lái thử. Hệ thống sinh mã QR giả lập thanh toán.")
     public ResponseEntity<DepositResponse> createDeposit(
             @RequestBody CreateDepositRequest request) {
-        DepositResponse response = depositService.createDeposit(request, SecurityUtils.currentUser().id());
+        AppUserPrincipal customer = requireCustomer();
+        DepositResponse response = depositService.createDeposit(request, customer.id());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -40,7 +44,8 @@ public class DepositController {
     @Operation(summary = "Xác nhận đã thanh toán cọc giả lập & Khóa xe HOLD", 
                description = "Quét mã QR và bấm xác nhận chuyển tiền. Áp dụng transaction chống đặt cọc trùng xe.")
     public ResponseEntity<ReceiptResponse> confirmPayment(@PathVariable Long id) {
-        ReceiptResponse response = depositService.confirmPayment(id, SecurityUtils.currentUser().id());
+        AppUserPrincipal customer = requireCustomer();
+        ReceiptResponse response = depositService.confirmPayment(id, customer.id());
         return ResponseEntity.ok(response);
     }
 
@@ -49,7 +54,8 @@ public class DepositController {
     @Operation(summary = "Xem biên lai thu tiền cọc và hợp đồng số", 
                description = "Hiển thị thông tin biên lai điện tử và hợp đồng cọc để tải hoặc in ấn.")
     public ResponseEntity<ReceiptResponse> getReceipt(@PathVariable Long id) {
-        ReceiptResponse response = depositService.getReceipt(id, SecurityUtils.currentUser().id());
+        AppUserPrincipal customer = requireCustomer();
+        ReceiptResponse response = depositService.getReceipt(id, customer.id());
         return ResponseEntity.ok(response);
     }
 
@@ -58,7 +64,16 @@ public class DepositController {
     @Operation(summary = "Danh sách đơn cọc của tôi", 
                description = "Trả về lịch sử các đơn đặt cọc của khách hàng đang đăng nhập.")
     public ResponseEntity<List<CustomerDepositResponse>> getMyDeposits() {
-        List<CustomerDepositResponse> deposits = depositService.getMyDeposits(SecurityUtils.currentUser().id());
+        AppUserPrincipal customer = requireCustomer();
+        List<CustomerDepositResponse> deposits = depositService.getMyDeposits(customer.id());
         return ResponseEntity.ok(deposits);
+    }
+
+    private AppUserPrincipal requireCustomer() {
+        AppUserPrincipal principal = SecurityUtils.currentUser();
+        if (principal.role() != Role.CUSTOMER) {
+            throw new AuthException(HttpStatus.FORBIDDEN, "Chỉ tài khoản CUSTOMER mới được sử dụng chức năng đặt cọc.");
+        }
+        return principal;
     }
 }
