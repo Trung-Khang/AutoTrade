@@ -41,6 +41,10 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
     int updateVehicleStatusIfAvailable(@Param("id") Long id, @Param("newStatus") String newStatus);
 
     @Modifying
+    @Query("UPDATE Vehicle v SET v.status = 'AVAILABLE' WHERE v.id = :id AND v.status = 'HOLD'")
+    int releaseVehicleHold(@Param("id") Long id);
+
+    @Modifying
     @Query("UPDATE Vehicle v SET v.status = :newStatus WHERE v.id = :id")
     int updateVehicleStatus(@Param("id") Long id, @Param("newStatus") String newStatus);
 }

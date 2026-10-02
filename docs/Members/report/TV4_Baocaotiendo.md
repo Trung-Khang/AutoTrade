@@ -1,8 +1,18 @@
 # TV4 - Báo cáo tiến độ xác thực và phân quyền AutoTrade
 
-Ngày cập nhật: 01/10/2026
+Ngày cập nhật: 02/10/2026
 Người phụ trách: TV4
 Phạm vi: Authentication, identity, authorization và tích hợp UI xác thực theo `TV4.md` và `Workflow_4_Increment.md`.
+
+## Addendum 02/10/2026 - Deposit/Appointment sau merge TV2
+
+- Theo yêu cầu audit hậu merge `795f1878e66802f75bc3bb35324be44cfff30f61`, khóa các API deposit theo JWT CUSTOMER; tạo, danh sách của tôi, confirm và receipt lấy identity từ Security Context. Không nhận `X-User-Id` hoặc user mặc định. Confirm/receipt xác minh ownership.
+- Xóa mock/localStorage fallback khỏi `depositApi.js`; mọi lỗi API giờ được đưa tới UI thay vì báo thành công giả. Trang lịch sử CUSTOMER nhận DTO từ DB gồm xe và lịch hẹn.
+- Bổ sung Admin API đọc appointment từ cùng bảng PostgreSQL với Staff, đổi lịch PENDING, hủy lịch PENDING gắn với deposit DEPOSITED, hoàn tiền, mở lại xe và ghi một ledger REFUND âm/CONFIRMED trong cùng transaction. Pessimistic lock trên deposit/appointment và điều kiện HOLD ngăn xử lý lặp; Staff check-in chỉ nhận PENDING.
+- Thêm UI Admin đổi/hủy lịch, thông báo lỗi/thành công; trang Admin gọi riêng Admin appointments và ledger. Bổ sung A4 print receipt, ẩn `.footer-exact`, navbar và action controls.
+- Xác minh: Maven package `BUILD SUCCESS`; focused `DepositServiceUnitTest,AuthSecurityUnitTest` **15/15 PASS**; frontend `npm run build` **PASS**; Chrome headless print fixture **1 trang A4**, nội dung còn đủ và không in footer. `git diff --check` sạch; source trong phạm vi đã quét không còn `X-User-Id`, user mặc định `1`, hoặc deposit/appointment localStorage fallback.
+- Full Maven suite chưa PASS: 10 case `AuthDatabaseIntegrationTest` bị gate do thiếu database fixture do official isolated runner tạo. Không chạy runner/schema/migration/seed trên `autotrade_final`; do đó HTTP role matrix, DB rollback thật và integration trên database chung vẫn **PENDING**. Unit test có kiểm tra các nhánh trạng thái/lỗi, không thay thế transaction integration.
+- Không sửa README; giữ nguyên README đang có thay đổi và file `Huong_dan_test_autotrade_final.md` untracked. Không xử lý multi-tab. Không commit/push.
 
 ## Phần I - Báo cáo chi tiết
 

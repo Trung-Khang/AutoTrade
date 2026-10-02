@@ -28,6 +28,7 @@ const LoginPage = () => {
   return <div className="auth-page-container"><div className="auth-card">
     <div className="auth-header"><h1>Đăng nhập</h1><p>Hệ thống Quản lý Kinh doanh Ô tô AutoTrade</p></div>
     {error && <div className="auth-error-alert">{error}</div>}
+    {location.state?.message && <div className="auth-error-alert" role="status">{location.state.message}</div>}
     <form onSubmit={handleSubmit} className="auth-form">
       <div className="form-group"><label htmlFor="identity">Tên đăng nhập / Email</label><input id="identity" placeholder="VD: admin, staff, customer" value={usernameOrEmail} onChange={(e) => setUsernameOrEmail(e.target.value)} required autoComplete="username" /></div>
       <div className="form-group"><label htmlFor="password">Mật khẩu</label><input id="password" type="password" placeholder="Nhập mật khẩu..." value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" /></div>

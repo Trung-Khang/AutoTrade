@@ -17,14 +17,16 @@ const StaffAppointmentPage = () => {
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [searchKeyword, setSearchKeyword] = useState('');
   const [actionNotice, setActionNotice] = useState('');
+  const [error, setError] = useState('');
 
   const loadAppointments = async () => {
     setLoading(true);
+    setError('');
     try {
       const data = await depositApi.getStaffAppointments();
       setAppointments(data || []);
     } catch (err) {
-      console.error('Lỗi khi tải lịch hẹn:', err);
+      setError(err.message || 'Không tải được lịch hẹn từ Backend.');
     } finally {
       setLoading(false);
     }
@@ -93,6 +95,7 @@ const StaffAppointmentPage = () => {
           ✓ {actionNotice}
         </div>
       )}
+      {error && <div role="alert" style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '12px 16px', borderRadius: '8px', marginBottom: '20px' }}>{error}</div>}
 
       {/* Bộ lọc và Tìm kiếm */}
       <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', marginBottom: '20px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
@@ -189,9 +192,9 @@ const StaffAppointmentPage = () => {
                     )}
                   </div>
 
-                  {item.note && (
+                  {(item.customerNote || item.note) && (
                     <div style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic', background: '#f8fafc', padding: '4px 8px', borderRadius: '4px' }}>
-                      Ghi chú khách: "{item.note}"
+                      Ghi chú khách: "{item.customerNote || item.note}"
                     </div>
                   )}
 

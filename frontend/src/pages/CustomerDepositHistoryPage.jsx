@@ -19,15 +19,17 @@ const CustomerDepositHistoryPage = () => {
   const { user } = useAuth();
   const [deposits, setDeposits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const loadDeposits = async () => {
       setLoading(true);
+      setError('');
       try {
         const list = await depositApi.getMyDeposits(user?.email);
         setDeposits(list || []);
       } catch (err) {
-        console.error('Lỗi khi tải lịch sử cọc:', err);
+        setError(err.message || 'Không tải được lịch sử đặt cọc từ Backend.');
       } finally {
         setLoading(false);
       }
@@ -39,6 +41,7 @@ const CustomerDepositHistoryPage = () => {
     switch (status) {
       case 'DEPOSITED':
         return <span style={{ color: '#16a34a', backgroundColor: '#dcfce7', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}><FaCheckCircle /> Đã đặt cọc</span>;
+      case 'PENDING':
       case 'PENDING_PAYMENT':
         return <span style={{ color: '#d97706', backgroundColor: '#fef3c7', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}><FaHourglassHalf /> Chờ thanh toán</span>;
       case 'REFUNDED':
@@ -50,6 +53,7 @@ const CustomerDepositHistoryPage = () => {
 
   const renderAppointmentStatus = (status) => {
     switch (status) {
+      case 'PENDING':
       case 'SCHEDULED':
         return <span style={{ color: '#2563eb', backgroundColor: '#dbeafe', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Đã lên lịch</span>;
       case 'COMPLETED':
@@ -76,6 +80,8 @@ const CustomerDepositHistoryPage = () => {
         <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
           Đang tải dữ liệu đơn cọc...
         </div>
+      ) : error ? (
+        <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: 16, borderRadius: 8 }}>{error}</div>
       ) : deposits.length === 0 ? (
         <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '48px 24px', textAlign: 'center' }}>
           <FaReceipt style={{ fontSize: '48px', color: '#cbd5e1', marginBottom: '16px' }} />
@@ -140,7 +146,7 @@ const CustomerDepositHistoryPage = () => {
                 <div>
                   <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Lịch hẹn Showroom</div>
                   <div style={{ color: '#0f172a', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaCalendarAlt style={{ color: '#16a34a' }} /> {item.appointmentDate} ({item.appointmentTime})
+                    <FaCalendarAlt style={{ color: '#16a34a' }} /> {item.appointmentDate ? new Date(item.appointmentDate).toLocaleString() : 'Chưa có lịch hẹn'}
                   </div>
                   <div style={{ marginTop: '4px' }}>
                     Trạng thái hẹn: {renderAppointmentStatus(item.appointmentStatus || 'SCHEDULED')}

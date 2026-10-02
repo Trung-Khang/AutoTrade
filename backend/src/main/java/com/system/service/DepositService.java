@@ -2,6 +2,7 @@ package com.system.service;
 
 import com.system.dto.CreateDepositRequest;
 import com.system.dto.DepositResponse;
+import com.system.dto.CustomerDepositResponse;
 import com.system.dto.ReceiptResponse;
 import com.system.entity.Appointment;
 import com.system.entity.Deposit;
@@ -11,6 +12,7 @@ import com.system.entity.Vehicle;
 import com.system.exception.ResourceNotFoundException;
 import com.system.exception.VehicleAlreadyReservedException;
 import com.system.exception.VehicleNotAvailableException;
+import com.system.exception.AuthException;
 import com.system.repository.AppointmentRepository;
 import com.system.repository.DepositRepository;
 import com.system.repository.ShowroomRepository;
@@ -18,6 +20,7 @@ import com.system.repository.TransactionLedgerRepository;
 import com.system.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -142,12 +145,16 @@ public class DepositService {
      * Áp dụng Transaction và Atomic Update chống Race Condition / Đặt cọc trùng (FR-09 & NFR-02)
      */
     @Transactional
-    public ReceiptResponse confirmPayment(Long depositId) {
-        Deposit deposit = depositRepository.findById(depositId)
+    public ReceiptResponse confirmPayment(Long depositId, Long userId) {
+        Deposit deposit = depositRepository.findLockedById(depositId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn cọc với ID: " + depositId));
+        requireOwner(deposit, userId);
 
         if ("DEPOSITED".equalsIgnoreCase(deposit.getStatus())) {
-            return getReceipt(depositId);
+            return buildReceipt(deposit);
+        }
+        if (!"PENDING".equalsIgnoreCase(deposit.getStatus())) {
+            throw new AuthException(HttpStatus.CONFLICT, "Đơn cọc không còn ở trạng thái chờ xác nhận.");
         }
 
         // Cập nhật trạng thái xe nguyên tử: chỉ cập nhật thành HOLD nếu status hiện tại là 'AVAILABLE'
@@ -204,9 +211,16 @@ public class DepositService {
      * Lấy biên lai và hợp đồng số của đơn cọc (FR-10)
      */
     @Transactional(readOnly = true)
-    public ReceiptResponse getReceipt(Long depositId) {
+    public ReceiptResponse getReceipt(Long depositId, Long userId) {
         Deposit deposit = depositRepository.findById(depositId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn cọc với ID: " + depositId));
+        requireOwner(deposit, userId);
+
+        return buildReceipt(deposit);
+    }
+
+    private ReceiptResponse buildReceipt(Deposit deposit) {
+        Long depositId = deposit.getId();
 
         Vehicle vehicle = vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
 
@@ -233,7 +247,25 @@ public class DepositService {
      * Lấy danh sách đơn cọc của người dùng (UC-12)
      */
     @Transactional(readOnly = true)
-    public List<Deposit> getMyDeposits(Long userId) {
-        return depositRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public List<CustomerDepositResponse> getMyDeposits(Long userId) {
+        return depositRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(deposit -> {
+            Vehicle vehicle = vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+            Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
+            String vehicleTitle = vehicle == null ? "Xe #" + deposit.getVehicleId()
+                    : String.join(" ", java.util.stream.Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
+                    .filter(value -> value != null && !value.isBlank()).toList());
+            return new CustomerDepositResponse(deposit.getId(), deposit.getDepositCode(), deposit.getVehicleId(),
+                    vehicleTitle, vehicle == null ? null : vehicle.getPrice(), deposit.getAmount(), deposit.getStatus(),
+                    appointment == null ? null : appointment.getAppointmentDate(),
+                    appointment == null ? null : appointment.getStatus(),
+                    appointment != null && appointment.isHasTestDrive(),
+                    appointment == null ? null : appointment.getCustomerNote());
+        }).toList();
+    }
+
+    private void requireOwner(Deposit deposit, Long userId) {
+        if (!deposit.getUserId().equals(userId)) {
+            throw new AuthException(HttpStatus.FORBIDDEN, "Bạn không có quyền truy cập đơn đặt cọc này.");
+        }
     }
 }

@@ -2,9 +2,10 @@ package com.system.controller;
 
 import com.system.dto.CreateDepositRequest;
 import com.system.dto.DepositResponse;
+import com.system.dto.CustomerDepositResponse;
 import com.system.dto.ReceiptResponse;
-import com.system.entity.Deposit;
 import com.system.service.DepositService;
+import com.system.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
@@ -29,9 +30,8 @@ public class DepositController {
     @Operation(summary = "Khởi tạo đơn đặt cọc và hẹn lịch xem xe", 
                description = "Khách hàng chọn xe, chọn showroom, ngày giờ hẹn và tùy chọn lái thử. Hệ thống sinh mã QR giả lập thanh toán.")
     public ResponseEntity<DepositResponse> createDeposit(
-            @RequestBody CreateDepositRequest request,
-            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        DepositResponse response = depositService.createDeposit(request, userId);
+            @RequestBody CreateDepositRequest request) {
+        DepositResponse response = depositService.createDeposit(request, SecurityUtils.currentUser().id());
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -40,7 +40,7 @@ public class DepositController {
     @Operation(summary = "Xác nhận đã thanh toán cọc giả lập & Khóa xe HOLD", 
                description = "Quét mã QR và bấm xác nhận chuyển tiền. Áp dụng transaction chống đặt cọc trùng xe.")
     public ResponseEntity<ReceiptResponse> confirmPayment(@PathVariable Long id) {
-        ReceiptResponse response = depositService.confirmPayment(id);
+        ReceiptResponse response = depositService.confirmPayment(id, SecurityUtils.currentUser().id());
         return ResponseEntity.ok(response);
     }
 
@@ -49,7 +49,7 @@ public class DepositController {
     @Operation(summary = "Xem biên lai thu tiền cọc và hợp đồng số", 
                description = "Hiển thị thông tin biên lai điện tử và hợp đồng cọc để tải hoặc in ấn.")
     public ResponseEntity<ReceiptResponse> getReceipt(@PathVariable Long id) {
-        ReceiptResponse response = depositService.getReceipt(id);
+        ReceiptResponse response = depositService.getReceipt(id, SecurityUtils.currentUser().id());
         return ResponseEntity.ok(response);
     }
 
@@ -57,9 +57,8 @@ public class DepositController {
     @GetMapping("/my")
     @Operation(summary = "Danh sách đơn cọc của tôi", 
                description = "Trả về lịch sử các đơn đặt cọc của khách hàng đang đăng nhập.")
-    public ResponseEntity<List<Deposit>> getMyDeposits(
-            @RequestHeader(value = "X-User-Id", defaultValue = "1") Long userId) {
-        List<Deposit> deposits = depositService.getMyDeposits(userId);
+    public ResponseEntity<List<CustomerDepositResponse>> getMyDeposits() {
+        List<CustomerDepositResponse> deposits = depositService.getMyDeposits(SecurityUtils.currentUser().id());
         return ResponseEntity.ok(deposits);
     }
 }

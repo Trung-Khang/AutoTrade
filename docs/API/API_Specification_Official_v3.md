@@ -234,7 +234,7 @@ stateDiagram-v2
 #### [CUSTOMER] 1. Khởi tạo đơn đặt cọc & hẹn ngày xem xe
 * **Method:** `POST`
 * **URL:** `/api/v1/deposits`
-* **Role yêu cầu:** `CUSTOMER` (hoặc Header `X-User-Id` trong Ngày 1)
+* **Role yêu cầu:** `CUSTOMER` (JWT bắt buộc; userId luôn lấy từ Security Context)
 * **Request Body:**
 ```json
 {
@@ -245,7 +245,7 @@ stateDiagram-v2
   "customerName": "Nguyễn Văn A",
   "customerPhone": "0987654321",
   "customerEmail": "nguyenvana@gmail.com",
-  "note": "Hẹn sáng thứ 6 xem xe và chạy thử trên đại lộ"
+  "customerNote": "Hẹn sáng thứ 6 xem xe và chạy thử trên đại lộ"
 }
 ```
 * **Quy trình xử lý của Backend:**
@@ -314,14 +314,16 @@ stateDiagram-v2
 #### [CUSTOMER] 3. Xem biên lai thu tiền cọc và Hợp đồng số điện tử (FR-10)
 * **Method:** `GET`
 * **URL:** `/api/v1/deposits/{id}/receipt`
-* **Role yêu cầu:** `CUSTOMER` (hoặc `ADMIN`)
+* **Role yêu cầu:** Chủ đơn có role `CUSTOMER`; đọc đơn của CUSTOMER khác trả `403`.
 * **Response (200 OK):** Trả về toàn bộ thông tin hợp đồng số: Bên A (Showroom), Bên B (Khách hàng), Xe đặt cọc (VIN, Biển số, ODO, Giá bán), Số tiền cọc, Thời hạn giữ cọc (7 ngày), Điều khoản hoàn cọc và Lịch hẹn kèm tùy chọn lái thử.
 
 #### [CUSTOMER] 4. Quản lý danh sách đơn cọc của tôi (UC-12)
 * **Method:** `GET`
 * **URL:** `/api/v1/deposits/my`
 * **Role yêu cầu:** `CUSTOMER`
-* **Response (200 OK):** Danh sách các đơn cọc mà user hiện tại đã tạo kèm trạng thái (`PENDING`, `DEPOSITED`, `CANCELLED`).
+* **Response (200 OK):** Danh sách DTO lịch sử của user hiện tại gồm `id`, `depositCode`, `vehicleId`, `vehicleTitle`, `vehiclePrice`, `depositAmount`, `status`, `appointmentDate`, `appointmentStatus`, `hasTestDrive`, `note`.
+
+> Tất cả endpoint deposit đều yêu cầu JWT CUSTOMER. Thiếu/sai JWT trả `401`; STAFF/ADMIN hoặc CUSTOMER không sở hữu đơn trả `403`. Không gửi `X-User-Id`.
 
 ---
 
@@ -330,7 +332,7 @@ stateDiagram-v2
 #### [STAFF] 1. Xem danh sách lịch hẹn khách đến xem xe (FR-12, UC-13)
 * **Method:** `GET`
 * **URL:** `/api/v1/staff/appointments`
-* **Role yêu cầu:** `STAFF` (hoặc `ADMIN`)
+* **Role yêu cầu:** `STAFF`
 * **Query Parameters:**
   * `date` (LocalDate, optional): Ngày hẹn (mặc định lấy hôm nay)
   * `showroomId` (Long, optional): Lọc theo showroom của nhân viên
@@ -339,14 +341,19 @@ stateDiagram-v2
 ```json
 [
   {
+    "id": 8,
     "appointmentId": 8,
+    "depositId": 12,
+    "depositStatus": "DEPOSITED",
+    "depositAmount": 10000000.00,
     "customerName": "Nguyễn Văn A",
     "customerPhone": "0987654321",
     "vehicleInfo": "Toyota Camry 2.5Q 2021 (VIN: VN-TOYOTA-CAMRY-2021-001)",
     "appointmentDate": "2026-10-02T09:30:00",
     "hasTestDrive": true,
     "status": "PENDING",
-    "depositCode": "DEP-20260930-9948"
+    "depositCode": "DEP-20260930-9948",
+    "customerNote": "Hẹn xem xe"
   }
 ]
 ```
@@ -375,6 +382,12 @@ stateDiagram-v2
 ---
 
 ### 3.4. Phân hệ Quản trị Sổ cái Tiền cọc (Admin Ledger)
+
+#### [ADMIN] Quản lý lịch hẹn dùng chung với Staff
+* `GET /api/v1/admin/appointments`: đọc các appointment từ cùng bảng PostgreSQL với Staff.
+* `PUT /api/v1/admin/appointments/{id}/reschedule` với body `{ "appointmentDate": "2026-10-05T09:30:00", "reason": "..." }`: chỉ đổi lịch `PENDING`; thời gian mới phải ở tương lai, status vẫn `PENDING`. Lý do được xác nhận và hiển thị trong kết quả thao tác trên giao diện Admin (schema hiện tại chưa có cột riêng lưu lý do đổi lịch).
+* `POST /api/v1/admin/appointments/{id}/cancel?reason=...`: chỉ hủy `PENDING` gắn với deposit `DEPOSITED`. Một transaction cập nhật appointment `CANCELLED`, deposit `REFUNDED`, vehicle `AVAILABLE` và ghi một ledger `REFUND` âm/`CONFIRMED`. Lặp lại trả `409` và không ghi bút toán mới.
+* Check-in Staff cập nhật cùng appointment thành `COMPLETED`; Admin thấy thay đổi sau khi tải lại. Staff không được đổi/hủy lịch hoặc hoàn tiền.
 
 #### [ADMIN] 1. Xem danh sách sổ cái cọc (FR-14, UC-18)
 * **Method:** `GET`
@@ -411,7 +424,7 @@ stateDiagram-v2
   "refundAmount": 10000000.00
 }
 ```
-* **Xử lý:** Chuyển trạng thái đơn cọc sang `REFUNDED`, mở khóa trạng thái xe từ `HOLD` trở về `AVAILABLE` để người khác có thể cọc lại.
+* **Xử lý:** Chỉ deposit `DEPOSITED` được hoàn. Nếu có appointment thì appointment phải `PENDING` và được chuyển `CANCELLED`; deposit thành `REFUNDED`, xe về `AVAILABLE`, ghi ledger `REFUND` âm `CONFIRMED`. Các bước cùng một transaction; lặp lại trả `409`.
 * **Response (200 OK):**
 ```json
 {
