@@ -9,10 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
-public record AppUserPrincipal(Long id, String username, String password, String fullName, String email, Role role,
+public record AppUserPrincipal(Long id, String username, String password, String fullName, String email, String phone, Role role,
                                boolean active, boolean locked) implements UserDetails {
     public static AppUserPrincipal from(AppUser user) {
-        return new AppUserPrincipal(user.getId(), user.getUsername(), user.getPasswordHash(), user.getFullName(), user.getEmail(), user.getRole(),
+        return new AppUserPrincipal(user.getId(), user.getUsername(), user.getPasswordHash(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole(),
                 user.isActive(), user.isLocked());
     }
 

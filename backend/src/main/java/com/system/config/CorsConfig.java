@@ -16,7 +16,7 @@ public class CorsConfig implements WebMvcConfigurer {
                     "http://127.0.0.1:5173",
                     "http://localhost:8080"
                 ) // Các cổng Frontend được phép gọi vào
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Các phương thức HTTP được phép
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS") // Các phương thức HTTP được phép
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }

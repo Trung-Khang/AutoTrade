@@ -209,6 +209,9 @@ export const userApi = {
     throw new Error('Không tìm thấy tài khoản người dùng.');
   },
 
+  updateCustomerProfile: (userId, profile) =>
+    apiClient.patch(`/admin/users/${userId}/profile`, profile),
+
   /**
    * Xóa tài khoản người dùng (chỉ được xóa khi không có lịch hẹn hoặc đơn cọc)
    * Target endpoint Backend: DELETE /api/v1/admin/users/{id}

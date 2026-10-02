@@ -60,6 +60,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/verify-reset-otp",
                                 "/api/v1/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/auth/me").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/vehicles/**", "/api/v1/listings/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/deposits", "/api/v1/deposits/*/confirm").hasRole("CUSTOMER")
@@ -72,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/vehicles/**", "/api/v1/listings/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/vehicles/**", "/api/v1/listings/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/vehicles/**", "/api/v1/listings/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/admin/users/*/profile").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/vehicles/**", "/api/v1/listings/**").hasRole("ADMIN")
                         .requestMatchers("/api/v1/auth/**").denyAll()
                         .anyRequest().authenticated())

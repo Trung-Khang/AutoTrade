@@ -3,6 +3,7 @@ package com.system.service;
 import com.system.dto.request.LoginRequest;
 import com.system.dto.request.RegisterRequest;
 import com.system.dto.request.ResetPasswordRequest;
+import com.system.dto.request.UpdateProfileRequest;
 import com.system.dto.response.AuthResponse;
 import com.system.dto.response.CurrentUserResponse;
 import com.system.dto.response.MessageResponse;
@@ -214,11 +215,36 @@ public class AuthService {
     }
 
     public CurrentUserResponse currentUser(AppUser user) {
-        return new CurrentUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getRole().name());
+        return new CurrentUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().name());
+    }
+
+    @Transactional
+    public CurrentUserResponse updateCurrentUser(UpdateProfileRequest request, Long userId) {
+        if (request == null || isBlank(request.fullName())) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Họ tên không được để trống.");
+        }
+        String fullName = request.fullName().trim();
+        if (fullName.length() > 120) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Họ tên không được vượt quá 120 ký tự.");
+        }
+        String phone = normalizePhone(request.phone());
+        if (phone == null || !phone.matches("(03|05|07|08|09)\\d{8}")) {
+            throw new AuthException(HttpStatus.BAD_REQUEST,
+                    "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.");
+        }
+        AppUser user = userRepository.findLockedById(userId)
+                .orElseThrow(() -> new AuthException(HttpStatus.UNAUTHORIZED, "Tài khoản không còn tồn tại."));
+        if (!phone.equals(user.getPhone()) && userRepository.existsByPhone(phone)) {
+            throw new AuthException(HttpStatus.CONFLICT, "Số điện thoại đã được sử dụng.");
+        }
+        user.setFullName(fullName);
+        user.setPhone(phone);
+        userRepository.saveAndFlush(user);
+        return currentUser(user);
     }
 
     private AuthResponse toAuthResponse(AppUser user, String token) {
-        return new AuthResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getRole().name(), token);
+        return new AuthResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().name(), token);
     }
 
     private MessageResponse verificationDispatchMessage(OtpService.OtpDispatch dispatch) {

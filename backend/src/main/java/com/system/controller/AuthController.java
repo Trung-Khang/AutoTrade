@@ -2,6 +2,8 @@ package com.system.controller;
 
 import com.system.dto.request.*;
 import com.system.dto.response.*;
+import com.system.entity.Role;
+import com.system.exception.AuthException;
 import com.system.security.AppUserPrincipal;
 import com.system.security.SecurityUtils;
 import com.system.service.AuthService;
@@ -70,6 +72,17 @@ public class AuthController {
     public ResponseEntity<CurrentUserResponse> currentUser() {
         AppUserPrincipal principal = SecurityUtils.currentUser();
         return ResponseEntity.ok(new CurrentUserResponse(principal.id(), principal.username(), principal.fullName(),
-                principal.email(), principal.role().name()));
+                principal.email(), principal.phone(), principal.role().name()));
+    }
+
+    @PatchMapping("/me")
+    @Operation(summary = "Cập nhật họ tên và số điện thoại của tài khoản hiện tại")
+    public ResponseEntity<CurrentUserResponse> updateProfile(@RequestBody UpdateProfileRequest request) {
+        AppUserPrincipal principal = SecurityUtils.currentUser();
+        if (principal.role() != Role.CUSTOMER) {
+            throw new AuthException(org.springframework.http.HttpStatus.FORBIDDEN,
+                    "Chỉ CUSTOMER được cập nhật thông tin cá nhân tại đây.");
+        }
+        return ResponseEntity.ok(authService.updateCurrentUser(request, principal.id()));
     }
 }

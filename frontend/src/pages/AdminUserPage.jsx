@@ -13,8 +13,12 @@ import {
   FaTimesCircle,
   FaEnvelope,
   FaPhone,
-  FaTrashAlt
+  FaTrashAlt,
+  FaEdit,
+  FaSave,
+  FaTimes
 } from 'react-icons/fa';
+import { normalizeVietnamesePhone, validateVietnamesePhone } from '../utils/phonePolicy';
 import './AdminUserPage.css';
 
 const AdminUserPage = () => {
@@ -26,6 +30,9 @@ const AdminUserPage = () => {
   const [selectedStatus, setSelectedStatus] = useState('ALL');
   const [toast, setToast] = useState(null);
   const [actionLoadingId, setActionLoadingId] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
 
   // Fetch users list
   const fetchUsers = async () => {
@@ -51,6 +58,46 @@ const AdminUserPage = () => {
   const showToast = (type, message) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  const openCustomerEditor = (targetUser) => {
+    setEditingUser(targetUser);
+    setEditFullName(targetUser.fullName || '');
+    setEditPhone(targetUser.phone || '');
+    setToast(null);
+  };
+
+  const closeCustomerEditor = () => {
+    if (!actionLoadingId) {
+      setEditingUser(null);
+    }
+  };
+
+  const handleUpdateCustomerProfile = async (event) => {
+    event.preventDefault();
+    const phoneState = validateVietnamesePhone(editPhone);
+    if (!editFullName.trim()) {
+      showToast('error', 'Họ tên không được để trống.');
+      return;
+    }
+    if (phoneState.state !== 'success') {
+      showToast('error', phoneState.message);
+      return;
+    }
+    setActionLoadingId(editingUser.id);
+    try {
+      await userApi.updateCustomerProfile(editingUser.id, {
+        fullName: editFullName.trim(),
+        phone: normalizeVietnamesePhone(editPhone),
+      });
+      showToast('success', 'Đã cập nhật thông tin Customer @' + editingUser.username + '.');
+      setEditingUser(null);
+      fetchUsers();
+    } catch (err) {
+      showToast('error', err.message || 'Cập nhật thông tin Customer thất bại.');
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   // KPI Counts
@@ -158,6 +205,48 @@ const AdminUserPage = () => {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {editingUser && (
+        <div className="admin-user-modal-backdrop" role="presentation" onMouseDown={closeCustomerEditor}>
+          <div className="admin-user-modal" role="dialog" aria-modal="true" aria-labelledby="customer-profile-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="admin-user-modal-header">
+              <div>
+                <h2 id="customer-profile-title">Chỉnh sửa thông tin Customer</h2>
+                <p>@{editingUser.username}</p>
+              </div>
+              <button type="button" className="modal-close-btn" onClick={closeCustomerEditor} title="Đóng">
+                <FaTimes />
+              </button>
+            </div>
+            <form className="admin-user-modal-form" onSubmit={handleUpdateCustomerProfile}>
+              <label>
+                Họ và tên
+                <input value={editFullName} onChange={(event) => setEditFullName(event.target.value)} maxLength={120} required />
+              </label>
+              <label>
+                Số điện thoại
+                <input
+                  value={editPhone}
+                  onChange={(event) => setEditPhone(event.target.value)}
+                  className={editPhone ? (validateVietnamesePhone(editPhone).state === 'success' ? 'input-success' : 'input-error') : ''}
+                  inputMode="tel"
+                  maxLength={15}
+                  required
+                />
+                <span className={'admin-phone-hint ' + validateVietnamesePhone(editPhone).state}>
+                  {validateVietnamesePhone(editPhone).message}
+                </span>
+              </label>
+              <div className="admin-user-modal-actions">
+                <button type="button" className="modal-cancel-btn" onClick={closeCustomerEditor}>Hủy</button>
+                <button type="submit" className="modal-save-btn" disabled={actionLoadingId === editingUser.id}>
+                  <FaSave /> {actionLoadingId === editingUser.id ? 'Đang lưu...' : 'Lưu thay đổi'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -362,6 +451,17 @@ const AdminUserPage = () => {
                       {/* Actions */}
                       <td style={{ textAlign: 'right' }}>
                         <div className="action-buttons-cell" style={{ justifyContent: 'flex-end' }}>
+                          {u.role === 'CUSTOMER' && (
+                            <button
+                              className="btn-user-edit"
+                              onClick={() => openCustomerEditor(u)}
+                              disabled={isBusy}
+                              title="Chỉnh sửa họ tên và số điện thoại Customer"
+                            >
+                              <FaEdit /> Sửa
+                            </button>
+                          )}
+
                           <button
                             className={`btn-status-toggle ${u.locked ? 'unlock' : 'lock'}`}
                             onClick={() => handleToggleStatus(u)}

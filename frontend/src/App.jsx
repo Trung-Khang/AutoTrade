@@ -27,6 +27,7 @@ import PolicyPage from './pages/PolicyPage';
 import TermsPage from './pages/TermsPage';
 import AboutPage from './pages/AboutPage';
 import FavoritesPage from './pages/FavoritesPage';
+import ProfilePage from './pages/ProfilePage';
 
 import './styles/global.css';
 
@@ -62,6 +63,14 @@ function App() {
               <Route path="/terms" element={<TermsPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
               <Route path="/customer/favorites" element={<FavoritesPage />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Customer Routes */}
               <Route

@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (usernameOrEmail, password) => {
     const response = await apiClient.post('/auth/login', { usernameOrEmail, password });
-    const userData = { id: response.userId, username: response.username, fullName: response.fullName, email: response.email, role: response.role };
+    const userData = { id: response.userId, username: response.username, fullName: response.fullName, email: response.email, phone: response.phone, role: response.role };
     setUser(userData);
     setToken(response.token);
     return { success: true, user: userData };
@@ -36,13 +36,19 @@ export const AuthProvider = ({ children }) => {
 
   const register = (userData) => apiClient.post('/auth/register', userData, { timeout: 50000 });
 
+  const updateProfile = async (profileData) => {
+    const updatedUser = await apiClient.patch('/auth/me', profileData);
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   const logout = async () => {
     try { await apiClient.post('/auth/logout'); } catch { /* Clear a local stateless session even if offline. */ }
     finally { localStorage.removeItem('autotrade_token'); setToken(null); setUser(null); }
   };
 
   return <AuthContext.Provider value={{
-    user, token, loading, login, register, logout,
+    user, token, loading, login, register, updateProfile, logout,
     isAuthenticated: Boolean(user), isCustomer: user?.role === 'CUSTOMER',
     isStaff: user?.role === 'STAFF', isAdmin: user?.role === 'ADMIN',
   }}>{children}</AuthContext.Provider>;
