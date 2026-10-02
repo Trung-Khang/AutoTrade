@@ -1,0 +1,36 @@
+@startuml
+actor "STAFF" as A
+boundary "StaffAppointmentPage\n(React UI)" as UI
+control "StaffAppointmentController" as C
+control "AppointmentService" as S
+collections "AppointmentRepository" as R
+database "PostgreSQL" as DB
+
+== 1. Xem danh sách lịch hẹn ==
+A -> UI : 1. Mở danh sách lịch hẹn
+UI -> C : 2. GET /api/v1/staff/appointments?showroomId&status
+C -> S : 3. getAppointments(showroomId,status)
+S -> R : 4. find appointments
+R -> DB : 5. SELECT appointments
+DB --> R : 6. List<Appointment>
+R --> S : 7. List<Appointment>
+S --> C : 8. List<Appointment>
+C --> UI : 9. 200 OK
+UI --> A : 10. Hiển thị lịch hẹn
+
+== 2. Thực hiện Check-in lịch hẹn ==
+A -> UI : 11. Bấm Check-in
+UI -> C : 12. PUT /api/v1/staff/appointments/{id}/check-in
+C -> S : 13. checkIn(id, request)
+S -> R : 14. findById(id)
+R -> DB : 15. SELECT appointment
+DB --> R : 16. Appointment
+R --> S : 17. Appointment
+S -> R : 18. save(COMPLETED)
+R -> DB : 19. UPDATE appointment
+DB --> R : 20. Appointment
+R --> S : 21. Appointment
+S --> C : 22. Appointment
+C --> UI : 23. 200 OK
+UI --> A : 24. Cập nhật trạng thái
+@enduml

@@ -1,0 +1,22 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+
+actor "Quản trị viên" as U
+boundary "Giao diện quản trị xe\n(AdminVehiclePage)" as UI
+control "AdminVehicleController" as C
+control "VehicleService" as S
+entity "VehicleRepository" as R
+database "Cơ sở dữ liệu" as DB
+
+U --> UI : 1. tạo / sửa / xóa xe
+UI --> C : 2. POST/PUT/DELETE /admin/vehicles
+C --> S : 3. create/update/delete(request)
+S --> R : 4. validate + save/delete
+R --> DB : 5. INSERT / UPDATE / DELETE
+DB --> R : 6. kết quả thao tác
+R --> S : 7. persisted vehicle
+S --> C : 8. VehicleResponse / result
+C --> UI : 9. 200/201/204
+UI --> U : 10. cập nhật danh sách xe
+@enduml

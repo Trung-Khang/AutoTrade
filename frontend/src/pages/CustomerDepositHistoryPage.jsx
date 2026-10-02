@@ -7,12 +7,11 @@ import {
   FaReceipt,
   FaCalendarAlt,
   FaCar,
-  FaClock,
   FaCheckCircle,
   FaTimesCircle,
   FaHourglassHalf,
   FaShieldAlt,
-  FaExclamationCircle
+  FaMapMarkerAlt
 } from 'react-icons/fa';
 
 const CustomerDepositHistoryPage = () => {
@@ -44,25 +43,45 @@ const CustomerDepositHistoryPage = () => {
       case 'PENDING':
       case 'PENDING_PAYMENT':
         return <span style={{ color: '#d97706', backgroundColor: '#fef3c7', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}><FaHourglassHalf /> Chờ thanh toán</span>;
+      case 'CANCELLED':
+        return <span style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}><FaTimesCircle /> Đã hủy cọc</span>;
       case 'REFUNDED':
-        return <span style={{ color: '#64748b', backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>Đã hoàn cọc</span>;
+        return <span style={{ color: '#64748b', backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}><FaShieldAlt /> Đã hoàn cọc</span>;
       default:
-        return <span style={{ color: '#0f172a', backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>{status}</span>;
+        return <span style={{ color: '#0f172a', backgroundColor: '#f1f5f9', padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: '600' }}>{status || 'Đang xử lý'}</span>;
     }
   };
 
-  const renderAppointmentStatus = (status) => {
-    switch (status) {
-      case 'PENDING':
+  const renderAppointmentStatus = (appointmentStatus, depositStatus) => {
+    if (depositStatus === 'PENDING' || depositStatus === 'PENDING_PAYMENT') {
+      return <span style={{ color: '#d97706', backgroundColor: '#fef3c7', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Chờ thanh toán cọc</span>;
+    }
+
+    switch (appointmentStatus) {
       case 'SCHEDULED':
+      case 'CONFIRMED':
         return <span style={{ color: '#2563eb', backgroundColor: '#dbeafe', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Đã lên lịch</span>;
       case 'COMPLETED':
         return <span style={{ color: '#16a34a', backgroundColor: '#dcfce7', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Đã hoàn tất</span>;
       case 'CANCELLED':
         return <span style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Đã hủy</span>;
+      case 'RESCHEDULED':
+        return <span style={{ color: '#8b5cf6', backgroundColor: '#ede9fe', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Đã đổi lịch</span>;
       default:
-        return <span>{status}</span>;
+        return appointmentStatus ? <span>{appointmentStatus}</span> : <span style={{ color: '#64748b', fontStyle: 'italic' }}>Chờ xác nhận</span>;
     }
+  };
+
+  const formatAppointmentDateTime = (dateStr, timeStr) => {
+    if (!dateStr) return 'Chờ sắp xếp lịch';
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return dateStr;
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const time = timeStr || `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return `${day}/${month}/${year} (${time})`;
   };
 
   return (
@@ -77,9 +96,7 @@ const CustomerDepositHistoryPage = () => {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
-          Đang tải dữ liệu đơn cọc...
-        </div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Đang tải dữ liệu đơn cọc...</div>
       ) : error ? (
         <div role="alert" style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: 16, borderRadius: 8 }}>{error}</div>
       ) : deposits.length === 0 ? (
@@ -89,84 +106,54 @@ const CustomerDepositHistoryPage = () => {
           <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '20px' }}>
             Bạn chưa thực hiện đơn đặt cọc giữ chỗ cho chiếc xe nào tại showroom.
           </p>
-          <Link
-            to="/vehicles"
-            style={{
-              display: 'inline-block',
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              padding: '10px 20px',
-              borderRadius: '8px',
-              fontWeight: '600',
-              textDecoration: 'none'
-            }}
-          >
+          <Link to="/vehicles" style={{ display: 'inline-block', backgroundColor: '#2563eb', color: '#ffffff', padding: '10px 20px', borderRadius: '8px', fontWeight: '600', textDecoration: 'none' }}>
             Khám phá xe trong showroom
           </Link>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {deposits.map((item) => (
-            <div
-              key={item.id}
-              style={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #e2e8f0',
-                borderRadius: '12px',
-                padding: '20px',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.03)'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
-                <div>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>Mã đơn cọc: </span>
-                  <strong style={{ fontFamily: 'monospace', fontSize: '14px', color: '#0f172a' }}>{item.depositCode}</strong>
+          {deposits.map((item) => {
+            const depositMoney = item.depositAmount ?? item.amount;
+            const carName = item.vehicleTitle || (item.vehicle ? `${item.vehicle.brand} ${item.vehicle.model}` : null) || 'Xe tại Showroom';
+            const carPrice = item.vehiclePrice ?? item.vehicle?.price;
+            const showroomText = item.showroomName || item.showroom?.name;
+
+            return (
+              <div key={item.id || item.depositId} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>Mã đơn cọc: </span>
+                    <strong style={{ fontFamily: 'monospace', fontSize: '14px', color: '#0f172a' }}>{item.depositCode}</strong>
+                  </div>
+                  <div>{renderDepositStatus(item.status)}</div>
                 </div>
-                <div>{renderDepositStatus(item.status)}</div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', fontSize: '14px' }}>
+                  <div>
+                    <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Xe đặt cọc</div>
+                    <strong style={{ color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCar style={{ color: '#2563eb' }} /> {carName}</strong>
+                    <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>Giá xe: {carPrice ? formatFullPrice(carPrice) : 'Liên hệ'}</div>
+                  </div>
+
+                  <div>
+                    <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Số tiền đã cọc</div>
+                    <strong style={{ color: '#ea580c', fontSize: '16px' }}>{depositMoney ? formatFullPrice(depositMoney) : 'Liên hệ'}</strong>
+                    {item.contractNumber && <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>HĐ số: <span style={{ fontFamily: 'monospace' }}>{item.contractNumber}</span></div>}
+                  </div>
+
+                  <div>
+                    <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Lịch hẹn Showroom</div>
+                    <div style={{ color: '#0f172a', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCalendarAlt style={{ color: '#16a34a' }} /> {formatAppointmentDateTime(item.appointmentDate, item.appointmentTime)}</div>
+                    {showroomText && <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}><FaMapMarkerAlt style={{ color: '#94a3b8' }} /> {showroomText}</div>}
+                    <div style={{ marginTop: '4px' }}>Trạng thái hẹn: {renderAppointmentStatus(item.appointmentStatus, item.status)}</div>
+                  </div>
+                </div>
+
+                {item.hasTestDrive && <div style={{ marginTop: '14px', backgroundColor: '#eff6ff', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Có đăng ký lái thử xe trong buổi hẹn</div>}
+                {item.note && <div style={{ marginTop: '10px', fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>Ghi chú: "{item.note}"</div>}
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', fontSize: '14px' }}>
-                <div>
-                  <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Xe đặt cọc</div>
-                  <strong style={{ color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaCar style={{ color: '#2563eb' }} /> {item.vehicleTitle}
-                  </strong>
-                  <div style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
-                    Giá xe: {formatFullPrice(item.vehiclePrice)}
-                  </div>
-                </div>
-
-                <div>
-                  <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Số tiền đã cọc</div>
-                  <strong style={{ color: '#ea580c', fontSize: '16px' }}>
-                    {formatFullPrice(item.depositAmount)}
-                  </strong>
-                </div>
-
-                <div>
-                  <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Lịch hẹn Showroom</div>
-                  <div style={{ color: '#0f172a', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <FaCalendarAlt style={{ color: '#16a34a' }} /> {item.appointmentDate ? new Date(item.appointmentDate).toLocaleString() : 'Chưa có lịch hẹn'}
-                  </div>
-                  <div style={{ marginTop: '4px' }}>
-                    Trạng thái hẹn: {renderAppointmentStatus(item.appointmentStatus || 'SCHEDULED')}
-                  </div>
-                </div>
-              </div>
-
-              {item.hasTestDrive && (
-                <div style={{ marginTop: '14px', backgroundColor: '#eff6ff', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <FaCheckCircle /> Có đăng ký lái thử xe trong buổi hẹn
-                </div>
-              )}
-
-              {item.note && (
-                <div style={{ marginTop: '10px', fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>
-                  Ghi chú: "{item.note}"
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

@@ -1,0 +1,33 @@
+@startuml
+start
+partition "UI — AdminVehiclePage" {
+  :ADMIN mở quản lý xe;
+  :Chọn Create / Update / Status / Delete;
+}
+partition "Backend — AdminVehicleController" {
+  if (Create?) then (POST)
+    :POST /api/v1/admin/vehicles;
+    :VehicleService.createVehicle();
+  elseif (Update?) then (PUT)
+    :PUT /api/v1/admin/vehicles/{id};
+    :VehicleService.updateVehicle();
+  elseif (Status?) then (PATCH)
+    :PATCH /api/v1/admin/vehicles/{id}/status;
+    :VehicleService.updateVehicleStatus();
+  else (Delete)
+    :DELETE /api/v1/admin/vehicles/{id};
+    :VehicleService.deleteVehicle();
+  endif
+}
+partition "Security" {
+  :SecurityConfig yêu cầu ROLE_ADMIN;
+}
+partition "Database" {
+  :Repository đọc / ghi Vehicle;
+}
+partition "UI — AdminVehiclePage" {
+  :Nhận 200/201/4xx;
+  :Refresh danh sách và hiển thị lỗi nếu có;
+}
+stop
+@enduml

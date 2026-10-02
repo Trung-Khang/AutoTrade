@@ -1,0 +1,34 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+
+actor "Khách / Người mua" as U
+boundary "Giao diện danh sách xe\n(VehicleListPage)" as UI
+boundary "Giao diện chi tiết xe\n(VehicleDetailPage)" as DETAIL
+control "VehicleController" as C
+control "VehicleService" as S
+entity "VehicleRepository" as R
+database "Cơ sở dữ liệu" as DB
+
+U --> UI : 1. nhập từ khóa + bộ lọc
+UI --> C : 2. GET /vehicles?keyword&filters
+C --> S : 3. search/filter(request)
+S --> R : 4. query vehicles
+R --> DB : 5. SELECT vehicles
+DB --> R : 6. danh sách xe
+R --> S : 7. Vehicle list
+S --> C : 8. VehicleResponse[]
+C --> UI : 9. 200 OK
+UI --> U : 10. hiển thị danh sách
+
+U --> DETAIL : 11. chọn một xe
+DETAIL --> C : 12. GET /vehicles/{id}
+C --> S : 13. getVehicleDetail(id)
+S --> R : 14. findById(id)
+R --> DB : 15. SELECT vehicle detail
+DB --> R : 16. vehicle data
+R --> S : 17. Vehicle detail
+S --> C : 18. VehicleDetailResponse
+C --> DETAIL : 19. 200 OK
+DETAIL --> U : 20. hiển thị chi tiết xe
+@enduml

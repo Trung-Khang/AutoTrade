@@ -1,0 +1,61 @@
+@startuml
+actor "CUSTOMER" as A
+boundary "VehicleDetailPage / DepositPage\n(React UI)" as UI
+control "DepositController" as C
+control "DepositService" as S
+database "PostgreSQL" as DB
+collections "VehicleRepository" as VR
+collections "ShowroomRepository" as SR
+collections "DepositRepository" as DR
+collections "AppointmentRepository" as AR
+collections "TransactionLedgerRepository" as LR
+
+== 1. Khởi tạo đặt cọc ==
+A -> UI : 1. Chọn Đặt cọc giữ xe
+UI -> C : 2. POST /api/v1/deposits
+C -> S : 3. createDeposit(request, userId)
+S -> VR : 4. findById(vehicleId)
+VR -> DB : 5. SELECT vehicle
+DB --> VR : 6. Vehicle
+VR --> S : 7. Vehicle
+S -> SR : 8. findById(showroomId)
+SR -> DB : 9. SELECT showroom
+DB --> SR : 10. Showroom
+SR --> S : 11. Showroom
+S -> DR : 12. save(PENDING)
+DR -> DB : 13. INSERT deposit
+DB --> DR : 14. Deposit
+S -> AR : 15. save(PENDING)
+AR -> DB : 16. INSERT appointment
+DB --> AR : 17. Appointment
+S --> C : 18. DepositResponse
+C --> UI : 19. 201 Created + QR/reference
+UI --> A : 20. Hiển thị QR + lịch hẹn
+
+== 2. Xác nhận thanh toán & Giữ xe ==
+A -> UI : 21. Xác nhận thanh toán giả lập
+UI -> C : 22. POST /api/v1/deposits/{id}/confirm
+C -> S : 23. confirmPayment(id)
+S -> DR : 24. findById(id)
+DR -> DB : 25. SELECT deposit
+DB --> DR : 26. Deposit
+DR --> S : 27. Deposit
+S -> VR : 28. updateVehicleStatusIfAvailable(id,HOLD)
+VR -> DB : 29. UPDATE ... WHERE status=AVAILABLE
+DB --> VR : 30. rowsUpdated
+
+alt rowsUpdated = 1 (Thành công)
+  S -> DR : 31a. save(DEPOSITED)
+  S -> LR : 32a. save(DEPOSIT_RECEIVED)
+  LR -> DB : 33a. INSERT ledger
+  DB --> LR : 34a. Ledger
+  S --> C : 35a. ReceiptResponse
+  C --> UI : 36a. 200 OK
+  UI --> A : 37a. Hiển thị receipt + contract
+else rowsUpdated = 0 (Thất bại / Đã có người đặt trước)
+  S -> DR : 31b. save(CANCELLED)
+  S --> C : 32b. VehicleAlreadyReservedException
+  C --> UI : 33b. 409 Conflict
+  UI --> A : 34b. Thông báo xe vừa được giữ bởi giao dịch khác
+end
+@enduml

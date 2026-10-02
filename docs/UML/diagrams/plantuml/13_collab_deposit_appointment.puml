@@ -1,0 +1,45 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+
+actor "Khách hàng" as U
+boundary "Giao diện chi tiết / đặt cọc\n(VehicleDetailPage)" as UI
+boundary "Giao diện thanh toán\n(DepositPage)" as PAY
+control "DepositController" as C
+control "DepositService" as S
+entity "VehicleRepository" as VR
+entity "ShowroomRepository" as SR
+entity "DepositRepository" as DR
+entity "AppointmentRepository" as AR
+database "Cơ sở dữ liệu" as DB
+
+U --> UI : 1. chọn Đặt cọc
+UI --> C : 2. POST /deposits
+C --> S : 3. createDeposit(request,userId)
+S --> VR : 4. kiểm tra xe AVAILABLE
+VR --> DB : 5. SELECT vehicle
+DB --> VR : 6. vehicle status
+S --> SR : 7. kiểm tra showroom
+SR --> DB : 8. SELECT showroom
+DB --> SR : 9. showroom data
+S --> DR : 10. save deposit PENDING
+DR --> DB : 11. INSERT Deposit
+S --> AR : 12. save appointment PENDING
+AR --> DB : 13. INSERT Appointment
+S --> C : 14. DepositResponse
+C --> UI : 15. 201 Created
+UI --> PAY : 16. hiển thị thông tin + QR
+
+U --> PAY : 17. xác nhận thanh toán
+PAY --> C : 18. POST /deposits/{id}/confirm
+C --> S : 19. confirmPayment(id)
+S --> DR : 20. load deposit
+DR --> DB : 21. SELECT deposit
+DB --> DR : 22. deposit data
+S --> VR : 23. atomic AVAILABLE -> HOLD
+VR --> DB : 24. UPDATE vehicle status
+DB --> VR : 25. kết quả cập nhật
+S --> DR : 26. save DEPOSITED / CANCELLED
+S --> C : 27. receipt hoặc 409
+C --> PAY : 28. kết quả xác nhận
+@enduml
