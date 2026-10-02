@@ -17,6 +17,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     Optional<Appointment> findByDepositId(Long depositId);
 
+    Optional<Appointment> findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(Long userId,
+                                                                                               Long vehicleId);
+
     List<Appointment> findByUserIdOrderByAppointmentDateDesc(Long userId);
 
     List<Appointment> findByShowroomIdOrderByAppointmentDateAsc(Long showroomId);

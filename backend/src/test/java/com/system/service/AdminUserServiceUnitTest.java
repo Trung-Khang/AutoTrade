@@ -172,7 +172,7 @@ class AdminUserServiceUnitTest {
     @Test
     @DisplayName("Xóa tài khoản thành công khi không có đơn cọc và lịch hẹn")
     void testDeleteUser_Success() {
-        when(userRepository.findById(2L)).thenReturn(Optional.of(customerUser));
+        when(userRepository.findLockedById(2L)).thenReturn(Optional.of(customerUser));
         when(depositRepository.existsByUserId(2L)).thenReturn(false);
         when(appointmentRepository.existsByUserId(2L)).thenReturn(false);
 
@@ -181,12 +181,13 @@ class AdminUserServiceUnitTest {
         assertNotNull(result);
         assertEquals(true, result.get("success"));
         verify(userRepository, times(1)).delete(customerUser);
+        verify(userRepository, times(1)).flush();
     }
 
     @Test
     @DisplayName("Chặn xóa tài khoản khi người dùng đang có đơn đặt cọc")
     void testDeleteUser_HasDeposits_ThrowsException() {
-        when(userRepository.findById(2L)).thenReturn(Optional.of(customerUser));
+        when(userRepository.findLockedById(2L)).thenReturn(Optional.of(customerUser));
         when(depositRepository.existsByUserId(2L)).thenReturn(true);
 
         AuthException ex = assertThrows(AuthException.class, () ->
@@ -194,12 +195,13 @@ class AdminUserServiceUnitTest {
 
         assertTrue(ex.getMessage().contains("đang có lịch hẹn hoặc đơn đặt cọc"));
         verify(userRepository, never()).delete(any(AppUser.class));
+        verify(userRepository, never()).flush();
     }
 
     @Test
     @DisplayName("Chặn xóa tài khoản khi người dùng đang có lịch hẹn")
     void testDeleteUser_HasAppointments_ThrowsException() {
-        when(userRepository.findById(2L)).thenReturn(Optional.of(customerUser));
+        when(userRepository.findLockedById(2L)).thenReturn(Optional.of(customerUser));
         when(depositRepository.existsByUserId(2L)).thenReturn(false);
         when(appointmentRepository.existsByUserId(2L)).thenReturn(true);
 
@@ -208,6 +210,7 @@ class AdminUserServiceUnitTest {
 
         assertTrue(ex.getMessage().contains("đang có lịch hẹn hoặc đơn đặt cọc"));
         verify(userRepository, never()).delete(any(AppUser.class));
+        verify(userRepository, never()).flush();
     }
 
     @Test
