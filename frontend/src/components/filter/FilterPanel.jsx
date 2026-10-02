@@ -6,6 +6,44 @@ const BRANDS = ['Tất cả', 'Toyota', 'Mazda', 'Honda', 'Hyundai', 'Kia', 'For
 const FUEL_TYPES = ['Tất cả', 'Xăng', 'Dầu', 'Hybrid', 'Điện'];
 const TRANSMISSIONS = ['Tất cả', 'Tự động', 'Số sàn'];
 
+const LOCATIONS = [
+  { label: 'Tất cả khu vực', value: '' },
+  { label: 'Hà Nội', value: 'Hà Nội' },
+  { label: 'TP. Hồ Chí Minh', value: 'Hồ Chí Minh' },
+  { label: 'Đà Nẵng', value: 'Đà Nẵng' },
+  { label: 'Hải Phòng', value: 'Hải Phòng' },
+  { label: 'Cần Thơ', value: 'Cần Thơ' },
+  { label: 'Bình Dương', value: 'Bình Dương' },
+  { label: 'Đồng Nai', value: 'Đồng Nai' },
+  { label: 'Bà Rịa - Vũng Tàu', value: 'Vũng Tàu' },
+  { label: 'Quảng Ninh', value: 'Quảng Ninh' },
+  { label: 'Bắc Ninh', value: 'Bắc Ninh' },
+  { label: 'Hải Dương', value: 'Hải Dương' },
+  { label: 'Thái Nguyên', value: 'Thái Nguyên' },
+  { label: 'Vĩnh Phúc', value: 'Vĩnh Phúc' },
+  { label: 'Phú Thọ', value: 'Phú Thọ' },
+  { label: 'Bắc Giang', value: 'Bắc Giang' },
+  { label: 'Nam Định', value: 'Nam Định' },
+  { label: 'Thái Bình', value: 'Thái Bình' },
+  { label: 'Hưng Yên', value: 'Hưng Yên' },
+  { label: 'Nghệ An', value: 'Nghệ An' },
+  { label: 'Thanh Hóa', value: 'Thanh Hóa' },
+  { label: 'Thừa Thiên Huế', value: 'Huế' },
+  { label: 'Khánh Hòa', value: 'Khánh Hòa' },
+  { label: 'Bình Định', value: 'Bình Định' },
+  { label: 'Quảng Nam', value: 'Quảng Nam' },
+  { label: 'Quảng Ngãi', value: 'Quảng Ngãi' },
+  { label: 'Đắk Lắk', value: 'Đắk Lắk' },
+  { label: 'Gia Lai', value: 'Gia Lai' },
+  { label: 'Lâm Đồng', value: 'Lâm Đồng' },
+  { label: 'Bình Thuận', value: 'Bình Thuận' },
+  { label: 'Long An', value: 'Long An' },
+  { label: 'Tiền Giang', value: 'Tiền Giang' },
+  { label: 'An Giang', value: 'An Giang' },
+  { label: 'Kiên Giang', value: 'Kiên Giang' },
+  { label: 'Tây Ninh', value: 'Tây Ninh' },
+];
+
 const PRICE_RANGES = [
   { label: 'Tất cả mức giá', min: '', max: '' },
   { label: 'Dưới 500 triệu', min: '', max: 500000000 },
@@ -17,6 +55,10 @@ const PRICE_RANGES = [
 const FilterPanel = ({ filters, onFilterChange, onReset }) => {
   const handleKeywordChange = (e) => {
     onFilterChange('keyword', e.target.value);
+  };
+
+  const handleLocationChange = (e) => {
+    onFilterChange('location', e.target.value);
   };
 
   const handleBrandChange = (e) => {
@@ -76,6 +118,21 @@ const FilterPanel = ({ filters, onFilterChange, onReset }) => {
             {BRANDS.map((b) => (
               <option key={b} value={b}>
                 {b}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Khu vực / Tỉnh thành */}
+        <div className="filter-field-group">
+          <label>Khu vực / Tỉnh thành</label>
+          <select
+            value={filters.location || ''}
+            onChange={handleLocationChange}
+          >
+            {LOCATIONS.map((loc) => (
+              <option key={loc.value || 'all'} value={loc.value}>
+                {loc.label}
               </option>
             ))}
           </select>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import VehicleGrid from '../components/vehicle/VehicleGrid';
 import FilterPanel from '../components/filter/FilterPanel';
 import vehicleApi from '../services/vehicleApi';
@@ -6,14 +7,18 @@ import { FaCar, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import './VehicleListPage.css';
 
 const VehicleListPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const locationFromUrl = searchParams.get('location') || '';
+
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Trạng thái bộ lọc tìm kiếm
   const [filters, setFilters] = useState({
-    keyword: '',
-    brand: '',
+    keyword: searchParams.get('keyword') || '',
+    location: locationFromUrl,
+    brand: searchParams.get('brand') || '',
     minPrice: '',
     maxPrice: '',
     fuelType: '',
@@ -66,6 +71,18 @@ const VehicleListPage = () => {
     fetchListings();
   }, [fetchListings]);
 
+  // Đồng bộ location từ URL query param khi người dùng bấm từ Showroom hoặc link trực tiếp
+  useEffect(() => {
+    const locParam = searchParams.get('location') || '';
+    if (locParam !== filters.location) {
+      setFilters((prev) => ({
+        ...prev,
+        location: locParam,
+        page: 0,
+      }));
+    }
+  }, [searchParams]);
+
   // Cập nhật bộ lọc
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
@@ -77,8 +94,10 @@ const VehicleListPage = () => {
 
   // Đặt lại bộ lọc
   const handleResetFilters = () => {
+    setSearchParams({});
     setFilters({
       keyword: '',
+      location: '',
       brand: '',
       minPrice: '',
       maxPrice: '',
@@ -113,6 +132,24 @@ const VehicleListPage = () => {
         {!isLoading && !error && (
           <div className="vehicle-count-badge">
             <FaCar /> <span>{pagination.totalElements} xe trong kho</span>
+            {filters.location && (
+              <span
+                style={{
+                  marginLeft: 10,
+                  padding: '3px 10px',
+                  background: '#fef3c7',
+                  color: '#92400e',
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  fontSize: 13,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                📍 {filters.location}
+              </span>
+            )}
           </div>
         )}
       </div>

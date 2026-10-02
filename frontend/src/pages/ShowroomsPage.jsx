@@ -359,6 +359,14 @@ const SHOWROOMS_DATA = [
   }
 ];
 
+export const getLocationFilterValue = (city) => {
+  if (!city) return '';
+  if (city.includes('Hồ Chí Minh')) return 'Hồ Chí Minh';
+  if (city.includes('Huế')) return 'Huế';
+  if (city.includes('Vũng Tàu')) return 'Vũng Tàu';
+  return city;
+};
+
 export default function ShowroomsPage() {
   const [selectedRegion, setSelectedRegion] = useState('ALL');
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -469,7 +477,10 @@ export default function ShowroomsPage() {
             </div>
 
             <div className="showroom-card-footer">
-              <Link to="/vehicles" className="btn-showroom-action primary">
+              <Link
+                to={`/vehicles?location=${encodeURIComponent(getLocationFilterValue(showroom.city))}`}
+                className="btn-showroom-action primary"
+              >
                 <FaCar /> Xem xe tại đây
               </Link>
               <a
