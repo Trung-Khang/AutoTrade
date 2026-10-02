@@ -66,6 +66,66 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.password-input-wrap {
+  display: flex;
+  gap: 8px;
+}
+
+.password-input-wrap input {
+  min-width: 0;
+  flex: 1;
+}
+
+.password-visibility-button {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 8px;
+  color: #1d4ed8;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 12px;
+}
+
+.password-visibility-button:hover {
+  background: #eff6ff;
+}
+
+.password-policy-checklist {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+}
+
+.password-policy-checklist li {
+  color: #64748b;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+}
+
+.password-policy-checklist li span {
+  color: #94a3b8;
+  font-family: monospace;
+  min-width: 16px;
+}
+
+.password-policy-checklist li.met {
+  color: #166534;
+}
+
+.password-policy-checklist li.met span {
+  color: #16a34a;
+}
+
+.field-error {
+  color: #dc2626;
+  font-size: 12px;
+}
+
 .auth-submit-btn {
   background-color: #2563eb;
   color: #ffffff;

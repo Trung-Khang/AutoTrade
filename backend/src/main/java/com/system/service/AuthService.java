@@ -33,16 +33,19 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
     private final JwtTokenService jwtTokenService;
+    private final PasswordPolicyValidator passwordPolicyValidator;
     private final long resetSessionMinutes;
 
     public AuthService(AppUserRepository userRepository, PasswordResetSessionRepository resetSessionRepository,
                        PasswordEncoder passwordEncoder, OtpService otpService, JwtTokenService jwtTokenService,
+                       PasswordPolicyValidator passwordPolicyValidator,
                        @Value("${app.security.reset-session-minutes}") long resetSessionMinutes) {
         this.userRepository = userRepository;
         this.resetSessionRepository = resetSessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.otpService = otpService;
         this.jwtTokenService = jwtTokenService;
+        this.passwordPolicyValidator = passwordPolicyValidator;
         this.resetSessionMinutes = resetSessionMinutes;
     }
 
@@ -193,7 +196,6 @@ public class AuthService {
         if (request == null || isBlank(request.resetToken())) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
         }
-        validateNewPassword(request.newPassword(), request.confirmPassword());
         PasswordResetSession session = resetSessionRepository
                 .findByTokenHashAndConsumedAtIsNull(OtpService.sha256(request.resetToken()))
                 .orElseThrow(() -> new AuthException(HttpStatus.BAD_REQUEST, "Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn."));
@@ -201,6 +203,7 @@ public class AuthService {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
         }
         AppUser user = session.getUser();
+        passwordPolicyValidator.validate(request.newPassword(), request.confirmPassword(), user.getUsername(), user.getEmail());
         if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Mật khẩu mới phải khác mật khẩu hiện tại.");
         }
@@ -241,16 +244,7 @@ public class AuthService {
         if (!request.phone().trim().matches("[0-9+() .-]{8,30}")) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Số điện thoại không hợp lệ.");
         }
-        validateNewPassword(request.password(), request.password());
-    }
-
-    private void validateNewPassword(String password, String confirmPassword) {
-        if (isBlank(password) || password.length() < 8) {
-            throw new AuthException(HttpStatus.BAD_REQUEST, "Mật khẩu phải có ít nhất 8 ký tự.");
-        }
-        if (!password.equals(confirmPassword)) {
-            throw new AuthException(HttpStatus.BAD_REQUEST, "Mật khẩu xác nhận không khớp.");
-        }
+        passwordPolicyValidator.validate(request.password(), request.confirmPassword(), request.username(), request.email());
     }
 
     private String requireOtp(String code) {

@@ -26,17 +26,19 @@ class AuthServiceResetPasswordTest {
     private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
     private final PasswordResetSessionRepository sessions = mock(PasswordResetSessionRepository.class);
     private final AuthService service = new AuthService(mock(AppUserRepository.class), sessions, encoder,
-            mock(OtpService.class), mock(JwtTokenService.class), 10);
+            mock(OtpService.class), mock(JwtTokenService.class), new PasswordPolicyValidator(), 10);
 
     @Test
     void rejectsCurrentPasswordWithoutConsumingResetToken() {
         AppUser user = new AppUser();
-        String oldHash = encoder.encode("OldPassword123");
+        user.setUsername("resetuser");
+        user.setEmail("reset@example.com");
+        String oldHash = encoder.encode("OldPassword123!");
         user.setPasswordHash(oldHash);
         PasswordResetSession session = sessionFor(user);
 
         AuthException error = assertThrows(AuthException.class, () -> service.resetPassword(
-                new ResetPasswordRequest("valid-token", "OldPassword123", "OldPassword123")));
+                new ResetPasswordRequest("valid-token", "OldPassword123!", "OldPassword123!")));
 
         assertEquals("Mật khẩu mới phải khác mật khẩu hiện tại.", error.getMessage());
         assertEquals(oldHash, user.getPasswordHash());
@@ -44,15 +46,34 @@ class AuthServiceResetPasswordTest {
     }
 
     @Test
-    void acceptsDifferentPasswordAndConsumesResetToken() {
+    void rejectsWeakPasswordWithoutConsumingResetToken() {
         AppUser user = new AppUser();
-        user.setPasswordHash(encoder.encode("OldPassword123"));
+        user.setUsername("resetuser");
+        user.setEmail("reset@example.com");
+        String oldHash = encoder.encode("OldPassword123!");
+        user.setPasswordHash(oldHash);
         PasswordResetSession session = sessionFor(user);
 
-        service.resetPassword(new ResetPasswordRequest("valid-token", "NewPassword123", "NewPassword123"));
+        AuthException error = assertThrows(AuthException.class, () -> service.resetPassword(
+                new ResetPasswordRequest("valid-token", "weak", "weak")));
 
-        assertTrue(encoder.matches("NewPassword123", user.getPasswordHash()));
-        assertFalse(encoder.matches("OldPassword123", user.getPasswordHash()));
+        assertEquals("Mật khẩu phải có ít nhất 8 ký tự.", error.getMessage());
+        assertEquals(oldHash, user.getPasswordHash());
+        assertNull(session.getConsumedAt());
+    }
+
+    @Test
+    void acceptsDifferentPasswordAndConsumesResetToken() {
+        AppUser user = new AppUser();
+        user.setUsername("resetuser");
+        user.setEmail("reset@example.com");
+        user.setPasswordHash(encoder.encode("OldPassword123!"));
+        PasswordResetSession session = sessionFor(user);
+
+        service.resetPassword(new ResetPasswordRequest("valid-token", "NewPassword123!", "NewPassword123!"));
+
+        assertTrue(encoder.matches("NewPassword123!", user.getPasswordHash()));
+        assertFalse(encoder.matches("OldPassword123!", user.getPasswordHash()));
         assertTrue(session.getConsumedAt() != null);
     }
 

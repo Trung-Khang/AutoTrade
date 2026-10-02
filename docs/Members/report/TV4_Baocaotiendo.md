@@ -6,6 +6,15 @@ Phạm vi: Authentication, identity, authorization và tích hợp UI xác thự
 
 ## Phần I - Báo cáo chi tiết
 
+### Cập nhật 01/10 - Củng cố chính sách mật khẩu
+
+- Backend dùng một `PasswordPolicyValidator` chung cho đăng ký và đặt lại mật khẩu. Mật khẩu phải có tối thiểu 8 ký tự, gồm ít nhất một chữ hoa, chữ thường, chữ số và ký tự đặc biệt trong `@#$%^&+=!`.
+- `POST /register` nhận thêm `confirmPassword`; Backend từ chối khi hai mật khẩu không khớp, nên không phụ thuộc riêng vào validation của trình duyệt.
+- `POST /reset-password` áp dụng cùng policy sau khi reset token hợp lệ được tìm thấy. Token không bị consume, password hash không đổi khi policy không hợp lệ; đồng thời vẫn chặn dùng lại mật khẩu hiện tại.
+- UI Register và Reset Password dùng một checklist chung, chặn submit khi chưa đạt rule, báo lỗi confirm password và có nút Hiện/Ẩn mật khẩu. Reset UI chỉ biết username để không tiết lộ email liên kết; Backend vẫn kiểm tra email thật khi lưu mật khẩu.
+- Không thêm bảng, migration, secret, log plaintext hoặc thay đổi JWT/RBAC/OTP/contract `MessageResponse`.
+- Kiểm thử unit đã chạy: `PasswordPolicyValidatorTest`, `AuthServicePasswordPolicyTest`, `AuthServiceResetPasswordTest`, `AuthSecurityUnitTest`: **9/9 PASS**. Full integration trên `autotrade_final` vẫn chờ Final Gate theo điều kiện database chung.
+
 ### 1. Mục tiêu và phạm vi đã đối chiếu
 
 TV4 chịu trách nhiệm cho luồng đăng ký, xác minh email OTP, đăng nhập, đăng xuất, quên/đặt lại mật khẩu, JWT, phân quyền `CUSTOMER`/`STAFF`/`ADMIN`, lỗi `401`/`403` và contract current user.
@@ -59,7 +68,7 @@ Không thuộc phạm vi TV4: CRUD xe, nghiệp vụ trạng thái deposit/appoi
 | Placeholder Login | Khớp | Khôi phục gợi ý `VD: admin, staff, customer` và `Nhập mật khẩu...`. |
 | Tiêu đề/Register fields | Khớp | Dùng `Đăng ký tài khoản`, đủ username, họ tên, email, điện thoại, password, confirm password. |
 | Điện thoại bắt buộc | Khớp | UI và Backend đều bắt buộc, kiểm tra định dạng 8-30 ký tự số/ký tự điện thoại hợp lệ. |
-| Mật khẩu | Đã làm rõ | UI hiển thị tối thiểu 8 ký tự, khớp validation Backend; không giữ nội dung cũ sáu ký tự. |
+| Mật khẩu | Đã củng cố | UI checklist và Backend cùng áp dụng tối thiểu 8 ký tự, hoa, thường, số, ký tự đặc biệt; Backend xác nhận lại confirm password. |
 | Demo account box | Cố ý loại bỏ | Không còn mock login hoặc token giả. Seed account thật do TV3 chuẩn bị và chỉ hiển thị cho demo khi đã có dữ liệu thật. |
 | Quên mật khẩu/OTP | Bổ sung | Login có link quên mật khẩu; có route xác minh email và đặt lại mật khẩu cùng style card hiện hữu. |
 

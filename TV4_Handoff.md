@@ -58,6 +58,21 @@ Authorization: Bearer <access-token>
 
 Không gửi user ID bằng header hoặc request body để thay thế identity trong JWT.
 
+### Contract quên mật khẩu
+
+`POST /forgot-password` nhận username, không nhận một email do người dùng tự
+nhập. Khi username hợp lệ, OTP được gửi tới email đã liên kết với chính account
+đó; message chỉ hiển thị email đã che bớt. Điều này ngăn việc dùng username của
+người A với email của người B để reset nhầm account.
+
+```json
+{ "username": "customer" }
+```
+
+`POST /verify-reset-otp` nhận `{ "username": "customer", "code": "123456" }`.
+`POST /reset-password` vẫn nhận `resetToken`, `newPassword` và
+`confirmPassword`.
+
 ## 3. Ma trận phân quyền đã khóa
 
 | Phạm vi | Quyền |
@@ -84,7 +99,17 @@ STAFF nếu matcher không cho phép rõ ràng.
 - Reset token không được đặt trong URL hoặc localStorage và không được dùng lại.
 - Đặt lại mật khẩu không tự mở khóa account bị khóa.
 
-## 5. Trạng thái SMTP thực tế
+## 5. Chính sách mật khẩu bắt buộc
+
+- Áp dụng tại Backend cho cả `POST /register` và `POST /reset-password`; UI chỉ
+  là hỗ trợ phản hồi sớm, không phải lớp bảo vệ duy nhất.
+- Có tối thiểu 8 ký tự, một chữ hoa, chữ thường, chữ số và ký tự đặc biệt thuộc
+  `@#$%^&+=!`.
+- `confirmPassword` phải trùng `password`/`newPassword`. Reset cũng không được
+  dùng lại mật khẩu hiện tại.
+- Không lưu, log hoặc bàn giao plaintext password. Mật khẩu tiếp tục hash BCrypt.
+
+## 6. Trạng thái SMTP thực tế
 
 - Gmail SMTP, STARTTLS port 587 và App Password từ environment đang hoạt động.
 - Tên gửi hiển thị là AutoTrade; subject đăng ký/reset đúng thương hiệu.
@@ -96,7 +121,7 @@ STAFF nếu matcher không cho phép rõ ràng.
   lỗi JWT, API, OTP hoặc PostgreSQL.
 - Quyết định: không refactor thêm SMTP/OTP chỉ để tác động bộ lọc Spam.
 
-## 6. Bàn giao cho TV1
+## 7. Bàn giao cho TV1
 
 1. Lấy identity bằng `SecurityUtils.currentUser().id()`; không dùng
    `X-User-Id` hoặc user ID do frontend tự gửi.
@@ -106,7 +131,7 @@ STAFF nếu matcher không cho phép rõ ràng.
 4. Giữ transaction, trạng thái xe và chống đặt cọc trùng thuộc phạm vi TV1.
 5. Regression bắt buộc: CUSTOMER chỉ đọc/thao tác deposit của chính mình.
 
-## 7. Bàn giao cho TV2
+## 8. Bàn giao cho TV2
 
 1. Lưu JWT theo contract hiện tại và gắn `Authorization: Bearer ...` qua API
    client; không tạo mock token hoặc mock role.
@@ -119,8 +144,10 @@ STAFF nếu matcher không cho phép rõ ràng.
 5. Test loading, cooldown, OTP sai/hết hạn/dùng lại và mất kết nối Backend.
 6. Lưu screenshot/test evidence cho cả Inbox hoặc Spam, không công bố
    production delivery chỉ từ `emailSent=true`.
+7. Register gửi đủ `password` và `confirmPassword`; không bỏ qua trạng thái
+   disabled/checklist. Reset password dùng `newPassword` và `confirmPassword`.
 
-## 8. Xác nhận với TV3
+## 9. Xác nhận với TV3
 
 - Database acceptance của TV3 đã PASS trên PostgreSQL 18.6, database
   `autotrade_final`, theo `database/guides/Final_Acceptance_Handoff.md`.
@@ -136,7 +163,7 @@ STAFF nếu matcher không cho phép rõ ràng.
 - TV4 chưa chạy Hibernate validate/auth browser flow trên `autotrade_final` vì
   instance TV3 mới cho loopback; chờ TV3 cấp route VPN/tunnel giới hạn theo IP.
 
-## 9. Bàn giao cho TV5
+## 10. Bàn giao cho TV5
 
 - UML/SRS dùng đúng ba role và auth endpoint ở biên bản này.
 - Sequence OTP phải thể hiện SMTP submission và người dùng nhập OTP; không mô
@@ -144,7 +171,7 @@ STAFF nếu matcher không cho phép rõ ràng.
 - Deposit sequence lấy current user từ JWT, không dùng header identity giả.
 - Không thêm class/outbox/migration chưa tồn tại vào sơ đồ chính thức.
 
-## 10. Bằng chứng và việc còn lại
+## 11. Bằng chứng và việc còn lại
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -156,8 +183,9 @@ STAFF nếu matcher không cho phép rõ ràng.
 | Full regression sau merge mới nhất | PENDING Final Gate |
 | TV2 Test Report và screenshot | PENDING |
 | JWT expiry/account lock/role bypass matrix cuối | PENDING Ngày 3 |
+| Password policy unit regression | PASS 9/9 selected tests |
 
-## 11. Known limitations
+## 12. Known limitations
 
 - Gmail hoặc mail trường có thể đưa OTP vào Spam, đặc biệt khi gửi thử liên tục.
 - `POST /logout` là logout stateless; client phải xóa token.
@@ -165,7 +193,7 @@ STAFF nếu matcher không cho phép rõ ràng.
 - Không đánh dấu PASS cho clean bootstrap/full regression cho đến khi chạy lại
   trên database chính thức sau code freeze.
 
-## 12. Checklist bên nhận
+## 13. Checklist bên nhận
 
 - [ ] TV1 xác nhận không dùng identity do client tự khai.
 - [ ] TV2 xác nhận mapping JWT, `MessageResponse` và cảnh báo kiểm tra Spam.
