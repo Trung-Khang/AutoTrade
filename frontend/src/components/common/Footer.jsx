@@ -43,7 +43,7 @@ const Footer = () => {
             <ul className="footer-nav-links">
               <li><a href="mailto:support@autotrade.vn">Email: support@autotrade.vn</a></li>
               <li><a href="tel:19008888">Hotline: 1900 8888</a></li>
-              <li><span>Hà Nội & TP. Hồ Chí Minh</span></li>
+              <li><Link to="/about">Giới thiệu về AutoTrade</Link></li>
             </ul>
           </div>
         </div>

@@ -12,13 +12,16 @@ import {
   FaClipboardList,
   FaShieldAlt,
   FaUserTie,
-  FaUsers
+  FaUsers,
+  FaHeart,
 } from 'react-icons/fa';
+import { useFavorites } from '../../context/FavoritesContext';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated, isAdmin, isStaff, isCustomer, logout } = useAuth();
+  const { favoritesCount } = useFavorites();
   const navigate = useNavigate();
 
   const toggleMenu = () => {
@@ -75,6 +78,15 @@ const Navbar = () => {
             onClick={closeMenu}
           >
             Showroom Xe
+          </NavLink>
+
+          <NavLink
+            to="/favorites"
+            className={({ isActive }) => `nav-link nav-fav-link ${isActive ? 'active' : ''}`}
+            onClick={closeMenu}
+          >
+            <FaHeart className="nav-fav-icon" /> Yêu thích
+            {favoritesCount > 0 && <span className="nav-fav-badge">{favoritesCount}</span>}
           </NavLink>
 
           {/* Customer Links */}
