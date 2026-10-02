@@ -91,7 +91,7 @@ const Navbar = () => {
           {/* Staff Links */}
           {isAuthenticated && (isStaff || isAdmin) && (
             <NavLink
-              to={isAdmin ? '/admin/appointments' : '/staff/appointments'}
+              to="/staff/appointments"
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >

@@ -8,9 +8,7 @@ import com.system.dto.DepositResponse;
 import com.system.dto.CustomerDepositResponse;
 import com.system.dto.ReceiptResponse;
 import com.system.entity.Appointment;
-import com.system.entity.AppUser;
 import com.system.entity.Deposit;
-import com.system.entity.Listing;
 import com.system.entity.Showroom;
 import com.system.entity.TransactionLedger;
 import com.system.entity.Vehicle;
@@ -164,56 +162,6 @@ class DepositServiceUnitTest {
     }
 
     @Test
-    @DisplayName("Lịch sử cọc cũ hỗ trợ listing ID, giá listing và appointment chưa có deposit ID")
-    void getMyDepositsResolvesLegacyListingAndUnlinkedAppointment() {
-        sampleDeposit.setVehicleId(10813L);
-        sampleVehicle.setVariant("2.5Q");
-        Listing listing = new Listing();
-        listing.setId(10813L);
-        listing.setVehicle(sampleVehicle);
-        listing.setPrice(new BigDecimal("1050000000.00"));
-        Appointment legacyAppointment = new Appointment(null, 100L, 1L, 10L,
-                LocalDateTime.parse("2026-10-05T09:30:00"), true, "Dữ liệu cũ");
-        legacyAppointment.setId(15L);
-        legacyAppointment.setStatus("PENDING");
-
-        when(depositRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(List.of(sampleDeposit));
-        when(vehicleRepository.findById(10813L)).thenReturn(Optional.empty());
-        when(listingRepository.findById(10813L)).thenReturn(Optional.of(listing));
-        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
-        when(appointmentRepository.findByDepositId(50L)).thenReturn(Optional.empty());
-        when(appointmentRepository.findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(100L, 1L))
-                .thenReturn(Optional.of(legacyAppointment));
-
-        CustomerDepositResponse response = depositService.getMyDeposits(100L).get(0);
-
-        assertEquals(1L, response.vehicleId());
-        assertEquals("Toyota Camry 2.5Q", response.vehicleTitle());
-        assertEquals(new BigDecimal("1050000000.00"), response.vehiclePrice());
-        assertEquals(15L, response.appointmentId());
-        assertEquals("PENDING", response.appointmentStatus());
-    }
-
-    @Test
-    @DisplayName("Lịch sử cọc lấy giá listing khi vehicle không lưu giá")
-    void getMyDepositsUsesListingPriceWhenVehiclePriceIsNull() {
-        Listing listing = new Listing();
-        listing.setVehicle(sampleVehicle);
-        listing.setPrice(new BigDecimal("850000000.00"));
-        when(depositRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(List.of(sampleDeposit));
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
-        when(listingRepository.findByVehicleId(1L)).thenReturn(List.of(listing));
-        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
-        when(appointmentRepository.findByDepositId(50L)).thenReturn(Optional.empty());
-        when(appointmentRepository.findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(100L, 1L))
-                .thenReturn(Optional.empty());
-
-        CustomerDepositResponse response = depositService.getMyDeposits(100L).get(0);
-
-        assertEquals(new BigDecimal("850000000.00"), response.vehiclePrice());
-    }
-
-    @Test
     @DisplayName("1. Khởi tạo đơn cọc thành công khi xe AVAILABLE và có tùy chọn lái thử")
     void testCreateDeposit_Success() {
         CreateDepositRequest request = new CreateDepositRequest();
@@ -244,42 +192,7 @@ class DepositServiceUnitTest {
         assertTrue(response.isHasTestDrive(), "Lịch hẹn phải ghi nhận tùy chọn lái thử");
         assertNotNull(response.getQrPaymentUrl(), "Phải tự động sinh link mã QR thanh toán giả lập");
         verify(depositRepository, times(1)).save(any(Deposit.class));
-        verify(appointmentRepository, times(1)).save(argThat(appointment ->
-                Long.valueOf(50L).equals(appointment.getDepositId())
-                        && Long.valueOf(100L).equals(appointment.getUserId())
-                        && Long.valueOf(1L).equals(appointment.getVehicleId())));
-    }
-
-    @Test
-    @DisplayName("Staff portal ưu tiên chủ tài khoản và xe từ đơn cọc khi appointment cũ bị lệch ID")
-    void adminAppointmentsFallbackToLinkedDepositData() throws Exception {
-        AppUser wrongUser = new AppUser();
-        wrongUser.setFullName("Khách vãng lai");
-        AppUser owner = new AppUser();
-        owner.setFullName("Nguyễn Ngọc Huy");
-        owner.setPhone("0922008156");
-        var idField = AppUser.class.getDeclaredField("id");
-        idField.setAccessible(true);
-        idField.set(wrongUser, 999L);
-        idField.set(owner, 100L);
-
-        Appointment appointment = new Appointment(50L, 999L, 9999L, 10L,
-                LocalDateTime.parse("2026-10-05T09:30:00"), false, null);
-        appointment.setId(15L);
-        appointment.setStatus("PENDING");
-        when(appointmentRepository.findAll()).thenReturn(List.of(appointment));
-        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
-        when(appUserRepository.findById(999L)).thenReturn(Optional.of(wrongUser));
-        when(appUserRepository.findById(100L)).thenReturn(Optional.of(owner));
-        when(vehicleRepository.findById(9999L)).thenReturn(Optional.empty());
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
-
-        AppointmentResponse response = adminLedgerService.getAppointments().get(0);
-
-        assertEquals("Nguyễn Ngọc Huy", response.customerName());
-        assertEquals("0922008156", response.customerPhone());
-        assertEquals("Toyota Camry", response.vehicleInfo());
-        assertEquals(1L, response.vehicleId());
+        verify(appointmentRepository, times(1)).save(any(Appointment.class));
     }
 
     @Test

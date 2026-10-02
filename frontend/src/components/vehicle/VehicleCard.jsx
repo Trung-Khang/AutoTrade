@@ -16,7 +16,7 @@ const VehicleCard = ({ vehicle }) => {
   const variant = vehicle.variant || '';
   const year = vehicle.manufactureYear || vehicle.manufacture_year;
   const mileage = vehicle.mileage;
-  const location = vehicle.location || vehicle.showroom?.city || vehicle.showroom?.name || 'Showroom AutoTrade';
+  const location = vehicle.location || 'Showroom AutoTrade';
   const price = vehicle.price;
   const seatCount = vehicle.seatCount || vehicle.seat_count;
   const status = (vehicle.status || 'AVAILABLE').toUpperCase();

@@ -46,7 +46,7 @@ const AdminVehiclePage = () => {
   const loadVehicles = async () => {
     setLoading(true);
     try {
-      const res = await vehicleApi.getAdminInventory();
+      const res = await vehicleApi.getListings();
       setVehicles(res.content || []);
     } catch (err) {
       console.error('Lỗi khi tải kho xe:', err);

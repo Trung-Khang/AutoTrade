@@ -29,9 +29,6 @@ const saveStoredVehicles = (list) => {
  * - Admin: POST /api/v1/admin/vehicles, PUT /api/v1/admin/vehicles/{id}, DELETE /api/v1/admin/vehicles/{id}, PATCH /api/v1/admin/vehicles/{id}/status
  */
 export const vehicleApi = {
-  getAdminInventory: (params = { page: 0, size: 100 }) =>
-    apiClient.get('/admin/vehicles', { params }),
-
   /**
    * Lấy danh sách xe showroom (hỗ trợ tìm kiếm, lọc, phân trang, sắp xếp)
    * Endpoint TV1: GET /api/v1/vehicles

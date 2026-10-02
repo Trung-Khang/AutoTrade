@@ -2,13 +2,11 @@ package com.system.service;
 
 import com.system.dto.VehicleRequest;
 import com.system.dto.VehicleResponse;
-import com.system.dto.ListingFilterRequest;
 import com.system.entity.Showroom;
 import com.system.entity.Vehicle;
 import com.system.exception.ResourceNotFoundException;
 import com.system.repository.ShowroomRepository;
 import com.system.repository.VehicleRepository;
-import com.system.specification.VehicleSpecification;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -32,22 +30,7 @@ public class VehicleService {
     // 1. Lấy danh sách xe đang AVAILABLE phục vụ người dùng xem/tìm kiếm (Public Catalog)
     @Transactional(readOnly = true)
     public Page<VehicleResponse> getAvailableVehicles(Pageable pageable) {
-        return searchAvailableVehicles(null, pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<VehicleResponse> searchAvailableVehicles(ListingFilterRequest filter, Pageable pageable) {
-        Page<Vehicle> vehiclePage = vehicleRepository.findAll(
-                VehicleSpecification.availableShowroomVehicles(filter), pageable);
-        return mapWithShowrooms(vehiclePage, pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<VehicleResponse> getShowroomInventory(Pageable pageable) {
-        return mapWithShowrooms(vehicleRepository.findByShowroomIdIsNotNull(pageable), pageable);
-    }
-
-    private Page<VehicleResponse> mapWithShowrooms(Page<Vehicle> vehiclePage, Pageable pageable) {
+        Page<Vehicle> vehiclePage = vehicleRepository.findByStatus("AVAILABLE", pageable);
         List<VehicleResponse> dtoList = new ArrayList<>();
 
         for (Vehicle v : vehiclePage.getContent()) {

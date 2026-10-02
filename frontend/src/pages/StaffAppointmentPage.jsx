@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import depositApi from '../services/depositApi';
-import { useAuth } from '../context/AuthContext';
 import { formatFullPrice } from '../utils/formatters';
 import {
   FaCalendarAlt,
@@ -13,7 +12,6 @@ import {
 } from 'react-icons/fa';
 
 const StaffAppointmentPage = () => {
-  const { isAdmin } = useAuth();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState('ALL');
@@ -25,9 +23,7 @@ const StaffAppointmentPage = () => {
     setLoading(true);
     setError('');
     try {
-      const data = isAdmin
-        ? await depositApi.getAdminAppointments()
-        : await depositApi.getStaffAppointments();
+      const data = await depositApi.getStaffAppointments();
       setAppointments(data || []);
     } catch (err) {
       setError(err.message || 'Không tải được lịch hẹn từ Backend.');
@@ -38,7 +34,7 @@ const StaffAppointmentPage = () => {
 
   useEffect(() => {
     loadAppointments();
-  }, [isAdmin]);
+  }, []);
 
   const handleCheckIn = async (item) => {
     const note = prompt('Ghi chú tiếp đón khách (staff note):', item.hasTestDrive ? 'Khách đã đến đúng giờ, hoàn thành lái thử xe hài lòng.' : 'Khách đã đến showroom xem xe.');
@@ -86,12 +82,10 @@ const StaffAppointmentPage = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <FaClipboardList style={{ color: '#D4AF37' }} /> Quản Lý Lịch Hẹn Khách Hàng
+            <FaClipboardList style={{ color: '#D4AF37' }} /> Quản Lý Lịch Hẹn Khách Hàng (Staff Portal)
           </h1>
           <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
-            {isAdmin
-              ? 'Theo dõi lịch hẹn khách hàng từ dữ liệu PostgreSQL dùng chung.'
-              : 'Tiếp đón khách hàng đến xem xe, kiểm tra tình trạng đặt cọc và ghi nhận kết quả lái thử.'}
+            Tiếp đón khách hàng đến xem xe, kiểm tra tình trạng đặt cọc và bấm Check-in ghi nhận kết quả lái thử (Task TV2-06)
           </p>
         </div>
       </div>
@@ -231,7 +225,7 @@ const StaffAppointmentPage = () => {
                     )}
                   </div>
 
-                  {isPending && !isAdmin && (
+                  {isPending && (
                     <button
                       onClick={() => handleCheckIn(item)}
                       style={{

@@ -38,7 +38,7 @@ const VehicleInfo = ({ vehicle }) => {
   const fuelType = vehicle.fuelType || vehicle.fuel_type || 'Xăng';
   const transmission = vehicle.transmission || 'Tự động';
   const bodyType = vehicle.bodyType || vehicle.body_type || 'Sedan';
-  const location = vehicle.location || vehicle.showroom?.city || vehicle.showroom?.name || 'Showroom AutoTrade';
+  const location = vehicle.location || 'Showroom AutoTrade';
   const color = vehicle.color || 'Chưa xác định';
   const origin = vehicle.origin || 'Chưa xác định';
   const seatCount = vehicle.seatCount || vehicle.seat_count;

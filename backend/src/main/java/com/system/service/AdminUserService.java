@@ -162,7 +162,7 @@ public class AdminUserService {
         }
 
         // 2. Tìm tài khoản cần xóa
-        AppUser targetUser = userRepository.findLockedById(targetUserId)
+        AppUser targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản với ID: " + targetUserId));
 
         // 3. Ràng buộc: Kiểm tra đơn cọc và lịch hẹn
@@ -176,7 +176,6 @@ public class AdminUserService {
 
         // 4. Tiến hành xóa
         userRepository.delete(targetUser);
-        userRepository.flush();
 
         return java.util.Map.of(
                 "success", true,
