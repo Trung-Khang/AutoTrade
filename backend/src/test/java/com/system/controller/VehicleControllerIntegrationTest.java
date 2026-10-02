@@ -1,10 +1,8 @@
 package com.system.controller;
 
-import com.system.entity.Listing;
-import com.system.entity.Source;
+import com.system.entity.Showroom;
 import com.system.entity.Vehicle;
-import com.system.repository.ListingRepository;
-import com.system.repository.SourceRepository;
+import com.system.repository.ShowroomRepository;
 import com.system.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,7 +15,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,28 +29,29 @@ class VehicleControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ListingRepository listingRepository;
-
-    @Autowired
     private VehicleRepository vehicleRepository;
 
     @Autowired
-    private SourceRepository sourceRepository;
+    private ShowroomRepository showroomRepository;
 
-    private Listing testListing;
+    private Vehicle testVehicle;
 
     @BeforeEach
     void setUp() {
-        Source source = sourceRepository.save(new Source("vc-source-" + System.currentTimeMillis(), "https://test.com"));
-
-        Vehicle vehicle = vehicleRepository.save(new Vehicle("Hyundai", "Accent", "1.4 AT", 2021, "Gasoline", "Automatic", 1.4, 5, "Domestic", "Sedan"));
-
-        testListing = listingRepository.save(new Listing(vehicle, source, new BigDecimal("435000000"), 35000, "Cần Thơ",
-                "https://test.com/accent-" + System.currentTimeMillis(), "https://img.test.com/accent.jpg", Instant.now()));
+        Showroom showroom = showroomRepository.save(new Showroom(
+                "AutoTrade Cần Thơ", "1 Test Street", "0123456789", "Cần Thơ"));
+        Vehicle vehicle = new Vehicle("Hyundai", "Accent", "1.4 AT", 2021,
+                "Gasoline", "Automatic", 1.4, 5, "Domestic", "Sedan");
+        vehicle.setPrice(new BigDecimal("435000000"));
+        vehicle.setMileage(35000);
+        vehicle.setImageUrl("https://img.test.com/accent.jpg");
+        vehicle.setShowroomId(showroom.getId());
+        vehicle.setStatus("AVAILABLE");
+        testVehicle = vehicleRepository.save(vehicle);
     }
 
     @Test
-    @DisplayName("GET /api/v1/vehicles: Trả về phân trang và danh sách xe tin đăng thị trường")
+    @DisplayName("GET /api/v1/vehicles: Chỉ trả về kho xe showroom đang mở bán")
     void testGetAllVehiclesPaginated() throws Exception {
         mockMvc.perform(get("/api/v1/vehicles")
                         .param("page", "0")
@@ -82,17 +80,35 @@ class VehicleControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/vehicles/{id}: Lấy chi tiết xe kèm giá bán, ODO, thông số kỹ thuật dạng phẳng DTO")
-    void testGetVehicleByIdFlatDto() throws Exception {
-        mockMvc.perform(get("/api/v1/vehicles/" + testListing.getId())
+    @DisplayName("GET /api/v1/vehicles: Không đếm xe archive hoặc xe không thuộc showroom")
+    void testExcludesMarketplaceArchiveFromShowroomInventory() throws Exception {
+        Vehicle archived = new Vehicle("Hyundai", "Accent", "Marketplace", 2020,
+                "Gasoline", "Automatic", 1.4, 5, "Domestic", "Sedan");
+        archived.setPrice(new BigDecimal("300000000"));
+        archived.setStatus("AVAILABLE");
+        vehicleRepository.save(archived);
+
+        mockMvc.perform(get("/api/v1/vehicles")
+                        .param("vehicleId", archived.getId().toString())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(testListing.getId().intValue())))
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.totalElements", is(0)));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/vehicles/{id}: Lấy chi tiết xe kèm giá bán, ODO, thông số kỹ thuật dạng phẳng DTO")
+    void testGetVehicleByIdFlatDto() throws Exception {
+        mockMvc.perform(get("/api/v1/vehicles/" + testVehicle.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(testVehicle.getId().intValue())))
                 .andExpect(jsonPath("$.brand", is("Hyundai")))
                 .andExpect(jsonPath("$.model", is("Accent")))
                 .andExpect(jsonPath("$.price", is(435000000)))
                 .andExpect(jsonPath("$.mileage", is(35000)))
-                .andExpect(jsonPath("$.manufacture_year", is(2021)))
-                .andExpect(jsonPath("$.image_url", is("https://img.test.com/accent.jpg")));
+                .andExpect(jsonPath("$.manufactureYear", is(2021)))
+                .andExpect(jsonPath("$.imageUrl", is("https://img.test.com/accent.jpg")))
+                .andExpect(jsonPath("$.showroom.city", is("Cần Thơ")));
     }
 }

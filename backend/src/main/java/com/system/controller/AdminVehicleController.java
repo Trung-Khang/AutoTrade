@@ -1,12 +1,17 @@
 package com.system.controller;
 
 import com.system.dto.VehicleRequest;
+import com.system.dto.VehicleResponse;
+import com.system.dto.PageResponse;
 import com.system.entity.Vehicle;
 import com.system.service.VehicleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -18,6 +23,14 @@ public class AdminVehicleController {
 
     public AdminVehicleController(VehicleService vehicleService) {
         this.vehicleService = vehicleService;
+    }
+
+    @GetMapping
+    @Operation(summary = "Lấy toàn bộ kho xe showroom",
+               description = "Trả về xe vật lý thuộc showroom ở mọi trạng thái để Admin quản lý.")
+    public ResponseEntity<PageResponse<VehicleResponse>> getInventory(
+            @PageableDefault(page = 0, size = 100, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(PageResponse.fromPage(vehicleService.getShowroomInventory(pageable)));
     }
 
     // 1. Admin thêm mới một xe vào kho showroom

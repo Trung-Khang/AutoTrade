@@ -26,6 +26,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
 
     Page<Vehicle> findByStatus(String status, Pageable pageable);
 
+    Page<Vehicle> findByShowroomIdIsNotNull(Pageable pageable);
+
     List<Vehicle> findByShowroomIdAndStatus(Long showroomId, String status);
 
     /**
