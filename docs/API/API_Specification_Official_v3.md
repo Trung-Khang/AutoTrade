@@ -321,7 +321,29 @@ stateDiagram-v2
 * **Method:** `GET`
 * **URL:** `/api/v1/deposits/my`
 * **Role yêu cầu:** `CUSTOMER`
-* **Response (200 OK):** Danh sách DTO lịch sử của user hiện tại gồm `id`, `depositCode`, `vehicleId`, `vehicleTitle`, `vehiclePrice`, `depositAmount`, `status`, `appointmentDate`, `appointmentStatus`, `hasTestDrive`, `note`.
+* **Response (200 OK):** Danh sách DTO lịch sử đặt cọc của CUSTOMER đang đăng nhập, sắp xếp mới nhất trước. Mỗi phần tử gồm `depositId`, `depositCode`, `depositAmount`, `status`, `contractNumber`, `vehicleId`, `vehicleTitle`, `vehiclePrice`, `showroomId`, `showroomName`, `appointmentId`, `appointmentDate`, `appointmentStatus`, `hasTestDrive`, `customerNote`, `createdAt`. Các trường liên quan xe/showroom/lịch hẹn có thể là `null` nếu bản ghi liên kết không còn tồn tại.
+```json
+[
+  {
+    "depositId": 1,
+    "depositCode": "DEP-1790904541779",
+    "depositAmount": 105000000.00,
+    "status": "DEPOSITED",
+    "contractNumber": "HD-COC-2026-0001",
+    "vehicleId": 10813,
+    "vehicleTitle": "Toyota Camry 2.5Q",
+    "vehiclePrice": 1050000000.00,
+    "showroomId": 1,
+    "showroomName": "Showroom AutoTrade Trung Tâm",
+    "appointmentId": 15,
+    "appointmentDate": "2026-10-05T09:30:00",
+    "appointmentStatus": "PENDING",
+    "hasTestDrive": true,
+    "customerNote": "Khách hẹn xem xe buổi sáng",
+    "createdAt": "2026-10-02T04:15:00Z"
+  }
+]
+```
 
 > Tất cả endpoint deposit đều yêu cầu JWT CUSTOMER. Thiếu/sai JWT trả `401`; STAFF/ADMIN hoặc CUSTOMER không sở hữu đơn trả `403`. Không gửi `X-User-Id`.
 

@@ -5,6 +5,7 @@ import com.system.dto.AppointmentResponse;
 import com.system.dto.RescheduleAppointmentRequest;
 import com.system.dto.CreateDepositRequest;
 import com.system.dto.DepositResponse;
+import com.system.dto.CustomerDepositResponse;
 import com.system.dto.ReceiptResponse;
 import com.system.entity.Appointment;
 import com.system.entity.Deposit;
@@ -28,7 +29,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -89,6 +92,73 @@ class DepositServiceUnitTest {
         sampleDeposit = new Deposit("DEP-20260930-1001", 1L, 100L, 10L, new BigDecimal("10000000.00"));
         sampleDeposit.setId(50L);
         sampleDeposit.setStatus("PENDING");
+    }
+
+    @Test
+    @DisplayName("Lịch sử đơn cọc map đầy đủ dữ liệu và chỉ truy vấn user hiện tại")
+    void getMyDepositsMapsJoinedDetailsForAuthenticatedOwner() {
+        sampleVehicle.setVariant("2.5Q");
+        sampleVehicle.setPrice(new BigDecimal("1050000000.00"));
+        sampleDeposit.setContractNumber("HD-COC-2026-0001");
+        Instant createdAt = Instant.parse("2026-10-02T04:15:00Z");
+        sampleDeposit.setCreatedAt(createdAt);
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L,
+                LocalDateTime.parse("2026-10-05T09:30:00"), true, "Xem xe buổi sáng");
+        appointment.setId(15L);
+        appointment.setStatus("PENDING");
+
+        when(depositRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(List.of(sampleDeposit));
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appointmentRepository.findByDepositId(50L)).thenReturn(Optional.of(appointment));
+
+        List<CustomerDepositResponse> result = depositService.getMyDeposits(100L);
+
+        assertEquals(1, result.size());
+        CustomerDepositResponse response = result.get(0);
+        assertEquals(50L, response.depositId());
+        assertEquals("DEP-20260930-1001", response.depositCode());
+        assertEquals(new BigDecimal("10000000.00"), response.depositAmount());
+        assertEquals("PENDING", response.status());
+        assertEquals("HD-COC-2026-0001", response.contractNumber());
+        assertEquals(1L, response.vehicleId());
+        assertEquals("Toyota Camry 2.5Q", response.vehicleTitle());
+        assertEquals(new BigDecimal("1050000000.00"), response.vehiclePrice());
+        assertEquals(10L, response.showroomId());
+        assertEquals("Showroom Thủ Đức", response.showroomName());
+        assertEquals(15L, response.appointmentId());
+        assertEquals(LocalDateTime.parse("2026-10-05T09:30:00"), response.appointmentDate());
+        assertEquals("PENDING", response.appointmentStatus());
+        assertTrue(response.hasTestDrive());
+        assertEquals("Xem xe buổi sáng", response.customerNote());
+        assertEquals(createdAt, response.createdAt());
+        verify(depositRepository).findByUserIdOrderByCreatedAtDesc(100L);
+        verify(depositRepository, never()).findAll();
+    }
+
+    @Test
+    @DisplayName("Thiếu dữ liệu liên kết vẫn trả lịch sử với các trường mở rộng null")
+    void getMyDepositsHandlesMissingRelatedRows() {
+        sampleDeposit.setVehicleId(404L);
+        sampleDeposit.setShowroomId(405L);
+        when(depositRepository.findByUserIdOrderByCreatedAtDesc(100L)).thenReturn(List.of(sampleDeposit));
+        when(vehicleRepository.findById(404L)).thenReturn(Optional.empty());
+        when(showroomRepository.findById(405L)).thenReturn(Optional.empty());
+        when(appointmentRepository.findByDepositId(50L)).thenReturn(Optional.empty());
+
+        CustomerDepositResponse response = depositService.getMyDeposits(100L).get(0);
+
+        assertEquals(50L, response.depositId());
+        assertEquals(404L, response.vehicleId());
+        assertNull(response.vehicleTitle());
+        assertNull(response.vehiclePrice());
+        assertEquals(405L, response.showroomId());
+        assertNull(response.showroomName());
+        assertNull(response.appointmentId());
+        assertNull(response.appointmentDate());
+        assertNull(response.appointmentStatus());
+        assertFalse(response.hasTestDrive());
+        assertNull(response.customerNote());
     }
 
     @Test

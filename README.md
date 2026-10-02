@@ -95,4 +95,8 @@ OTP được gửi qua email đã đăng ký. Nếu chưa thấy email, kiểm t
 Spam. Luồng quên mật khẩu yêu cầu username và gửi OTP tới email liên kết với
 username đó.
 
+Mật khẩu khi đăng ký hoặc đặt lại phải có tối thiểu 8 ký tự, gồm chữ hoa, chữ
+thường, chữ số và một ký tự trong `@#$%^&+=!`. Backend luôn kiểm tra lại các
+quy tắc này; không ghi hoặc log mật khẩu.
+
 Không chạy schema, migration hoặc seed trên `autotrade_final` từ máy thành viên.

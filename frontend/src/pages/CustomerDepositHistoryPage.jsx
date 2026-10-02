@@ -58,6 +58,7 @@ const CustomerDepositHistoryPage = () => {
     }
 
     switch (appointmentStatus) {
+      case 'PENDING':
       case 'SCHEDULED':
       case 'CONFIRMED':
         return <span style={{ color: '#2563eb', backgroundColor: '#dbeafe', padding: '3px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>Đã lên lịch</span>;
@@ -117,9 +118,10 @@ const CustomerDepositHistoryPage = () => {
             const carName = item.vehicleTitle || (item.vehicle ? `${item.vehicle.brand} ${item.vehicle.model}` : null) || 'Xe tại Showroom';
             const carPrice = item.vehiclePrice ?? item.vehicle?.price;
             const showroomText = item.showroomName || item.showroom?.name;
+            const customerNote = item.customerNote ?? item.note;
 
             return (
-              <div key={item.id || item.depositId} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
+              <div key={item.depositId || item.id} style={{ backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '12px' }}>
                   <div>
                     <span style={{ fontSize: '12px', color: '#64748b' }}>Mã đơn cọc: </span>
@@ -150,7 +152,7 @@ const CustomerDepositHistoryPage = () => {
                 </div>
 
                 {item.hasTestDrive && <div style={{ marginTop: '14px', backgroundColor: '#eff6ff', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Có đăng ký lái thử xe trong buổi hẹn</div>}
-                {item.note && <div style={{ marginTop: '10px', fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>Ghi chú: "{item.note}"</div>}
+                {customerNote && <div style={{ marginTop: '10px', fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>Ghi chú: "{customerNote}"</div>}
               </div>
             );
           })}
