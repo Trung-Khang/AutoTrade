@@ -1,267 +1,239 @@
-# Sequence Diagrams — Current API Flow
+# Sequence Diagrams — TV5
 
 Ngày đồng bộ: 01/10/2026
 
-## 1. Login + current user
+Quy ước ký hiệu theo mẫu:
+
+- `actor`: người dùng.
+- `boundary`: UI React/page.
+- `control`: Controller/Service xử lý nghiệp vụ.
+- `collections`: Repository.
+- `database`: PostgreSQL.
+- `alt`: nhánh nghiệp vụ/exception.
+
+## 1. Đặt cọc + lịch hẹn + xác nhận cọc
 
 ```plantuml
 @startuml
-actor User
-participant "AuthController" as C
-participant "AuthService" as S
-participant "AppUserRepository" as UR
-participant "PasswordEncoder" as PE
-participant "JwtTokenService" as J
+actor "CUSTOMER" as A
+boundary "VehicleDetailPage / DepositPage\n(React UI)" as UI
+control "DepositController" as C
+control "DepositService" as S
+collections "VehicleRepository" as VR
+collections "ShowroomRepository" as SR
+collections "DepositRepository" as DR
+collections "AppointmentRepository" as AR
+collections "TransactionLedgerRepository" as LR
+database "PostgreSQL" as DB
 
-User -> C: POST /api/v1/auth/login
-C -> S: login(usernameOrEmail,password)
-S -> UR: findByUsernameIgnoreCaseOrEmailIgnoreCase(...)
-UR --> S: AppUser
-S -> PE: matches(password,passwordHash)
-PE --> S: true
-S -> J: generate(user)
-J --> S: signed JWT
-S --> C: AuthResponse
-C --> User: 200 OK + JWT/user
-@enduml
-```
+A -> UI : Chọn Đặt cọc giữ xe
+UI -> C : POST /api/v1/deposits
+C -> S : createDeposit(request, userId)
+S -> VR : findById(vehicleId)
+VR -> DB : SELECT vehicle
+DB --> VR : Vehicle
+VR --> S : Vehicle
+S -> SR : findById(showroomId)
+SR -> DB : SELECT showroom
+DB --> SR : Showroom
+SR --> S : Showroom
+S -> DR : save(PENDING)
+DR -> DB : INSERT deposit
+DB --> DR : Deposit
+S -> AR : save(PENDING)
+AR -> DB : INSERT appointment
+DB --> AR : Appointment
+S --> C : DepositResponse
+C --> UI : 201 + QR/reference
+UI --> A : Hiển thị QR + lịch hẹn
 
-## 2. Register + verify email OTP
+A -> UI : Xác nhận thanh toán giả lập
+UI -> C : POST /api/v1/deposits/{id}/confirm
+C -> S : confirmPayment(id)
+S -> DR : findById(id)
+DR -> DB : SELECT deposit
+DB --> DR : Deposit
+DR --> S : Deposit
+S -> VR : updateVehicleStatusIfAvailable(vehicleId,HOLD)
+VR -> DB : UPDATE WHERE status=AVAILABLE
+DB --> VR : rowsUpdated
 
-```plantuml
-@startuml
-actor Guest
-participant "AuthController" as C
-participant "AuthService" as S
-participant "AppUserRepository" as U
-participant "PasswordEncoder" as PE
-participant "OtpService" as O
-participant "OtpMailService" as M
-participant "AuthOtpRepository" as OR
-
-Guest -> C: POST /auth/register
-C -> S: register(request)
-S -> PE: BCrypt encode(password)
-PE --> S: password hash
-S -> U: save user CUSTOMER
-S -> O: issue(user, VERIFY_EMAIL)
-O -> OR: save OTP hash/expiry
-O -> M: send(email, code)
-M --> O: emailSent
-O --> S: dispatch
-S --> C: MessageResponse
-C --> Guest: 200 OK
-
-Guest -> C: POST /auth/verify-email
-C -> S: verifyEmail(email, code)
-S -> O: verify(...)
-O -> OR: load active OTP + compare SHA-256
-OR --> O: valid
-O --> S: user
-S -> U: mark emailVerified=true
-S --> C: MessageResponse
-C --> Guest: 200 OK
-@enduml
-```
-
-## 3. Forgot password / reset token
-
-```plantuml
-@startuml
-actor User
-participant "AuthController" as C
-participant "AuthService" as S
-participant "OtpService" as O
-participant "PasswordResetSessionRepository" as PR
-
-User -> C: POST /auth/forgot-password
-C -> S: requestPasswordReset(email)
-S -> O: issue(user, RESET_PASSWORD)
-O --> S: generic response
-S --> C: MessageResponse
-C --> User: 200 OK (generic)
-
-User -> C: POST /auth/verify-reset-otp
-C -> S: verifyPasswordResetOtp(email, code)
-S -> O: verify(...)
-O --> S: user
-S -> PR: consume previous sessions
-S -> PR: save reset session(tokenHash, expiry)
-S --> C: ResetVerificationResponse(resetToken)
-C --> User: 200 OK
-
-User -> C: POST /auth/reset-password
-C -> S: resetPassword(resetToken,newPassword,confirmPassword)
-S -> PR: find active session by token hash
-PR --> S: session
-S -> PR: mark consumed
-S --> C: MessageResponse
-C --> User: 200 OK
-@enduml
-```
-
-## 4. Search / filter listing
-
-```plantuml
-@startuml
-actor Guest
-participant "ListingController" as C
-participant "ListingService" as S
-participant "ListingSpecification" as SP
-participant "ListingRepository" as R
-participant "ListingResponseDto" as D
-
-Guest -> C: GET /api/v1/listings?filters&page
-C -> S: searchListings(filter,pageable)
-S -> SP: filterBy(filter)
-SP --> S: Specification<Listing>
-S -> R: findAll(spec,pageable)
-R --> S: Page<Listing>
-S -> D: fromEntity(listing)
-D --> S: ListingResponseDto
-S --> C: PageResponse
-C --> Guest: 200 OK
-@enduml
-```
-
-## 5. Create deposit + appointment
-
-```plantuml
-@startuml
-actor CUSTOMER
-participant "DepositController" as C
-participant "DepositService" as S
-participant "VehicleRepository" as VR
-participant "ShowroomRepository" as SR
-participant "DepositRepository" as DR
-participant "AppointmentRepository" as AR
-
-CUSTOMER -> C: POST /api/v1/deposits
-C -> C: current code reads X-User-Id header (legacy mismatch)
-C -> S: createDeposit(request,userId)
-S -> VR: findById(vehicleId)
-VR --> S: Vehicle
-S -> S: require status AVAILABLE
-S -> SR: findById(showroomId)
-SR --> S: Showroom
-S -> DR: save Deposit(PENDING)
-DR --> S: Deposit
-S -> AR: save Appointment(PENDING)
-AR --> S: Appointment
-S --> C: DepositResponse
-C --> CUSTOMER: 201 Created
-@enduml
-```
-
-**Target security contract:** `userId` must come from JWT `SecurityUtils.currentUser()`, not a browser-provided header.
-
-## 6. Confirm deposit + atomic vehicle lock
-
-```plantuml
-@startuml
-actor CUSTOMER
-participant "DepositController" as C
-participant "DepositService" as S
-participant "DepositRepository" as DR
-participant "VehicleRepository" as VR
-participant "TransactionLedgerRepository" as LR
-
-CUSTOMER -> C: POST /api/v1/deposits/{id}/confirm
-C -> S: confirmPayment(id)
-S -> DR: findById(id)
-DR --> S: Deposit
-
-alt status == DEPOSITED
-  S -> S: getReceipt(id)
-  S --> C: existing ReceiptResponse
-else status == PENDING
-  S -> VR: updateVehicleStatusIfAvailable(vehicleId,HOLD)
-  alt rowsUpdated == 1
-    VR --> S: 1
-    S -> S: status = DEPOSITED
-    S -> DR: save(deposit)
-    S -> LR: save(DEPOSIT_RECEIVED)
-    S --> C: ReceiptResponse
-    C --> CUSTOMER: 200 OK
-  else rowsUpdated == 0
-    VR --> S: 0
-    S -> DR: save(CANCELLED)
-    S --> C: VehicleAlreadyReservedException
-    C --> CUSTOMER: 409 Conflict
-  end
+alt rowsUpdated = 1
+  S -> DR : save(DEPOSITED)
+  S -> LR : save(DEPOSIT_RECEIVED)
+  LR -> DB : INSERT ledger
+  DB --> LR : Ledger
+  S --> C : ReceiptResponse
+  C --> UI : 200 OK
+  UI --> A : Receipt + contract
+else rowsUpdated = 0
+  S -> DR : save(CANCELLED)
+  S --> C : VehicleAlreadyReservedException
+  C --> UI : 409 Conflict
+  UI --> A : Xe vừa được giữ bởi giao dịch khác
 end
 @enduml
 ```
 
-**Current gap:** sequence does not contain an ownership decision because source `confirmPayment()` only accepts `depositId`.
-
-## 7. Staff appointment/check-in
+## 2. Tìm kiếm / lọc xe
 
 ```plantuml
 @startuml
-actor STAFF
-participant "StaffAppointmentController" as C
-participant "AppointmentService" as S
-participant "AppointmentRepository" as R
+actor "Guest" as A
+boundary "VehicleListPage\n(React UI)" as UI
+control "ListingController" as C
+control "ListingService" as S
+control "ListingSpecification" as SP
+collections "ListingRepository" as R
+database "PostgreSQL" as DB
 
-STAFF -> C: GET /api/v1/staff/appointments?showroomId&status
-C -> S: getAppointments(showroomId,status)
-S -> R: findByShowroomId... / findByStatus / findAll
-R --> S: List<Appointment>
-S --> C: list
-C --> STAFF: 200 OK
-
-STAFF -> C: PUT /api/v1/staff/appointments/{id}/check-in
-C -> S: checkIn(id,request)
-S -> R: findById(id)
-R --> S: Appointment
-S -> S: status = COMPLETED
-S -> R: save(appointment)
-R --> S: Appointment
-S --> C: Appointment
-C --> STAFF: 200 OK
+A -> UI : Nhập keyword/filter
+UI -> C : GET /api/v1/listings?filters&page
+C -> S : searchListings(filter,pageable)
+S -> SP : filterBy(filter)
+SP --> S : Specification<Listing>
+S -> R : findAll(spec,pageable)
+R -> DB : SELECT + WHERE + paging
+DB --> R : Page<Listing>
+R --> S : Page<Listing>
+S --> C : PageResponse<ListingResponseDto>
+C --> UI : 200 OK
+UI --> A : Danh sách + phân trang
 @enduml
 ```
 
-## 8. Admin refund
+## 3. Login + JWT
 
 ```plantuml
 @startuml
-actor ADMIN
-participant "AdminLedgerController" as C
-participant "AdminLedgerService" as S
-participant "DepositRepository" as DR
-participant "VehicleRepository" as VR
-participant "TransactionLedgerRepository" as LR
+actor "User" as A
+boundary "LoginPage\n(React UI)" as UI
+control "AuthController" as C
+control "AuthService" as S
+collections "AppUserRepository" as R
+control "PasswordEncoder" as PE
+control "JwtTokenService" as J
+database "PostgreSQL" as DB
 
-ADMIN -> C: POST /api/v1/admin/ledger/{depositId}/refund
-C -> S: refundDeposit(depositId,reason)
-S -> DR: findById(depositId)
-DR --> S: Deposit
-S -> DR: save(status=REFUNDED)
-S -> VR: updateVehicleStatus(vehicleId,AVAILABLE)
-S -> LR: save(REFUND negative amount)
-LR --> S: Ledger
-S --> C: result map
-C --> ADMIN: 200 OK
+A -> UI : Nhập username/email + password
+UI -> C : POST /api/v1/auth/login
+C -> S : login(usernameOrEmail,password)
+S -> R : findByUsernameIgnoreCaseOrEmailIgnoreCase()
+R -> DB : SELECT app_users
+DB --> R : AppUser
+R --> S : AppUser
+S -> PE : matches(password,passwordHash)
+PE --> S : true / false
+alt Hợp lệ
+  S -> J : generate(user)
+  J --> S : signed JWT
+  S --> C : AuthResponse
+  C --> UI : 200 OK + JWT
+  UI --> A : Đăng nhập thành công
+else Sai / bị chặn
+  S --> C : AuthException
+  C --> UI : 401 / 403
+  UI --> A : Thông báo lỗi
+end
 @enduml
 ```
 
-## 9. Security boundary
+## 4. Admin CRUD / trạng thái xe
 
 ```plantuml
 @startuml
-participant Browser
-participant "JwtAuthenticationFilter" as JF
-participant "SecurityConfig" as SC
-participant "Controller" as C
+actor "ADMIN" as A
+boundary "AdminVehiclePage\n(React UI)" as UI
+control "AdminVehicleController" as C
+control "VehicleService" as S
+collections "VehicleRepository" as R
+database "PostgreSQL" as DB
 
-Browser -> JF: Authorization: Bearer <jwt>
-JF -> JF: verify signature + extract user id
-JF -> SC: authenticated principal + authorities
-SC -> C: allow/deny by method + URL + role
-C --> Browser: 200 / 401 / 403
+A -> UI : Create / Update / Status / Delete
+UI -> C : POST/PUT/PATCH/DELETE /api/v1/admin/vehicles/**
+C -> S : create/update/status/delete
+S -> R : find/save/delete Vehicle
+R -> DB : SQL/JPA
+DB --> R : result
+R --> S : result
+S --> C : result
+C --> UI : 200 / 201 / 4xx
+UI --> A : Refresh + message
+note over C
+SecurityConfig yêu cầu ROLE_ADMIN
+end note
 @enduml
 ```
 
-SecurityConfig currently protects `/admin/**`, `/staff/**`, deposit endpoints, `/auth/me` and logout; public GET catalog and auth bootstrap endpoints remain permitAll.
+## 5. Staff appointment + check-in
+
+```plantuml
+@startuml
+actor "STAFF" as A
+boundary "StaffAppointmentPage\n(React UI)" as UI
+control "StaffAppointmentController" as C
+control "AppointmentService" as S
+collections "AppointmentRepository" as R
+database "PostgreSQL" as DB
+
+A -> UI : Mở lịch hẹn
+UI -> C : GET /api/v1/staff/appointments?showroomId&status
+C -> S : getAppointments(showroomId,status)
+S -> R : find appointments
+R -> DB : SELECT appointments
+DB --> R : List<Appointment>
+R --> S : List<Appointment>
+S --> C : List<Appointment>
+C --> UI : 200 OK
+UI --> A : Danh sách lịch hẹn
+
+A -> UI : Bấm Check-in
+UI -> C : PUT /api/v1/staff/appointments/{id}/check-in
+C -> S : checkIn(id,request)
+S -> R : findById(id)
+R -> DB : SELECT appointment
+DB --> R : Appointment
+R --> S : Appointment
+S -> R : save(COMPLETED)
+R -> DB : UPDATE appointment
+DB --> R : Appointment
+R --> S : Appointment
+S --> C : Appointment
+C --> UI : 200 OK
+UI --> A : Cập nhật trạng thái
+@enduml
+```
+
+## 6. Security boundary
+
+```plantuml
+@startuml
+actor Browser
+boundary "React UI" as UI
+control "JwtAuthenticationFilter" as JF
+control "SecurityConfig" as SC
+control "Controller" as C
+database "PostgreSQL" as DB
+
+Browser -> UI : Request + Bearer JWT
+UI -> JF : HTTP request
+JF -> JF : Verify signature + extract user id
+JF -> DB : Load AppUser
+DB --> JF : AppUser/state
+JF -> SC : principal + authorities
+alt Đủ quyền
+  SC -> C : Allow
+  C --> UI : 2xx
+else Thiếu / sai quyền
+  SC --> UI : 401 / 403
+end
+UI --> Browser : Result
+@enduml
+```
+
+## 7. Lưu ý mismatch phải ghi trên diagram
+
+- `DepositController.createDeposit()` hiện đọc `X-User-Id`; đây là legacy mismatch với JWT current-user contract.
+- `getMyDeposits()` cũng còn `X-User-Id`.
+- `confirmPayment(id)` và `getReceipt(id)` chưa nhận current-user để kiểm tra ownership.
+- Không vẽ `X-User-Id` thành thiết kế mục tiêu; chỉ ghi chú mismatch hiện tại.

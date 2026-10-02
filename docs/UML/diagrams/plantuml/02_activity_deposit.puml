@@ -1,0 +1,61 @@
+@startuml
+start
+
+partition "UI — VehicleDetailPage / DepositPage" {
+  :Khách hàng mở chi tiết xe;
+  :Chọn "Đặt cọc giữ xe";
+  :Nhập showroom, ngày/giờ,
+  ghi chú và checkbox lái thử;
+  :Gửi POST /api/v1/deposits;
+}
+
+partition "Backend — DepositController / DepositService" {
+  :Đọc request + userId hiện tại;
+  :Tìm Vehicle theo vehicleId;
+  if (Xe tồn tại và AVAILABLE?) then (Có)
+    :Tìm Showroom;
+    if (Showroom tồn tại?) then (Có)
+      :Tạo Deposit PENDING;
+      :Sinh QR giả lập;
+      :Tạo Appointment PENDING;
+      :Trả DepositResponse 201;
+    else (Không)
+      :404 Showroom;
+      stop
+    endif
+  else (Không)
+    :404 hoặc conflict trạng thái xe;
+    stop
+  endif
+}
+
+partition "UI — DepositPage" {
+  :Hiển thị QR / thông tin đơn cọc;
+  :Khách hàng bấm xác nhận thanh toán giả lập;
+  :POST /api/v1/deposits/{id}/confirm;
+}
+
+partition "Backend — Transaction" {
+  :Tìm Deposit;
+  if (Deposit đã DEPOSITED?) then (Có)
+    :Trả receipt hiện có;
+  else (Chưa)
+    :Atomic UPDATE Vehicle
+    AVAILABLE -> HOLD;
+    if (Rows updated = 1?) then (Có)
+      :Deposit -> DEPOSITED;
+      :Sinh receipt + contract number;
+      :Ghi TransactionLedger DEPOSIT_RECEIVED;
+      :Trả ReceiptResponse 200;
+    else (Không)
+      :Deposit -> CANCELLED;
+      :Trả conflict 409;
+    endif
+  endif
+}
+
+partition "UI — Receipt" {
+  :Hiển thị biên lai / hợp đồng số;
+}
+stop
+@enduml

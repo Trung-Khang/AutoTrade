@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+
+actor "Nhân viên" as U
+boundary "Giao diện quản lý lịch hẹn\n(StaffAppointmentPage)" as UI
+control "StaffAppointmentController" as C
+control "AppointmentService" as S
+entity "AppointmentRepository" as R
+database "Cơ sở dữ liệu" as DB
+
+U --> UI : 1. chọn lịch hẹn
+UI --> C : 2. PUT /staff/appointments/{id}/check-in
+C --> S : 3. checkIn(id, request)
+S --> R : 4. findById(id)
+R --> DB : 5. SELECT appointment
+DB --> R : 6. appointment data
+S --> R : 7. save COMPLETED / check-in result
+R --> DB : 8. UPDATE appointment
+DB --> R : 9. updated row
+R --> S : 10. updated Appointment
+S --> C : 11. AppointmentResponse
+C --> UI : 12. 200 OK
+UI --> U : 13. hiển thị trạng thái đã check-in
+@enduml

@@ -1,0 +1,33 @@
+@startuml
+start
+partition "UI — LoginPage" {
+  :Nhập username/email + password;
+  :POST /api/v1/auth/login;
+}
+partition "Backend — AuthController / AuthService" {
+  :Tìm AppUser;
+  if (Tài khoản tồn tại?) then (Có)
+    :Kiểm tra active / locked / emailVerified;
+    :BCrypt matches password;
+    if (Thông tin hợp lệ?) then (Có)
+      :JwtTokenService.generate(user);
+      :Trả AuthResponse + JWT;
+    else (Không)
+      :401 / 403;
+      stop
+    endif
+  else (Không)
+    :401;
+    stop
+  endif
+}
+partition "UI — AuthContext" {
+  :Lưu token;
+  :Gọi GET /api/v1/auth/me khi cần restore session;
+}
+partition "Backend — Security" {
+  :JwtAuthenticationFilter xác thực Bearer token;
+  :SecurityConfig kiểm tra role;
+}
+stop
+@enduml

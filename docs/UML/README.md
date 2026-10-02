@@ -1,30 +1,29 @@
-# UML Documentation
+# UML — TV5
 
-## Mục đích
+## Source of truth
 
-UML của TV5 phải phản ánh **implementation + API contract đã được xác minh + database migration**, và phải đánh dấu rõ khi ba nguồn này lệch nhau.
+Diagram phải bám:
 
-## Tài liệu
+1. `backend/src/main/java/com/system/controller`
+2. `backend/src/main/java/com/system/service`
+3. `backend/src/main/java/com/system/repository`
+4. `backend/src/main/java/com/system/entity`
+5. `backend/src/main/java/com/system/config/SecurityConfig.java`
+6. `frontend/src/pages`
+7. `frontend/src/App.jsx`
+8. PostgreSQL migrations trong `database/migrations`
 
-| File | Nội dung |
-|---|---|
-| `Use_Case.md` | Actor, use case, business rules, trạng thái |
-| `Class_Diagram.md` | Entity, DTO, service, controller, repository, security/auth classes thực tế |
-| `Sequence_Diagrams.md` | Luồng auth, catalog, deposit, appointment, refund |
-| `Collaboration_Diagrams.md` | Object collaboration cho các flow chính |
-| `Traceability_Matrix.md` | FR → UC → API → Test/Evidence → Status |
-| `../Database/ERD/ERD.md` | Physical relational model theo migration hiện tại |
+## Bộ diagram cần dùng
 
-## Source-of-truth rule
+- `Use_Case.md`: 19 nghiệp vụ baseline từ tài liệu mô tả hệ thống, có trạng thái implementation.
+- `Activity_Diagrams.md`: activity cho deposit, login, Admin CRUD.
+- `Sequence_Diagrams.md`: sequence có ký hiệu UI (`boundary`) → controller/service (`control`) → repository (`collections`) → PostgreSQL (`database`).
+- `Collaboration_Diagrams.md`: message/object view.
+- `Class_Diagram.md`: class thực tế.
+- `Traceability_Matrix.md`: FR → UC → API → Test/Evidence.
 
-1. Backend source quyết định class, method và endpoint thực tế.
-2. Database migration quyết định table, column, key, constraint, status.
-3. API specification là contract cần đồng bộ; nếu lệch source, TV5 ghi `CONTRACT MISMATCH`, không tự bịa implementation.
-4. Test files/evidence quyết định `VERIFIED`.
-5. Auth/security classes **được đưa vào UML** vì đã có trong repository.
-6. `X-User-Id` trong `DepositController` được ghi như legacy mismatch; không coi nó là current-user contract.
-7. Không mô tả ML/regression/valuation/recommendation/comparison/payment thật là chức năng hiện hành.
+## PlantUML source
 
-## Ngày đồng bộ
+Các file `.puml` nằm tại `docs/UML/diagrams/` để import trực tiếp vào PlantUML/VS Code extension.
 
-01/10/2026 — audit branch `TV5`.
+Không sửa diagram bằng cách tự thêm class/API/actor chưa có trong source. Nếu nghiệp vụ có trong tài liệu gốc nhưng chưa có code, đánh dấu `PENDING` hoặc `PARTIAL`.

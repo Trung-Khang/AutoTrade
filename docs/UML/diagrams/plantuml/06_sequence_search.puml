@@ -1,0 +1,23 @@
+@startuml
+actor "Guest" as A
+boundary "VehicleListPage\n(React UI)" as UI
+control "ListingController" as C
+control "ListingService" as S
+control "ListingSpecification" as SP
+collections "ListingRepository" as R
+database "PostgreSQL" as DB
+
+== Tìm kiếm & Phân trang danh sách xe ==
+A -> UI : 1. Nhập keyword/filter
+UI -> C : 2. GET /api/v1/listings?filters&page
+C -> S : 3. searchListings(filter,pageable)
+S -> SP : 4. filterBy(filter)
+SP --> S : 5. Specification<Listing>
+S -> R : 6. findAll(spec,pageable)
+R -> DB : 7. SELECT + WHERE + paging
+DB --> R : 8. Page<Listing>
+R --> S : 9. Page<Listing>
+S --> C : 10. PageResponse<ListingResponseDto>
+C --> UI : 11. 200 OK
+UI --> A : 12. Hiển thị danh sách / phân trang
+@enduml

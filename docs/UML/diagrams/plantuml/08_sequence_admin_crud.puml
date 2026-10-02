@@ -1,0 +1,25 @@
+@startuml
+actor "ADMIN" as A
+boundary "AdminVehiclePage\n(React UI)" as UI
+control "AdminVehicleController" as C
+control "VehicleService" as S
+collections "VehicleRepository" as R
+database "PostgreSQL" as DB
+
+== Quản lý danh sách xe (Create / Update / Status / Delete) ==
+
+note over C
+SecurityConfig yêu cầu ROLE_ADMIN
+end note
+
+A -> UI : 1. Chọn thao tác (Create / Update / Status / Delete)
+UI -> C : 2. HTTP request /api/v1/admin/vehicles/**
+C -> S : 3. create / update / status / delete
+S -> R : 4. find / save / delete Vehicle
+R -> DB : 5. SQL/JPA operation
+DB --> R : 6. result
+R --> S : 7. Vehicle / result
+S --> C : 8. result
+C --> UI : 9. 200 OK / 201 Created / 4xx
+UI --> A : 10. Refresh danh sách + hiển thị thông báo
+@enduml

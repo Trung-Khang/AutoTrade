@@ -1,0 +1,33 @@
+@startuml
+actor "User" as A
+boundary "LoginPage\n(React UI)" as UI
+control "AuthController" as C
+control "AuthService" as S
+collections "AppUserRepository" as R
+control "PasswordEncoder" as PE
+control "JwtTokenService" as J
+database "PostgreSQL" as DB
+
+== Xác thực & Đăng nhập người dùng ==
+A -> UI : 1. Nhập username/email + password
+UI -> C : 2. POST /api/v1/auth/login
+C -> S : 3. login(usernameOrEmail,password)
+S -> R : 4. findByUsernameIgnoreCaseOrEmailIgnoreCase()
+R -> DB : 5. SELECT app_users
+DB --> R : 6. AppUser
+R --> S : 7. AppUser
+S -> PE : 8. matches(password, passwordHash)
+PE --> S : 9. true / false
+
+alt Hợp lệ (Thông tin đúng & Tài khoản hoạt động)
+  S -> J : 10a. generate(user)
+  J --> S : 11a. signed JWT
+  S --> C : 12a. AuthResponse
+  C --> UI : 13a. 200 OK + JWT
+  UI --> A : 14a. Đăng nhập thành công
+else Sai thông tin / Bị khóa
+  S --> C : 10b. AuthException
+  C --> UI : 11b. 401 Unauthorized / 403 Forbidden
+  UI --> A : 12b. Hiển thị lỗi
+end
+@enduml

@@ -1,0 +1,26 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+
+actor "Người dùng" as U
+boundary "Giao diện đăng nhập\n(LoginPage)" as UI
+control "AuthController" as C
+control "AuthService" as S
+entity "AppUserRepository" as R
+control "PasswordEncoder" as PE
+control "JwtTokenService" as JWT
+database "Cơ sở dữ liệu" as DB
+
+U --> UI : 1. nhập username/email + password
+UI --> C : 2. POST /auth/login
+C --> S : 3. login(credentials)
+S --> R : 4. findByUsernameOrEmail(...)
+R --> DB : 5. truy vấn user
+DB --> R : 6. thông tin user
+S --> PE : 7. verify BCrypt
+S --> JWT : 8. generate(user)
+JWT --> S : 9. access token
+S --> C : 10. AuthResponse
+C --> UI : 11. 200 OK + JWT
+UI --> U : 12. chuyển trang theo role
+@enduml
