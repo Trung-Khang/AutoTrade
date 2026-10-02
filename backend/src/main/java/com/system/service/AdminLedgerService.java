@@ -134,15 +134,24 @@ public class AdminLedgerService {
     private AppointmentResponse toResponse(Appointment appointment) {
         Deposit deposit = appointment.getDepositId() == null ? null
                 : depositRepository.findById(appointment.getDepositId()).orElse(null);
-        AppUser customer = appUserRepository.findById(appointment.getUserId()).orElse(null);
-        Vehicle vehicle = vehicleRepository.findById(appointment.getVehicleId()).orElse(null);
-        String vehicleInfo = vehicle == null ? "Xe #" + appointment.getVehicleId()
-                : String.join(" ", Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
-                .filter(value -> value != null && !value.isBlank()).toList());
+
+        Long customerId = appointment.getUserId() != null ? appointment.getUserId()
+                : (deposit != null ? deposit.getUserId() : null);
+        AppUser customer = customerId != null ? appUserRepository.findById(customerId).orElse(null) : null;
+
+        Long vehicleId = appointment.getVehicleId() != null ? appointment.getVehicleId()
+                : (deposit != null ? deposit.getVehicleId() : null);
+        Vehicle vehicle = vehicleId != null ? vehicleRepository.findById(vehicleId).orElse(null) : null;
+
+        String vehicleInfo = vehicle != null
+                ? String.join(" ", Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
+                        .filter(value -> value != null && !value.isBlank()).toList())
+                : (vehicleId != null ? "Xe #" + vehicleId : "Chưa xác định");
+
         return new AppointmentResponse(appointment.getId(), appointment.getId(), appointment.getDepositId(),
                 deposit == null ? null : deposit.getDepositCode(), deposit == null ? null : deposit.getStatus(),
                 deposit == null ? null : deposit.getAmount(), customer == null ? "Khách hàng" : customer.getFullName(),
-                customer == null ? null : customer.getPhone(), vehicleInfo, appointment.getVehicleId(),
+                customer == null ? null : customer.getPhone(), vehicleInfo, vehicleId,
                 appointment.getAppointmentDate(), appointment.isHasTestDrive(), appointment.getStatus(),
                 appointment.getCustomerNote(), appointment.getStaffNote());
     }

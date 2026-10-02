@@ -67,58 +67,104 @@
 }
 
 .password-input-wrap {
+  position: relative;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  width: 100%;
 }
 
 .password-input-wrap input {
-  min-width: 0;
-  flex: 1;
+  width: 100%;
+  padding-right: 42px; /* Dành chỗ cho icon con mắt */
 }
 
 .password-visibility-button {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  border-radius: 8px;
-  color: #1d4ed8;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #94a3b8;
   cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  font-size: 16px;
+  transition: all 0.2s ease;
 }
 
 .password-visibility-button:hover {
-  background: #eff6ff;
+  background: #f1f5f9;
+  color: #334155;
 }
 
-.password-policy-checklist {
-  display: grid;
-  gap: 4px;
-  list-style: none;
-  margin: 2px 0 0;
-  padding: 0;
+/* Hiệu ứng viền input phản hồi theo trạng thái */
+.form-group input.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2;
 }
 
-.password-policy-checklist li {
-  color: #64748b;
+.form-group input.input-error:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.form-group input.input-success {
+  border-color: #22c55e !important;
+}
+
+.form-group input.input-success:focus {
+  border-color: #16a34a !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15) !important;
+}
+
+/* Thông báo gợi ý / trạng thái mật khẩu 1 dòng tinh gọn */
+.password-hint-msg {
   display: flex;
-  font-size: 12px;
+  align-items: flex-start;
   gap: 6px;
+  font-size: 12.5px;
+  margin-top: 6px;
+  line-height: 1.4;
+  transition: all 0.2s ease;
 }
 
-.password-policy-checklist li span {
+.password-hint-msg.default {
+  color: #64748b;
+}
+
+.password-hint-msg.default .hint-icon {
   color: #94a3b8;
-  font-family: monospace;
-  min-width: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  font-size: 13px;
 }
 
-.password-policy-checklist li.met {
-  color: #166534;
+.password-hint-msg.error {
+  color: #dc2626;
+  font-weight: 500;
 }
 
-.password-policy-checklist li.met span {
+.password-hint-msg.error .hint-icon {
+  color: #ef4444;
+  margin-top: 2px;
+  flex-shrink: 0;
+  font-size: 13px;
+}
+
+.password-hint-msg.success {
   color: #16a34a;
+  font-weight: 500;
+}
+
+.password-hint-msg.success .hint-icon {
+  color: #16a34a;
+  margin-top: 2px;
+  flex-shrink: 0;
+  font-size: 13px;
 }
 
 .field-error {

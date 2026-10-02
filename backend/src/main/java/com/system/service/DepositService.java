@@ -249,17 +249,48 @@ public class DepositService {
     @Transactional(readOnly = true)
     public List<CustomerDepositResponse> getMyDeposits(Long userId) {
         return depositRepository.findByUserIdOrderByCreatedAtDesc(userId).stream().map(deposit -> {
-            Vehicle vehicle = deposit.getVehicleId() == null
-                    ? null : vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+            Vehicle vehicle = null;
+            com.system.entity.Listing legacyListing = null;
+            if (deposit.getVehicleId() != null) {
+                vehicle = vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+                if (vehicle == null && listingRepository != null) {
+                    legacyListing = listingRepository.findById(deposit.getVehicleId()).orElse(null);
+                    if (legacyListing != null) {
+                        vehicle = legacyListing.getVehicle();
+                    }
+                }
+            }
             Showroom showroom = deposit.getShowroomId() == null
                     ? null : showroomRepository.findById(deposit.getShowroomId()).orElse(null);
             Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
+            if (appointment == null && vehicle != null) {
+                appointment = appointmentRepository
+                        .findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(userId, vehicle.getId())
+                        .orElse(null);
+            }
+            if (appointment == null && deposit.getVehicleId() != null
+                    && (vehicle == null || !deposit.getVehicleId().equals(vehicle.getId()))) {
+                appointment = appointmentRepository
+                        .findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(userId, deposit.getVehicleId())
+                        .orElse(null);
+            }
             String vehicleTitle = vehicle == null ? null
                     : String.join(" ", java.util.stream.Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
                     .filter(value -> value != null && !value.isBlank()).toList());
+            BigDecimal vehiclePrice = vehicle == null ? null : vehicle.getPrice();
+            if (vehiclePrice == null && legacyListing != null) {
+                vehiclePrice = legacyListing.getPrice();
+            }
+            if (vehiclePrice == null && vehicle != null && listingRepository != null) {
+                List<com.system.entity.Listing> listings = listingRepository.findByVehicleId(vehicle.getId());
+                if (listings != null && !listings.isEmpty() && listings.get(0).getPrice() != null) {
+                    vehiclePrice = listings.get(0).getPrice();
+                }
+            }
+            Long responseVehicleId = vehicle == null ? deposit.getVehicleId() : vehicle.getId();
             return new CustomerDepositResponse(deposit.getId(), deposit.getDepositCode(), deposit.getAmount(),
-                    deposit.getStatus(), deposit.getContractNumber(), deposit.getVehicleId(), vehicleTitle,
-                    vehicle == null ? null : vehicle.getPrice(), deposit.getShowroomId(),
+                    deposit.getStatus(), deposit.getContractNumber(), responseVehicleId, vehicleTitle,
+                    vehiclePrice, deposit.getShowroomId(),
                     showroom == null ? null : showroom.getName(),
                     appointment == null ? null : appointment.getId(),
                     appointment == null ? null : appointment.getAppointmentDate(),

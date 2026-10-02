@@ -27,6 +27,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     boolean existsByUserId(Long userId);
 
+    Optional<Appointment> findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(Long userId, Long vehicleId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Appointment a WHERE a.id = :id")
     Optional<Appointment> findLockedById(@Param("id") Long id);
