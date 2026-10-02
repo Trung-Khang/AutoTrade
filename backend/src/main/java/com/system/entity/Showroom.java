@@ -29,6 +29,12 @@ public class Showroom {
     public Showroom() {
     }
 
+    public Showroom(String name, String address) {
+        this.name = name;
+        this.address = address;
+        this.createdAt = Instant.now();
+    }
+
     public Showroom(String name, String address, String phone, String city) {
         this.name = name;
         this.address = address;

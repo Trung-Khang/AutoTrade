@@ -316,3 +316,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  .navbar, .footer, .success-actions, .card-btn-outline {
+    display: none !important;
+  }
+  .deposit-page-container {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .deposit-success-card {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .success-summary-box {
+    border: 1px solid #333 !important;
+    font-size: 14px !important;
+  }
+}

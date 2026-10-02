@@ -12,7 +12,8 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaEnvelope,
-  FaPhone
+  FaPhone,
+  FaTrashAlt
 } from 'react-icons/fa';
 import './AdminUserPage.css';
 
@@ -105,6 +106,33 @@ const AdminUserPage = () => {
       fetchUsers();
     } catch (err) {
       showToast('error', err.message || 'Cập nhật vai trò thất bại.');
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Delete User with Constraints Check
+  const handleDeleteUser = async (targetUser) => {
+    if (targetUser.id === currentUser?.id) {
+      alert('Bạn không thể tự xóa tài khoản quản trị đang đăng nhập của chính mình!');
+      return;
+    }
+
+    if (!window.confirm(
+      `CẢNH BÁO XÓA TÀI KHOẢN:\n\n` +
+      `Bạn có chắc chắn muốn xóa tài khoản "${targetUser.username}" (${targetUser.fullName || 'Chưa cập nhật tên'})?\n\n` +
+      `* Quy tắc hệ thống: Chỉ xóa được tài khoản khi người dùng này KHÔNG CÓ lịch hẹn và KHÔNG CÓ đơn đặt cọc nào.`
+    )) {
+      return;
+    }
+
+    setActionLoadingId(targetUser.id);
+    try {
+      const res = await userApi.deleteUser(targetUser.id);
+      showToast('success', res.message || `Đã xóa tài khoản "${targetUser.username}" thành công.`);
+      fetchUsers();
+    } catch (err) {
+      showToast('error', err.message || 'Không thể xóa tài khoản này.');
     } finally {
       setActionLoadingId(null);
     }
@@ -349,6 +377,15 @@ const AdminUserPage = () => {
                                 <FaLock /> Khóa lại
                               </>
                             )}
+                          </button>
+
+                          <button
+                            className="btn-user-delete"
+                            onClick={() => handleDeleteUser(u)}
+                            disabled={isBusy || isCurrent}
+                            title={isCurrent ? 'Không thể tự xóa tài khoản của bạn' : 'Xóa tài khoản người dùng'}
+                          >
+                            <FaTrashAlt /> Xóa
                           </button>
                         </div>
                       </td>

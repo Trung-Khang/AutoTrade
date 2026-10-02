@@ -17,4 +17,6 @@ public interface DepositRepository extends JpaRepository<Deposit, Long> {
     List<Deposit> findByVehicleId(Long vehicleId);
 
     List<Deposit> findByStatus(String status);
+
+    boolean existsByUserId(Long userId);
 }

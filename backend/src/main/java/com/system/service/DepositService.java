@@ -31,17 +31,20 @@ public class DepositService {
     private final ShowroomRepository showroomRepository;
     private final AppointmentRepository appointmentRepository;
     private final TransactionLedgerRepository ledgerRepository;
+    private final com.system.repository.ListingRepository listingRepository;
 
     public DepositService(DepositRepository depositRepository,
                           VehicleRepository vehicleRepository,
                           ShowroomRepository showroomRepository,
                           AppointmentRepository appointmentRepository,
-                          TransactionLedgerRepository ledgerRepository) {
+                          TransactionLedgerRepository ledgerRepository,
+                          com.system.repository.ListingRepository listingRepository) {
         this.depositRepository = depositRepository;
         this.vehicleRepository = vehicleRepository;
         this.showroomRepository = showroomRepository;
         this.appointmentRepository = appointmentRepository;
         this.ledgerRepository = ledgerRepository;
+        this.listingRepository = listingRepository;
     }
 
     /**
@@ -50,22 +53,54 @@ public class DepositService {
      */
     @Transactional
     public DepositResponse createDeposit(CreateDepositRequest request, Long userId) {
-        // 1. Kiểm tra xe tồn tại và trạng thái
-        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + request.getVehicleId()));
-
-        if (!"AVAILABLE".equalsIgnoreCase(vehicle.getStatus())) {
-            throw new VehicleNotAvailableException("Rất tiếc! Xe này hiện tại không thể đặt cọc (Trạng thái hiện tại: " + vehicle.getStatus() + ").");
+        // 1. Kiểm tra xe tồn tại và trạng thái (hỗ trợ cả vehicleId hoặc listingId)
+        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId()).orElse(null);
+        if (vehicle == null && listingRepository != null) {
+            com.system.entity.Listing listing = listingRepository.findById(request.getVehicleId()).orElse(null);
+            if (listing != null) {
+                vehicle = listing.getVehicle();
+            }
         }
 
-        // 2. Kiểm tra showroom
-        Showroom showroom = showroomRepository.findById(request.getShowroomId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Showroom với ID: " + request.getShowroomId()));
+        if (vehicle == null) {
+            throw new ResourceNotFoundException("Không tìm thấy xe với ID: " + request.getVehicleId());
+        }
 
-        // 3. Sinh mã đơn cọc và URL QR thanh toán giả lập
+        String currentStatus = vehicle.getStatus() != null ? vehicle.getStatus().toUpperCase() : "AVAILABLE";
+        if ("HOLD".equals(currentStatus) || "RESERVED".equals(currentStatus) || "SOLD".equals(currentStatus)) {
+            throw new VehicleNotAvailableException("Rất tiếc! Xe này hiện tại không thể đặt cọc (Trạng thái hiện tại: " + currentStatus + ").");
+        }
+
+        // 2. Kiểm tra showroom (fallback về showroom đầu tiên nếu không tìm thấy)
+        Showroom showroom = null;
+        if (request.getShowroomId() != null) {
+            showroom = showroomRepository.findById(request.getShowroomId()).orElse(null);
+        }
+        if (showroom == null) {
+            showroom = showroomRepository.findAll().stream().findFirst()
+                    .orElseGet(() -> new Showroom("Showroom AutoTrade Trung Tâm", "Hồ Chí Minh"));
+        }
+
+        // 3. Tính tiền cọc: 10% giá trị xe (hoặc tối thiểu 10.000.000 VNĐ)
+        BigDecimal vehiclePrice = BigDecimal.ZERO;
+        if (listingRepository != null) {
+            List<com.system.entity.Listing> listings = listingRepository.findByVehicleId(vehicle.getId());
+            if (listings != null && !listings.isEmpty() && listings.get(0).getPrice() != null) {
+                vehiclePrice = listings.get(0).getPrice();
+            }
+        }
+
+        BigDecimal depositAmount;
+        if (vehiclePrice.compareTo(BigDecimal.ZERO) > 0) {
+            depositAmount = vehiclePrice.multiply(new BigDecimal("0.10")).setScale(0, java.math.RoundingMode.HALF_UP);
+        } else {
+            depositAmount = new BigDecimal("10000000.00");
+        }
+
+        // Sinh mã đơn cọc và URL QR thanh toán Vietcombank - NGUYEN TRUNG KHANG - 1050242933
         String depositCode = "DEP-" + System.currentTimeMillis();
-        BigDecimal depositAmount = new BigDecimal("10000000.00"); // Tiền cọc giữ xe tiêu chuẩn 10 triệu
-        String mockQrUrl = "https://api.vietqr.io/image/970422-999999999-compact2.jpg?amount=10000000&addInfo=" + depositCode;
+        String mockQrUrl = "https://api.vietqr.io/image/970436-1050242933-compact2.jpg?amount=" 
+                + depositAmount.longValue() + "&addInfo=" + depositCode + "&accountName=NGUYEN%20TRUNG%20KHANG";
 
         Deposit deposit = new Deposit(depositCode, vehicle.getId(), userId, showroom.getId(), depositAmount);
         deposit.setQrCodeUrl(mockQrUrl);
