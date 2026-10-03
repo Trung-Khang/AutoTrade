@@ -14,6 +14,7 @@ import com.system.exception.VehicleAlreadyReservedException;
 import com.system.exception.VehicleNotAvailableException;
 import com.system.exception.AuthException;
 import com.system.repository.AppointmentRepository;
+import com.system.repository.AppUserRepository;
 import com.system.repository.DepositRepository;
 import com.system.repository.ShowroomRepository;
 import com.system.repository.TransactionLedgerRepository;
@@ -35,19 +36,22 @@ public class DepositService {
     private final AppointmentRepository appointmentRepository;
     private final TransactionLedgerRepository ledgerRepository;
     private final com.system.repository.ListingRepository listingRepository;
+    private final AppUserRepository appUserRepository;
 
     public DepositService(DepositRepository depositRepository,
                           VehicleRepository vehicleRepository,
                           ShowroomRepository showroomRepository,
                           AppointmentRepository appointmentRepository,
                           TransactionLedgerRepository ledgerRepository,
-                          com.system.repository.ListingRepository listingRepository) {
+                          com.system.repository.ListingRepository listingRepository,
+                          AppUserRepository appUserRepository) {
         this.depositRepository = depositRepository;
         this.vehicleRepository = vehicleRepository;
         this.showroomRepository = showroomRepository;
         this.appointmentRepository = appointmentRepository;
         this.ledgerRepository = ledgerRepository;
         this.listingRepository = listingRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     /**
@@ -76,13 +80,20 @@ public class DepositService {
 
         // 2. Kiểm tra showroom (fallback về showroom đầu tiên nếu không tìm thấy)
         Showroom showroom = null;
-        if (request.getShowroomId() != null) {
-            showroom = showroomRepository.findById(request.getShowroomId()).orElse(null);
+        if (request.getAppointmentDate() == null) {
+            throw new IllegalArgumentException("Ngày giờ hẹn là bắt buộc.");
         }
-        if (showroom == null) {
-            showroom = showroomRepository.findAll().stream().findFirst()
-                    .orElseGet(() -> new Showroom("Showroom AutoTrade Trung Tâm", "Hồ Chí Minh"));
+        Long vehicleShowroomId = vehicle.getShowroomId();
+        Long showroomId = vehicleShowroomId != null ? vehicleShowroomId : request.getShowroomId();
+        if (showroomId == null) {
+            throw new IllegalArgumentException("Xe chưa được gắn showroom hợp lệ.");
         }
+        if (request.getShowroomId() != null && vehicleShowroomId != null
+                && !request.getShowroomId().equals(vehicleShowroomId)) {
+            throw new IllegalArgumentException("Showroom đặt lịch không trùng showroom của xe.");
+        }
+        showroom = showroomRepository.findById(showroomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy showroom với ID: " + showroomId));
 
         // 3. Tính tiền cọc: 10% giá trị xe (hoặc tối thiểu 10.000.000 VNĐ)
         BigDecimal vehiclePrice = BigDecimal.ZERO;
@@ -119,6 +130,8 @@ public class DepositService {
                 request.isHasTestDrive(),
                 request.getCustomerNote()
         );
+        appointment.setAssignedStaffId(resolveAssignedStaff(request.getAssignedStaffId(), showroom.getId(),
+                request.getAppointmentDate(), vehicle.getShowroomId() == null));
         appointment = appointmentRepository.save(appointment);
 
         // 5. Chuẩn bị response
@@ -138,6 +151,50 @@ public class DepositService {
         response.setCreatedAt(deposit.getCreatedAt());
 
         return response;
+    }
+
+    private Long resolveAssignedStaff(Long requestedStaffId, Long showroomId,
+                                      java.time.LocalDateTime appointmentDate,
+                                      boolean allowLegacyUnassigned) {
+        if (requestedStaffId != null) {
+            com.system.entity.AppUser staff = appUserRepository.findById(requestedStaffId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên được chọn."));
+            validateStaffForShowroom(staff, showroomId);
+            rejectIfBusy(staff.getId(), appointmentDate);
+            return staff.getId();
+        }
+
+        List<com.system.entity.AppUser> staffList = appUserRepository
+                .findByShowroomIdAndRoleAndActiveTrueAndLockedFalse(showroomId, com.system.entity.Role.STAFF);
+        if (staffList.isEmpty() && allowLegacyUnassigned) {
+            return null;
+        }
+        for (com.system.entity.AppUser staff : staffList) {
+            if (!appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                    staff.getId(), appointmentDate, java.util.Set.of("PENDING", "SCHEDULED"))) {
+                return staff.getId();
+            }
+        }
+
+        throw new AuthException(HttpStatus.CONFLICT,
+                "Khung giờ này hiện không còn nhân viên trống. Vui lòng chọn giờ khác.");
+    }
+
+    private void validateStaffForShowroom(com.system.entity.AppUser staff, Long showroomId) {
+        if (staff.getRole() != com.system.entity.Role.STAFF || !staff.isActive() || staff.isLocked()) {
+            throw new IllegalArgumentException("Nhân viên được chọn không còn hoạt động.");
+        }
+        if (!showroomId.equals(staff.getShowroomId())) {
+            throw new IllegalArgumentException("Nhân viên không thuộc showroom của xe.");
+        }
+    }
+
+    private void rejectIfBusy(Long staffId, java.time.LocalDateTime appointmentDate) {
+        if (appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                staffId, appointmentDate, java.util.Set.of("PENDING", "SCHEDULED"))) {
+            throw new AuthException(HttpStatus.CONFLICT,
+                    "Nhân viên đã kín lịch ở khung giờ này. Vui lòng chọn nhân viên hoặc giờ khác.");
+        }
     }
 
     /**
