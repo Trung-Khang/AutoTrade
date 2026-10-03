@@ -1,0 +1,14 @@
+[
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:41:22.468507+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:42:08.713190+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  }
+]
