@@ -158,12 +158,12 @@ export const OfficialReceiptContent = ({ receiptData }) => {
                     ★ MST: 0317899999 - TP.HCM ★
                   </textPath>
                 </text>
-                <text x="100" y="82" fill="#dc2626" fontSize="16" textAnchor="middle">★</text>
-                <text x="100" y="103" fill="#dc2626" fontSize="12" fontWeight="900" letterSpacing="0.8" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif">
+                <text x="100" y="78" fill="#dc2626" fontSize="15" textAnchor="middle">★</text>
+                <text x="100" y="100" fill="#dc2626" fontSize="11" fontWeight="900" letterSpacing="0.8" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif">
                   TỔNG GIÁM ĐỐC
                 </text>
-                <text x="100" y="120" fill="#dc2626" fontSize="9.5" fontWeight="800" letterSpacing="0.5" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif">
-                  ĐÃ KÝ SỐ
+                <text x="100" y="118" fill="#dc2626" fontSize="11" fontWeight="900" letterSpacing="0.8" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif">
+                  ĐÃ KÝ
                 </text>
               </svg>
             </div>

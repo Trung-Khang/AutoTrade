@@ -189,8 +189,8 @@
 /* Con Dấu Mộc Đỏ Tròn Công Ty Đè Trùm Lên Chữ Ký */
 .corporate-seal-overlay {
   position: absolute;
-  left: 12px;
-  top: -10px;
+  left: 50px;
+  top: -8px;
   width: 110px;
   height: 110px;
   z-index: 2;
