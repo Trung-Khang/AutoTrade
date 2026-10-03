@@ -101,6 +101,10 @@ export default function AdminDepositLedgerPage() {
       setError('Vui lòng chọn ngày giờ mới cho lịch hẹn.');
       return;
     }
+    if (new Date(newDate) <= new Date()) {
+      setError('Thời gian hẹn mới phải ở tương lai. Vui lòng chọn ngày giờ hợp lệ.');
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {
@@ -506,6 +510,7 @@ export default function AdminDepositLedgerPage() {
                     id="newAppointmentDate"
                     type="datetime-local"
                     className="modal-input"
+                    min={formatLocalIso(new Date())}
                     value={rescheduleModal.newDate}
                     onChange={(e) => setRescheduleModal({ ...rescheduleModal, newDate: e.target.value })}
                     required

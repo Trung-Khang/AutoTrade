@@ -22,6 +22,35 @@ import {
 } from 'react-icons/fa';
 import './DepositPage.css';
 
+const TIME_SLOTS = [
+  { value: '08:30', label: '08:30 Sáng' },
+  { value: '09:30', label: '09:30 Sáng' },
+  { value: '10:30', label: '10:30 Sáng' },
+  { value: '14:00', label: '14:00 Chiều' },
+  { value: '15:30', label: '15:30 Chiều' },
+  { value: '17:00', label: '17:00 Chiều' },
+];
+
+const getLocalDateString = (d = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getTomorrowDateString = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return getLocalDateString(d);
+};
+
+// Kiểm tra khung giờ đã trôi qua chưa (kèm buffer an toàn 15 phút)
+const isSlotInPast = (dateStr, timeStr) => {
+  if (!dateStr || !timeStr) return false;
+  const slotDate = new Date(`${dateStr}T${timeStr}:00`);
+  return slotDate.getTime() <= Date.now() + 15 * 60 * 1000;
+};
+
 const DepositPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -37,9 +66,36 @@ const DepositPage = () => {
   const [customerPhone, setCustomerPhone] = useState(user?.phone || '');
   const [customerEmail, setCustomerEmail] = useState(user?.email || '');
   
-  const todayStr = new Date().toISOString().split('T')[0];
-  const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTime, setAppointmentTime] = useState('09:30');
+  const todayStr = useMemo(() => getLocalDateString(), []);
+  const allSlotsPassedToday = useMemo(() => {
+    return TIME_SLOTS.every((slot) => isSlotInPast(todayStr, slot.value));
+  }, [todayStr]);
+
+  const minSelectableDate = allSlotsPassedToday ? getTomorrowDateString() : todayStr;
+
+  const [appointmentDate, setAppointmentDate] = useState(() => {
+    return allSlotsPassedToday ? getTomorrowDateString() : todayStr;
+  });
+
+  const [appointmentTime, setAppointmentTime] = useState(() => {
+    if (!allSlotsPassedToday) {
+      const firstValid = TIME_SLOTS.find((s) => !isSlotInPast(todayStr, s.value));
+      return firstValid ? firstValid.value : '09:30';
+    }
+    return '09:30';
+  });
+
+  const handleDateChange = (newDate) => {
+    setAppointmentDate(newDate);
+    if (newDate === todayStr) {
+      if (isSlotInPast(newDate, appointmentTime)) {
+        const nextValid = TIME_SLOTS.find((s) => !isSlotInPast(newDate, s.value));
+        if (nextValid) {
+          setAppointmentTime(nextValid.value);
+        }
+      }
+    }
+  };
   const [hasTestDrive, setHasTestDrive] = useState(true);
   const [note, setNote] = useState('');
 
@@ -184,8 +240,17 @@ const DepositPage = () => {
       return;
     }
 
-    if (appointmentDate < todayStr) {
-      alert('Ngày hẹn xem xe không thể ở quá khứ. Vui lòng chọn ngày từ hôm nay trở đi.');
+    if (appointmentDate < minSelectableDate) {
+      alert(allSlotsPassedToday
+        ? 'Các khung giờ hẹn trong ngày hôm nay đã kết thúc. Vui lòng chọn ngày từ ngày mai trở đi!'
+        : 'Ngày hẹn xem xe không thể ở quá khứ. Vui lòng chọn ngày từ hôm nay trở đi!');
+      return;
+    }
+
+    const fullAppointmentDateTime = `${appointmentDate}T${appointmentTime}:00`;
+    const selectedDateTime = new Date(fullAppointmentDateTime);
+    if (selectedDateTime.getTime() <= Date.now()) {
+      alert('Thời gian hẹn xem xe (ngày và giờ) phải ở tương lai. Vui lòng chọn khung giờ hợp lệ!');
       return;
     }
 
@@ -529,25 +594,38 @@ const DepositPage = () => {
                   <label>Ngày hẹn xem xe tại Showroom *</label>
                   <input
                     type="date"
-                    min={todayStr}
+                    min={minSelectableDate}
                     value={appointmentDate}
-                    onChange={(e) => setAppointmentDate(e.target.value)}
+                    onChange={(e) => handleDateChange(e.target.value)}
                     required
                   />
                 </div>
 
                 <div className="deposit-form-group">
                   <label>Khung giờ hẹn *</label>
-                  <select value={appointmentTime} onChange={(e) => setAppointmentTime(e.target.value)}>
-                    <option value="08:30">08:30 Sáng</option>
-                    <option value="09:30">09:30 Sáng</option>
-                    <option value="10:30">10:30 Sáng</option>
-                    <option value="14:00">14:00 Chiều</option>
-                    <option value="15:30">15:30 Chiều</option>
-                    <option value="17:00">17:00 Chiều</option>
+                  <select
+                    value={appointmentTime}
+                    onChange={(e) => setAppointmentTime(e.target.value)}
+                    disabled={appointmentDate === todayStr && allSlotsPassedToday}
+                  >
+                    {TIME_SLOTS.map((slot) => {
+                      const isPast = appointmentDate === todayStr && isSlotInPast(appointmentDate, slot.value);
+                      return (
+                        <option key={slot.value} value={slot.value} disabled={isPast}>
+                          {slot.label} {isPast ? '(Đã qua giờ)' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
+
+              {appointmentDate === todayStr && allSlotsPassedToday && (
+                <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginTop: '6px', fontWeight: '500', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FaTimesCircle style={{ fontSize: '16px', flexShrink: 0 }} />
+                  <span>Các khung giờ hẹn hôm nay đã kết thúc (Showroom đón tiếp 08:30 - 17:30). Vui lòng chọn lịch hẹn từ ngày mai trở đi.</span>
+                </div>
+              )}
 
               {/* Checkbox lái thử xe (Test-Drive) */}
               <label className="test-drive-checkbox-label">

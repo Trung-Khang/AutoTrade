@@ -174,7 +174,7 @@ class DepositServiceUnitTest {
         request.setHasTestDrive(true); // Checkbox lái thử
         request.setCustomerNote("Muốn lái thử");
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
         when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
         when(depositRepository.save(any(Deposit.class))).thenAnswer(i -> {
             Deposit d = i.getArgument(0);
@@ -219,7 +219,7 @@ class DepositServiceUnitTest {
         staff.setShowroomId(10L);
         staff.setFullName("Staff Test");
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
         when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
         when(appUserRepository.findById(21L)).thenReturn(Optional.of(staff));
         when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
@@ -243,6 +243,20 @@ class DepositServiceUnitTest {
     }
 
     @Test
+    @DisplayName("Báo lỗi khi đặt lịch hẹn ở quá khứ")
+    void createDepositRejectsPastAppointmentDate() {
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAppointmentDate(LocalDateTime.now().minusHours(2));
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> depositService.createDeposit(request, 100L));
+        assertEquals("Thời gian hẹn xem xe phải ở tương lai.", ex.getMessage());
+        verify(depositRepository, never()).save(any(Deposit.class));
+    }
+
+    @Test
     @DisplayName("Không tạo cọc khi Staff được chọn đã kín lịch")
     void createDepositRejectsBusySelectedStaff() {
         sampleVehicle.setShowroomId(10L);
@@ -258,7 +272,7 @@ class DepositServiceUnitTest {
         staff.setActive(true);
         staff.setShowroomId(10L);
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
         when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
         when(appUserRepository.findById(21L)).thenReturn(Optional.of(staff));
         when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
@@ -280,7 +294,7 @@ class DepositServiceUnitTest {
         com.system.entity.AppUser firstStaff = availableStaff(21L, 10L);
         com.system.entity.AppUser secondStaff = availableStaff(22L, 10L);
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
         when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
         when(appUserRepository.findByShowroomIdAndRoleAndActiveTrueAndLockedFalse(
                 10L, com.system.entity.Role.STAFF)).thenReturn(List.of(firstStaff, secondStaff));
@@ -303,7 +317,7 @@ class DepositServiceUnitTest {
         request.setShowroomId(10L);
         request.setAppointmentDate(LocalDateTime.now().plusDays(2));
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
 
         assertThrows(VehicleNotAvailableException.class, () -> depositService.createDeposit(request, 100L));
         verify(depositRepository, never()).save(any(Deposit.class));
@@ -328,7 +342,7 @@ class DepositServiceUnitTest {
         request.setVehicleId(1L);
         request.setShowroomId(10L);
 
-        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
 
         assertThrows(VehicleNotAvailableException.class, () -> {
             depositService.createDeposit(request, 100L);

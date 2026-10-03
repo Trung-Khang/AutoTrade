@@ -25,6 +25,7 @@ import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -87,6 +88,9 @@ public class DepositService {
         Showroom showroom = null;
         if (request.getAppointmentDate() == null) {
             throw new IllegalArgumentException("Ngày giờ hẹn là bắt buộc.");
+        }
+        if (!request.getAppointmentDate().isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Thời gian hẹn xem xe phải ở tương lai.");
         }
         Long vehicleShowroomId = vehicle.getShowroomId();
         Long showroomId = vehicleShowroomId;
