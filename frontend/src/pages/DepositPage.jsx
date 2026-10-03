@@ -20,6 +20,7 @@ import {
   FaUserTie,
   FaPhoneAlt
 } from 'react-icons/fa';
+import { OfficialReceiptContent } from '../components/deposit/OfficialReceiptModal';
 import './DepositPage.css';
 
 const TIME_SLOTS = [
@@ -398,74 +399,23 @@ const DepositPage = () => {
           </div>
 
           {/* KHỐI BIÊN LAI CHUẨN IN VÀ HIỂN THỊ */}
-          <div className="official-receipt-box">
-            <div className="receipt-formal-header">
-              <div className="receipt-national-motto">
-                <h4>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</h4>
-                <p>Độc lập - Tự do - Hạnh phúc</p>
-                <div className="motto-divider">-----------------o0o-----------------</div>
-              </div>
-              <div className="receipt-brand-title">
-                <h3>AUTOTRADE USED CAR MARKETPLACE</h3>
-                <h2>BIÊN LAI ĐẶT CỌC GIỮ XE ĐỘC BẢN</h2>
-              </div>
-            </div>
-
-            <div className="receipt-meta-grid">
-              <div><strong>Mã đơn cọc:</strong> <span className="ref-code-badge">{receiptData.depositCode}</span></div>
-              <div><strong>Mã biên lai:</strong> <span>{receiptData.receiptCode}</span></div>
-              <div><strong>Số hợp đồng:</strong> <span style={{ color: '#2563eb', fontWeight: 'bold' }}>{receiptData.contractNumber}</span></div>
-              <div><strong>Ngày xác nhận:</strong> <span>{receiptData.confirmedAt}</span></div>
-            </div>
-
-            <div className="receipt-divider-line"></div>
-
-            <div className="receipt-section-block">
-              <div className="receipt-section-title">THÔNG TIN GIAO DỊCH & XE:</div>
-              <div className="receipt-line"><span>- Xe đặt cọc:</span> <strong>{vehicle.brand} {vehicle.model} {vehicle.variant || ''} ({vehicle.manufactureYear || vehicle.manufacture_year})</strong></div>
-              <div className="receipt-line"><span>- Giá niêm yết:</span> <strong>{formatFullPrice(vehicle.price)}</strong></div>
-              <div className="receipt-line"><span>- Số tiền cọc (10%):</span> <strong style={{ color: '#b45309', fontSize: '15px' }}>{formatFullPrice(receiptData.depositAmount || depositAmount)}</strong></div>
-              <div className="receipt-line"><span>- Khách hàng:</span> <strong>{receiptData.customerName} ({receiptData.customerPhone})</strong></div>
-              <div className="receipt-line"><span>- Email liên hệ:</span> <span>{receiptData.customerEmail || 'Chưa cung cấp'}</span></div>
-            </div>
-
-            <div className="receipt-divider-line"></div>
-
-            <div className="receipt-section-block">
-              <div className="receipt-section-title">ĐỊA ĐIỂM TIẾP ĐÓN & BÀN GIAO:</div>
-              <div className="receipt-line"><span>- Showroom:</span> <strong>{receiptData.showroomName}</strong></div>
-              <div className="receipt-line"><span>- Địa chỉ:</span> <span>{receiptData.showroomAddress}</span></div>
-              <div className="receipt-line">
-                <span>- Thời gian hẹn:</span>{' '}
-                <strong>
-                  {appointmentDate} lúc {appointmentTime} {receiptData.hasTestDrive && '(Có đăng ký lái thử xe)'}
-                </strong>
-              </div>
-              <div className="receipt-line">
-                <span>- Chuyên viên tư vấn đón tiếp:</span>{' '}
-                <strong style={{ color: '#0369a1' }}>
-                  {receiptData.assignedStaffName} (Hotline: {receiptData.assignedStaffPhone})
-                </strong>
-              </div>
-              <div className="receipt-line"><span>- Thời hạn giữ chỗ:</span> <span>7 ngày kể từ thời điểm đặt cọc</span></div>
-              <div className="receipt-line"><span>- Tài khoản nhận tiền:</span> <span>Vietcombank - 1050242933 (NGUYEN TRUNG KHANG)</span></div>
-            </div>
-
-            <div className="receipt-signatures-block">
-              <div className="receipt-sig-item">
-                <span className="sig-role">KHÁCH HÀNG / NGƯỜI NỘP TIỀN</span>
-                <span className="sig-note">(Ký và ghi rõ họ tên)</span>
-                <div className="sig-spacing"></div>
-                <strong className="sig-name">{receiptData.customerName}</strong>
-              </div>
-              <div className="receipt-sig-item">
-                <span className="sig-role">ĐẠI DIỆN SHOWROOM / TƯ VẤN VIÊN</span>
-                <span className="sig-note">(Ký, đóng dấu xác nhận)</span>
-                <div className="sig-spacing"></div>
-                <strong className="sig-name">{receiptData.assignedStaffName}</strong>
-              </div>
-            </div>
-          </div>
+          <OfficialReceiptContent
+            receiptData={{
+              ...receiptData,
+              vehicleTitle: receiptData.vehicleTitle || `${vehicle.brand} ${vehicle.model} ${vehicle.variant || ''} (${vehicle.manufactureYear || vehicle.manufacture_year})`,
+              vehiclePrice: receiptData.vehiclePrice || vehicle.price,
+              depositAmount: receiptData.depositAmount || depositAmount,
+              customerName: receiptData.customerName || customerName,
+              customerPhone: receiptData.customerPhone || customerPhone,
+              customerEmail: receiptData.customerEmail || customerEmail,
+              appointmentDateFormatted: `${appointmentDate} lúc ${appointmentTime}`,
+              hasTestDrive,
+              showroomName: receiptData.showroomName || matchedShowroom?.name,
+              showroomAddress: receiptData.showroomAddress || matchedShowroom?.address,
+              assignedStaffName: receiptData.assignedStaffName || (staffList.find((s) => s.id === selectedStaffId)?.fullName),
+              assignedStaffPhone: receiptData.assignedStaffPhone || (staffList.find((s) => s.id === selectedStaffId)?.phone),
+            }}
+          />
 
           <div className="success-actions no-print">
             <button
