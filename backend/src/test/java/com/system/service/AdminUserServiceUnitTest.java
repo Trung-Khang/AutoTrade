@@ -42,6 +42,9 @@ class AdminUserServiceUnitTest {
     @Mock
     private com.system.repository.AppointmentRepository appointmentRepository;
 
+    @Mock
+    private com.system.repository.ShowroomRepository showroomRepository;
+
     @InjectMocks
     private AdminUserService adminUserService;
 
@@ -132,20 +135,52 @@ class AdminUserServiceUnitTest {
     @DisplayName("Cập nhật vai trò người dùng thành công")
     void testUpdateUserRole_PromoteToStaff_Success() {
         when(userRepository.findById(2L)).thenReturn(Optional.of(customerUser));
+        when(showroomRepository.existsById(2L)).thenReturn(true);
         when(userRepository.save(any(AppUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        UserSummaryResponse res = adminUserService.updateUserRole(2L, "STAFF");
+        UserSummaryResponse res = adminUserService.updateUserRole(2L, "STAFF", 2L);
 
         assertNotNull(res);
         assertEquals("STAFF", res.getRole());
+        assertEquals(2L, res.getShowroomId());
         verify(userRepository, times(1)).save(customerUser);
+    }
+
+    @Test
+    @DisplayName("Không cho chuyển sang STAFF nếu thiếu showroom")
+    void testUpdateUserRole_StaffWithoutShowroom_ThrowsException() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(customerUser));
+
+        AuthException ex = assertThrows(AuthException.class, () ->
+                adminUserService.updateUserRole(2L, "STAFF", null));
+
+        assertTrue(ex.getMessage().contains("bắt buộc phải thuộc một showroom"));
+        verify(userRepository, never()).save(any(AppUser.class));
+    }
+
+    @Test
+    @DisplayName("Không cho đổi chi nhánh Staff đang có lịch hiệu lực")
+    void testUpdateUserRole_ActiveStaffAppointment_ThrowsException() {
+        AppUser staff = customerUser;
+        staff.setRole(Role.STAFF);
+        staff.setShowroomId(1L);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(staff));
+        when(showroomRepository.existsById(2L)).thenReturn(true);
+        when(appointmentRepository.existsByAssignedStaffIdAndStatusIn(
+                2L, java.util.Set.of("PENDING", "SCHEDULED"))).thenReturn(true);
+
+        AuthException ex = assertThrows(AuthException.class, () ->
+                adminUserService.updateUserRole(2L, "STAFF", 2L));
+
+        assertTrue(ex.getMessage().contains("lịch hẹn hiệu lực"));
+        verify(userRepository, never()).save(any(AppUser.class));
     }
 
     @Test
     @DisplayName("Admin không thể tự hạ quyền của chính mình")
     void testUpdateUserRole_AdminSelfDemote_ThrowsException() {
         AuthException ex = assertThrows(AuthException.class, () ->
-                adminUserService.updateUserRole(1L, "CUSTOMER"));
+                adminUserService.updateUserRole(1L, "CUSTOMER", null));
 
         assertTrue(ex.getMessage().contains("Không thể tự hạ quyền quản trị"));
         verify(userRepository, never()).save(any());
@@ -155,7 +190,7 @@ class AdminUserServiceUnitTest {
     @DisplayName("Cập nhật vai trò với giá trị không hợp lệ sẽ báo lỗi")
     void testUpdateUserRole_InvalidRole_ThrowsException() {
         AuthException ex = assertThrows(AuthException.class, () ->
-                adminUserService.updateUserRole(2L, "SUPER_GOD_ROLE"));
+                adminUserService.updateUserRole(2L, "SUPER_GOD_ROLE", null));
 
         assertTrue(ex.getMessage().contains("Vai trò không hợp lệ"));
     }

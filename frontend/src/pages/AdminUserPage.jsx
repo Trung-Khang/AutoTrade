@@ -21,6 +21,12 @@ import {
 import { normalizeVietnamesePhone, validateVietnamesePhone } from '../utils/phonePolicy';
 import './AdminUserPage.css';
 
+const SHOWROOM_OPTIONS = [
+  { id: 1, label: 'TP. Hồ Chí Minh' },
+  { id: 2, label: 'Hà Nội' },
+  { id: 3, label: 'Đà Nẵng' },
+];
+
 const AdminUserPage = () => {
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
@@ -33,6 +39,8 @@ const AdminUserPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [editFullName, setEditFullName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [roleChangeTarget, setRoleChangeTarget] = useState(null);
+  const [selectedShowroomId, setSelectedShowroomId] = useState('');
 
   // Fetch users list
   const fetchUsers = async () => {
@@ -135,8 +143,7 @@ const AdminUserPage = () => {
     }
   };
 
-  // Change Role
-  const handleChangeRole = async (targetUser, newRole) => {
+  const saveRoleChange = async (targetUser, newRole, showroomId = null) => {
     if (targetUser.id === currentUser?.id && newRole !== 'ADMIN') {
       alert('Bạn không thể tự hạ quyền Admin của chính mình!');
       return;
@@ -148,14 +155,35 @@ const AdminUserPage = () => {
 
     setActionLoadingId(targetUser.id);
     try {
-      await userApi.updateUserRole(targetUser.id, newRole);
+      await userApi.updateUserRole(targetUser.id, newRole, showroomId);
       showToast('success', `Đã cập nhật vai trò tài khoản "${targetUser.username}" thành ${newRole}.`);
+      setRoleChangeTarget(null);
       fetchUsers();
     } catch (err) {
       showToast('error', err.message || 'Cập nhật vai trò thất bại.');
     } finally {
       setActionLoadingId(null);
     }
+  };
+
+  // Staff phải được gán showroom trước khi gửi thay đổi role lên Backend.
+  const handleChangeRole = (targetUser, newRole) => {
+    if (newRole === 'STAFF') {
+      setRoleChangeTarget(targetUser);
+      setSelectedShowroomId(targetUser.showroomId ? String(targetUser.showroomId) : '');
+      setToast(null);
+      return;
+    }
+    saveRoleChange(targetUser, newRole, null);
+  };
+
+  const submitRoleChange = (event) => {
+    event.preventDefault();
+    if (!selectedShowroomId) {
+      showToast('error', 'Vui lòng chọn chi nhánh cho tài khoản STAFF.');
+      return;
+    }
+    saveRoleChange(roleChangeTarget, 'STAFF', Number(selectedShowroomId));
   };
 
   // Delete User with Constraints Check
@@ -241,6 +269,37 @@ const AdminUserPage = () => {
                 <button type="submit" className="modal-save-btn" disabled={actionLoadingId === editingUser.id}>
                   <FaSave /> {actionLoadingId === editingUser.id ? 'Đang lưu...' : 'Lưu thay đổi'}
                 </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {roleChangeTarget && (
+        <div className="admin-user-modal-backdrop" role="presentation" onMouseDown={() => !actionLoadingId && setRoleChangeTarget(null)}>
+          <div className="admin-user-modal" role="dialog" aria-modal="true" aria-labelledby="staff-showroom-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="admin-user-modal-header">
+              <div>
+                <h2 id="staff-showroom-title">Gán chi nhánh cho Staff</h2>
+                <p>@{roleChangeTarget.username}</p>
+              </div>
+              <button type="button" className="modal-close-btn" onClick={() => setRoleChangeTarget(null)} title="Đóng"><FaTimes /></button>
+            </div>
+            <form className="admin-user-modal-form" onSubmit={submitRoleChange}>
+              <label>
+                Vai trò
+                <input value="STAFF (Nhân viên)" readOnly />
+              </label>
+              <label>
+                Chi nhánh phụ trách
+                <select value={selectedShowroomId} onChange={(event) => setSelectedShowroomId(event.target.value)} required>
+                  <option value="">-- Chọn chi nhánh --</option>
+                  {SHOWROOM_OPTIONS.map((showroom) => <option key={showroom.id} value={showroom.id}>{showroom.label}</option>)}
+                </select>
+              </label>
+              <div className="admin-user-modal-actions">
+                <button type="button" className="modal-cancel-btn" onClick={() => setRoleChangeTarget(null)}>Hủy</button>
+                <button type="submit" className="modal-save-btn" disabled={Boolean(actionLoadingId)}><FaSave /> Lưu phân công</button>
               </div>
             </form>
           </div>
@@ -417,6 +476,11 @@ const AdminUserPage = () => {
                           <option value="STAFF">STAFF (Nhân viên)</option>
                           <option value="ADMIN">ADMIN (Quản trị viên)</option>
                         </select>
+                        {u.role === 'STAFF' && (
+                          <small className="staff-showroom-label">
+                            {SHOWROOM_OPTIONS.find((showroom) => showroom.id === Number(u.showroomId))?.label || 'Chưa phân chi nhánh'}
+                          </small>
+                        )}
                       </td>
 
                       {/* Email Verification */}

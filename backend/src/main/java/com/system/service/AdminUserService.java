@@ -28,13 +28,16 @@ public class AdminUserService {
     private final AppUserRepository userRepository;
     private final com.system.repository.DepositRepository depositRepository;
     private final com.system.repository.AppointmentRepository appointmentRepository;
+    private final com.system.repository.ShowroomRepository showroomRepository;
 
     public AdminUserService(AppUserRepository userRepository,
                             com.system.repository.DepositRepository depositRepository,
-                            com.system.repository.AppointmentRepository appointmentRepository) {
+                            com.system.repository.AppointmentRepository appointmentRepository,
+                            com.system.repository.ShowroomRepository showroomRepository) {
         this.userRepository = userRepository;
         this.depositRepository = depositRepository;
         this.appointmentRepository = appointmentRepository;
+        this.showroomRepository = showroomRepository;
     }
 
     /**
@@ -119,7 +122,7 @@ public class AdminUserService {
      * Đổi vai trò (CUSTOMER <-> STAFF <-> ADMIN)
      */
     @Transactional
-    public UserSummaryResponse updateUserRole(Long targetUserId, String newRoleStr) {
+    public UserSummaryResponse updateUserRole(Long targetUserId, String newRoleStr, Long showroomId) {
         if (newRoleStr == null || newRoleStr.trim().isEmpty()) {
             throw new AuthException(HttpStatus.BAD_REQUEST, "Vai trò mới không được để trống.");
         }
@@ -140,6 +143,33 @@ public class AdminUserService {
 
         AppUser targetUser = userRepository.findById(targetUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tài khoản với ID: " + targetUserId));
+
+        if (newRole == Role.STAFF) {
+            if (showroomId == null) {
+                throw new AuthException(HttpStatus.BAD_REQUEST,
+                        "Tài khoản STAFF bắt buộc phải thuộc một showroom.");
+            }
+            if (!showroomRepository.existsById(showroomId)) {
+                throw new AuthException(HttpStatus.NOT_FOUND,
+                        "Không tìm thấy showroom với ID: " + showroomId);
+            }
+            if (targetUser.getRole() == Role.STAFF
+                    && !showroomId.equals(targetUser.getShowroomId())
+                    && appointmentRepository.existsByAssignedStaffIdAndStatusIn(
+                            targetUserId, java.util.Set.of("PENDING", "SCHEDULED"))) {
+                throw new AuthException(HttpStatus.CONFLICT,
+                        "Nhân viên đang có lịch hẹn hiệu lực. Vui lòng xử lý hoặc hủy lịch trước khi đổi chi nhánh.");
+            }
+            targetUser.setShowroomId(showroomId);
+        } else {
+            if (targetUser.getRole() == Role.STAFF
+                    && appointmentRepository.existsByAssignedStaffIdAndStatusIn(
+                            targetUserId, java.util.Set.of("PENDING", "SCHEDULED"))) {
+                throw new AuthException(HttpStatus.CONFLICT,
+                        "Nhân viên đang có lịch hẹn hiệu lực. Vui lòng xử lý hoặc hủy lịch trước khi đổi vai trò.");
+            }
+            targetUser.setShowroomId(null);
+        }
 
         targetUser.setRole(newRole);
         targetUser = userRepository.save(targetUser);

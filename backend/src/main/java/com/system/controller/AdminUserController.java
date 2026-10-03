@@ -73,13 +73,25 @@ public class AdminUserController {
     public ResponseEntity<UserSummaryResponse> updateUserRole(
             @PathVariable Long id,
             @RequestParam(required = false) String role,
+            @RequestParam(required = false) Long showroomId,
             @RequestBody(required = false) Map<String, Object> body) {
         String newRole = role;
         if ((newRole == null || newRole.trim().isEmpty()) && body != null && body.containsKey("role")) {
             newRole = String.valueOf(body.get("role"));
         }
 
-        UserSummaryResponse response = adminUserService.updateUserRole(id, newRole);
+        Long newShowroomId = showroomId;
+        if (body != null && body.containsKey("showroomId") && body.get("showroomId") != null) {
+            try {
+                newShowroomId = Long.valueOf(String.valueOf(body.get("showroomId")));
+            } catch (NumberFormatException ex) {
+                throw new com.system.exception.AuthException(
+                        org.springframework.http.HttpStatus.BAD_REQUEST,
+                        "showroomId không hợp lệ.");
+            }
+        }
+
+        UserSummaryResponse response = adminUserService.updateUserRole(id, newRole, newShowroomId);
         return ResponseEntity.ok(response);
     }
 
