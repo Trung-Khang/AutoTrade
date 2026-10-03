@@ -1,0 +1,6 @@
+{
+  "status": "FAILED",
+  "error": "HTTPError",
+  "http_status": 500,
+  "message": "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau."
+}

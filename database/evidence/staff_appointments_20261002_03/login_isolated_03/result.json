@@ -1,0 +1,93 @@
+{
+  "status": "PASS",
+  "database": "tv3_staff_20261002_183803",
+  "hibernate_validate": true,
+  "logins": [
+    {
+      "username": "staff_hn_01",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hn_01",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hn_02",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hn_02",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hcm_01",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hcm_01",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hcm_02",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hcm_02",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hcm_03",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_hcm_03",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_dn_01",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_dn_01",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_dn_02",
+      "identity_type": "username",
+      "http_status": 200,
+      "role": "STAFF"
+    },
+    {
+      "username": "staff_dn_02",
+      "identity_type": "email",
+      "http_status": 200,
+      "role": "STAFF"
+    }
+  ],
+  "rows_unchanged": true,
+  "staff_assignment_API": "NOT VERIFIED: TV4 implementation pending"
+}

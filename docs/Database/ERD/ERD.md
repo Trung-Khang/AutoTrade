@@ -1,3 +1,25 @@
+## Quan hệ bổ sung V3_0_7 — 02/10/2026
+
+Phần này cập nhật mô hình lịch sử bên dưới. Contract chi tiết: [Staff Appointment Handoff](../../../database/guides/Staff_Appointment_Handoff.md).
+
+```mermaid
+erDiagram
+    SHOWROOMS o|--o{ APP_USERS : staff_branch_nullable
+    APP_USERS o|--o{ APPOINTMENTS : assigned_staff_nullable
+    APP_USERS {
+        bigint id PK
+        bigint showroom_id FK "NULL; ON DELETE SET NULL"
+    }
+    APPOINTMENTS {
+        bigint id PK
+        bigint assigned_staff_id FK "NULL; ON DELETE RESTRICT"
+        timestamp appointment_date
+        varchar status "PENDING SCHEDULED COMPLETED CANCELLED"
+    }
+```
+
+Partial UNIQUE (assigned_staff_id,appointment_date) với PENDING/SCHEDULED ngăn trùng chính xác thời điểm; COMPLETED/CANCELLED không giữ slot. Không tự phân công lịch cũ. FK chỉ xác minh account tồn tại; TV4 xác minh STAFF/active/unlocked/cùng showroom. Evidence catalog: `database/evidence/staff_appointments_20261002_03/result.json`.
+
 ## Consolidation chính thức TV3 — 01/10/2026
 
 Baseline: `origin/main` tại `cb2c520`; checkout `AutoTrade-TV3` là worktree branch `TV3` (cùng repository với `AutoTrade`). Lịch sử TV3 `5ba28b9` đã là ancestor của main; fast-forward giữ nguyên commit cũ. Auth TV4 `48c8f88` đã merge upstream, không copy Backend/Frontend cũ từ AutoTrade-main. Không có AGENTS.md trong ba checkout hoặc các thư mục cha đã kiểm tra.

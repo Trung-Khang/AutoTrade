@@ -1,0 +1,416 @@
+[
+  {
+    "stage": "protect_backup_acl",
+    "time": "2026-10-02T18:36:55.136271+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "identity",
+    "time": "2026-10-02T18:36:55.340645+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:36:55.553923+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "catalog",
+    "time": "2026-10-02T18:36:55.676501+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence_names",
+    "time": "2026-10-02T18:36:55.764127+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:55.850004+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:55.929513+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.018794+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.106187+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.249446+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.392554+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.474373+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.551245+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.655910+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:56.856132+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "seed_identity_preflight",
+    "time": "2026-10-02T18:36:56.990947+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "full_backup",
+    "time": "2026-10-02T18:36:57.282088+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "create_isolated",
+    "time": "2026-10-02T18:36:58.746825+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "restore_backup",
+    "time": "2026-10-02T18:36:59.437961+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:36:59.683524+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence_names",
+    "time": "2026-10-02T18:36:59.799635+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:36:59.923442+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.014062+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.163022+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.269411+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.387278+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.501299+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.601134+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.713681+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:00.818308+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:01.069075+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "catalog",
+    "time": "2026-10-02T18:37:01.531854+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "spring_bcrypt_cost12_verify",
+    "time": "2026-10-02T18:37:04.193564+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "migration_and_seed",
+    "time": "2026-10-02T18:37:04.401102+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:37:04.671199+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "staff_distribution",
+    "time": "2026-10-02T18:37:05.251723+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "legacy_null",
+    "time": "2026-10-02T18:37:05.626138+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "nullable_columns",
+    "time": "2026-10-02T18:37:05.868430+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:37:06.116214+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence_names",
+    "time": "2026-10-02T18:37:06.349378+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:06.608092+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.053620+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.158809+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.261451+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.376146+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.485991+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.596940+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.707286+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.828493+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:07.941317+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "catalog",
+    "time": "2026-10-02T18:37:08.169173+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "seed_repeat",
+    "time": "2026-10-02T18:37:08.270775+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:37:08.509555+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence_names",
+    "time": "2026-10-02T18:37:08.624759+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:08.761549+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:08.962731+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:09.288597+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:09.446609+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:09.591253+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:09.746224+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:09.858941+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:09.947260+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:10.065015+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "sequence",
+    "time": "2026-10-02T18:37:10.175093+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "migration_repeat_rejected",
+    "time": "2026-10-02T18:37:10.298077+07:00",
+    "exit_code": 3,
+    "expected_exit": 1
+  },
+  {
+    "stage": "row_fingerprints",
+    "time": "2026-10-02T18:37:10.529467+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "catalog",
+    "time": "2026-10-02T18:37:10.651719+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "integrity_and_P0",
+    "time": "2026-10-02T18:37:10.780890+07:00",
+    "exit_code": 0,
+    "expected_exit": 0
+  },
+  {
+    "stage": "concurrent_fixtures",
+    "time": "2026-10-02T18:37:10.898171+07:00",
+    "exit_code": 3,
+    "expected_exit": 0
+  }
+]

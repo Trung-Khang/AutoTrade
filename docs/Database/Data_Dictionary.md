@@ -1,4 +1,17 @@
 # Data Dictionary — Current Increment
+## Cập nhật staff/showroom/lịch hẹn — V3_0_7 — 02/10/2026
+
+Contract mới: [Staff Appointment Handoff](../../database/guides/Staff_Appointment_Handoff.md). Các mô tả lịch sử bên dưới về việc chưa có staff-showroom được thay thế bởi phần này.
+
+| Table.column | Type | Nullable | Constraint |
+|---|---|---|---|
+| app_users.showroom_id | BIGINT | Yes | fk_app_users_showroom → showrooms.id, ON DELETE SET NULL; no default |
+| appointments.assigned_staff_id | BIGINT | Yes | fk_appointments_assigned_staff → app_users.id, ON DELETE RESTRICT; no default |
+
+`chk_appointments_status`: PENDING/SCHEDULED/COMPLETED/CANCELLED. `appointment_date` giữ TIMESTAMP WITHOUT TIME ZONE. `uq_staff_appointment_slot` UNIQUE (assigned_staff_id,appointment_date) WHERE status IN ('PENDING','SCHEDULED'); NULL vẫn cho phép lịch cũ chưa phân công. Index hỗ trợ: idx_app_users_showroom_role(showroom_id,role) WHERE active=true AND locked=false; idx_appointments_assigned_staff_date(assigned_staff_id,appointment_date,status). Không trigger/backfill hoặc thay đổi các bảng nghiệp vụ khác; role/active/locked/cùng showroom do TV4 kiểm tra.
+
+Evidence áp dụng và catalog thực tế: `database/evidence/staff_appointments_20261002_03/result.json`. Seed tìm exact unique showroom name và giữ nguyên account đã tồn tại. V3_0_6 không chỉnh sửa/không tự áp dụng cùng V3_0_7; target preflight chưa có ràng buộc phone của V3_0_6.
+
 ## Consolidation chính thức TV3 — 01/10/2026
 
 Baseline: `origin/main` tại `cb2c520`; checkout `AutoTrade-TV3` là worktree branch `TV3` (cùng repository với `AutoTrade`). Lịch sử TV3 `5ba28b9` đã là ancestor của main; fast-forward giữ nguyên commit cũ. Auth TV4 `48c8f88` đã merge upstream, không copy Backend/Frontend cũ từ AutoTrade-main. Không có AGENTS.md trong ba checkout hoặc các thư mục cha đã kiểm tra.

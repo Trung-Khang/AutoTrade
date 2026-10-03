@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "kind": "REPLAY_FROM_ORIGINAL_PREUPGRADE_BACKUP",
+  "live_target_unchanged": true,
+  "original_backup_sha256": "7c3e3737831b41dde40af66e791e68872cccd8ae589e633e456842fdc907af9b",
+  "original_backup_restore_verified": true,
+  "original_preupgrade_counts": {
+    "app_users": 5,
+    "appointments": 2,
+    "auth_otps": 3,
+    "deposits": 7,
+    "listings": 3812,
+    "password_reset_sessions": 0,
+    "showrooms": 3,
+    "sources": 2,
+    "transaction_ledger": 0,
+    "vehicles": 3822
+  },
+  "all_contract_tests_passed": true,
+  "non_user_sequences_preserved_on_live_target": true
+}

@@ -1,0 +1,3929 @@
+{
+  "status": "PREPARED",
+  "identity": {
+    "database": "tv3_staff_reaudit_20261002_184513",
+    "user": "postgres",
+    "system_identifier": "7673721980907334164",
+    "oid": "31246"
+  },
+  "before": {
+    "app_users": {
+      "count": 5,
+      "md5": "c9bfe60f9602da18586ced5efbcec0bc"
+    },
+    "appointments": {
+      "count": 2,
+      "md5": "ee930e86972eea974cc66fa6815f49d3"
+    },
+    "auth_otps": {
+      "count": 3,
+      "md5": "2891432311c4a4820b4b0fefb97faaf1"
+    },
+    "deposits": {
+      "count": 7,
+      "md5": "0e35a6c95b2606f74bfb96708fb6f3f8"
+    },
+    "listings": {
+      "count": 3812,
+      "md5": "b84207e1b5e86e46de1e541097b35144"
+    },
+    "password_reset_sessions": {
+      "count": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "showrooms": {
+      "count": 3,
+      "md5": "7132a2c8356fe2136df6e4b24b732748"
+    },
+    "sources": {
+      "count": 2,
+      "md5": "449820e4003d73484b472be6ba5a5322"
+    },
+    "transaction_ledger": {
+      "count": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "vehicles": {
+      "count": 3822,
+      "md5": "14508f72f65f6c8469ebf0703036ebf9"
+    }
+  },
+  "catalog": {
+    "tables": [
+      {
+        "table_name": "app_users",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "appointments",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "auth_otps",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "deposits",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "listings",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "password_reset_sessions",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "showrooms",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "sources",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "transaction_ledger",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      },
+      {
+        "table_name": "vehicles",
+        "table_type": "BASE TABLE",
+        "table_schema": "public"
+      }
+    ],
+    "columns": [
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "app_users",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('app_users_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "app_users",
+        "column_name": "username",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "app_users",
+        "column_name": "email",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": null,
+        "character_maximum_length": 254
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "app_users",
+        "column_name": "password_hash",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": 100
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "app_users",
+        "column_name": "full_name",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": null,
+        "character_maximum_length": 120
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "app_users",
+        "column_name": "phone",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "app_users",
+        "column_name": "role",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "'CUSTOMER'::character varying",
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": 20
+      },
+      {
+        "udt_name": "bool",
+        "data_type": "boolean",
+        "table_name": "app_users",
+        "column_name": "active",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "true",
+        "ordinal_position": 8,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "bool",
+        "data_type": "boolean",
+        "table_name": "app_users",
+        "column_name": "email_verified",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "false",
+        "ordinal_position": 9,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "bool",
+        "data_type": "boolean",
+        "table_name": "app_users",
+        "column_name": "locked",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "false",
+        "ordinal_position": 10,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "app_users",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 11,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "app_users",
+        "column_name": "updated_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 12,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "appointments",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('appointments_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "appointments",
+        "column_name": "deposit_id",
+        "is_nullable": "YES",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "appointments",
+        "column_name": "user_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "appointments",
+        "column_name": "vehicle_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "appointments",
+        "column_name": "showroom_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamp",
+        "data_type": "timestamp without time zone",
+        "table_name": "appointments",
+        "column_name": "appointment_date",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "bool",
+        "data_type": "boolean",
+        "table_name": "appointments",
+        "column_name": "has_test_drive",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "false",
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "appointments",
+        "column_name": "status",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "'PENDING'::character varying",
+        "ordinal_position": 8,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "appointments",
+        "column_name": "customer_note",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 9,
+        "numeric_precision": null,
+        "character_maximum_length": 500
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "appointments",
+        "column_name": "staff_note",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 10,
+        "numeric_precision": null,
+        "character_maximum_length": 500
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "appointments",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 11,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "appointments",
+        "column_name": "updated_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 12,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "auth_otps",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('auth_otps_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "auth_otps",
+        "column_name": "user_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "auth_otps",
+        "column_name": "email",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": null,
+        "character_maximum_length": 254
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "auth_otps",
+        "column_name": "purpose",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "auth_otps",
+        "column_name": "code_hash",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": null,
+        "character_maximum_length": 64
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "auth_otps",
+        "column_name": "expires_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "auth_otps",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "auth_otps",
+        "column_name": "consumed_at",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 8,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "auth_otps",
+        "column_name": "invalidated_at",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 9,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int4",
+        "data_type": "integer",
+        "table_name": "auth_otps",
+        "column_name": "attempt_count",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "0",
+        "ordinal_position": 10,
+        "numeric_precision": 32,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "auth_otps",
+        "column_name": "last_sent_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 11,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "deposits",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('deposits_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "deposits",
+        "column_name": "deposit_code",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "deposits",
+        "column_name": "vehicle_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "deposits",
+        "column_name": "user_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "deposits",
+        "column_name": "showroom_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "numeric",
+        "data_type": "numeric",
+        "table_name": "deposits",
+        "column_name": "amount",
+        "is_nullable": "NO",
+        "numeric_scale": 2,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": 15,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "deposits",
+        "column_name": "status",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "'PENDING'::character varying",
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "deposits",
+        "column_name": "qr_code_url",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 8,
+        "numeric_precision": null,
+        "character_maximum_length": 500
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "deposits",
+        "column_name": "receipt_code",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 9,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "deposits",
+        "column_name": "contract_number",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 10,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "deposits",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 11,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "deposits",
+        "column_name": "confirmed_at",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 12,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "listings",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('listings_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "listings",
+        "column_name": "vehicle_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "listings",
+        "column_name": "source_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "numeric",
+        "data_type": "numeric",
+        "table_name": "listings",
+        "column_name": "price",
+        "is_nullable": "NO",
+        "numeric_scale": 2,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": 15,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int4",
+        "data_type": "integer",
+        "table_name": "listings",
+        "column_name": "mileage",
+        "is_nullable": "YES",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": 32,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "listings",
+        "column_name": "color",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "listings",
+        "column_name": "location",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": 100
+      },
+      {
+        "udt_name": "text",
+        "data_type": "text",
+        "table_name": "listings",
+        "column_name": "source_url",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 8,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "listings",
+        "column_name": "image_url",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 9,
+        "numeric_precision": null,
+        "character_maximum_length": 500
+      },
+      {
+        "udt_name": "text",
+        "data_type": "text",
+        "table_name": "listings",
+        "column_name": "listed_at_raw",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 10,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "listings",
+        "column_name": "listed_at",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 11,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "listings",
+        "column_name": "crawled_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 12,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "listings",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 13,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "listings",
+        "column_name": "updated_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 14,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "password_reset_sessions",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('password_reset_sessions_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "password_reset_sessions",
+        "column_name": "user_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "password_reset_sessions",
+        "column_name": "token_hash",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": null,
+        "character_maximum_length": 64
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "password_reset_sessions",
+        "column_name": "expires_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "password_reset_sessions",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 5,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "password_reset_sessions",
+        "column_name": "consumed_at",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "showrooms",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('showrooms_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "showrooms",
+        "column_name": "name",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": null,
+        "character_maximum_length": 100
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "showrooms",
+        "column_name": "address",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": null,
+        "character_maximum_length": 255
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "showrooms",
+        "column_name": "phone",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": 20
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "showrooms",
+        "column_name": "city",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "showrooms",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "sources",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('sources_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "sources",
+        "column_name": "source_name",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "sources",
+        "column_name": "base_url",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": null,
+        "character_maximum_length": 255
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "sources",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "transaction_ledger",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('transaction_ledger_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "transaction_ledger",
+        "column_name": "deposit_id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "numeric",
+        "data_type": "numeric",
+        "table_name": "transaction_ledger",
+        "column_name": "amount",
+        "is_nullable": "NO",
+        "numeric_scale": 2,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": 15,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "transaction_ledger",
+        "column_name": "transaction_type",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "transaction_ledger",
+        "column_name": "status",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "'CONFIRMED'::character varying",
+        "ordinal_position": 5,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "transaction_ledger",
+        "column_name": "note",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": 500
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "transaction_ledger",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "vehicles",
+        "column_name": "id",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": "nextval('vehicles_id_seq'::regclass)",
+        "ordinal_position": 1,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "brand",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 2,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "model",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 3,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "variant",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 4,
+        "numeric_precision": null,
+        "character_maximum_length": 100
+      },
+      {
+        "udt_name": "int4",
+        "data_type": "integer",
+        "table_name": "vehicles",
+        "column_name": "manufacture_year",
+        "is_nullable": "NO",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 5,
+        "numeric_precision": 32,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "fuel_type",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 6,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "transmission",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 7,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      },
+      {
+        "udt_name": "float8",
+        "data_type": "double precision",
+        "table_name": "vehicles",
+        "column_name": "engine_size",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 8,
+        "numeric_precision": 53,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int4",
+        "data_type": "integer",
+        "table_name": "vehicles",
+        "column_name": "seat_count",
+        "is_nullable": "YES",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 9,
+        "numeric_precision": 32,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "origin",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 10,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "body_type",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 11,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "timestamptz",
+        "data_type": "timestamp with time zone",
+        "table_name": "vehicles",
+        "column_name": "created_at",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "CURRENT_TIMESTAMP",
+        "ordinal_position": 12,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "vin",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 13,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "status",
+        "is_nullable": "NO",
+        "numeric_scale": null,
+        "column_default": "'ARCHIVED'::character varying",
+        "ordinal_position": 14,
+        "numeric_precision": null,
+        "character_maximum_length": 20
+      },
+      {
+        "udt_name": "numeric",
+        "data_type": "numeric",
+        "table_name": "vehicles",
+        "column_name": "price",
+        "is_nullable": "YES",
+        "numeric_scale": 2,
+        "column_default": null,
+        "ordinal_position": 15,
+        "numeric_precision": 15,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int4",
+        "data_type": "integer",
+        "table_name": "vehicles",
+        "column_name": "mileage",
+        "is_nullable": "YES",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 16,
+        "numeric_precision": 32,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "color",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 17,
+        "numeric_precision": null,
+        "character_maximum_length": 50
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "image_url",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 18,
+        "numeric_precision": null,
+        "character_maximum_length": 500
+      },
+      {
+        "udt_name": "text",
+        "data_type": "text",
+        "table_name": "vehicles",
+        "column_name": "description",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 19,
+        "numeric_precision": null,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "int8",
+        "data_type": "bigint",
+        "table_name": "vehicles",
+        "column_name": "showroom_id",
+        "is_nullable": "YES",
+        "numeric_scale": 0,
+        "column_default": null,
+        "ordinal_position": 20,
+        "numeric_precision": 64,
+        "character_maximum_length": null
+      },
+      {
+        "udt_name": "varchar",
+        "data_type": "character varying",
+        "table_name": "vehicles",
+        "column_name": "demo_key",
+        "is_nullable": "YES",
+        "numeric_scale": null,
+        "column_default": null,
+        "ordinal_position": 21,
+        "numeric_precision": null,
+        "character_maximum_length": 30
+      }
+    ],
+    "indexes": [
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX app_users_email_key ON public.app_users USING btree (email)",
+        "index_name": "app_users_email_key",
+        "indisvalid": true,
+        "table_name": "app_users",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX app_users_pkey ON public.app_users USING btree (id)",
+        "index_name": "app_users_pkey",
+        "indisvalid": true,
+        "table_name": "app_users",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX app_users_username_key ON public.app_users USING btree (username)",
+        "index_name": "app_users_username_key",
+        "indisvalid": true,
+        "table_name": "app_users",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX uq_app_users_email_ci ON public.app_users USING btree (lower((email)::text))",
+        "index_name": "uq_app_users_email_ci",
+        "indisvalid": true,
+        "table_name": "app_users",
+        "expressions": "lower((email)::text)",
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX uq_app_users_username_ci ON public.app_users USING btree (lower((username)::text))",
+        "index_name": "uq_app_users_username_ci",
+        "indisvalid": true,
+        "table_name": "app_users",
+        "expressions": "lower((username)::text)",
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX appointments_pkey ON public.appointments USING btree (id)",
+        "index_name": "appointments_pkey",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_appointments_date ON public.appointments USING btree (appointment_date)",
+        "index_name": "idx_appointments_date",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_appointments_deposit_id ON public.appointments USING btree (deposit_id)",
+        "index_name": "idx_appointments_deposit_id",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_appointments_showroom_id ON public.appointments USING btree (showroom_id)",
+        "index_name": "idx_appointments_showroom_id",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_appointments_status ON public.appointments USING btree (status)",
+        "index_name": "idx_appointments_status",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_appointments_user_date ON public.appointments USING btree (user_id, appointment_date DESC)",
+        "index_name": "idx_appointments_user_date",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_appointments_vehicle_id ON public.appointments USING btree (vehicle_id)",
+        "index_name": "idx_appointments_vehicle_id",
+        "indisvalid": true,
+        "table_name": "appointments",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX auth_otps_pkey ON public.auth_otps USING btree (id)",
+        "index_name": "auth_otps_pkey",
+        "indisvalid": true,
+        "table_name": "auth_otps",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_auth_otps_active_lookup ON public.auth_otps USING btree (user_id, purpose, created_at DESC)",
+        "index_name": "idx_auth_otps_active_lookup",
+        "indisvalid": true,
+        "table_name": "auth_otps",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX deposits_deposit_code_key ON public.deposits USING btree (deposit_code)",
+        "index_name": "deposits_deposit_code_key",
+        "indisvalid": true,
+        "table_name": "deposits",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX deposits_pkey ON public.deposits USING btree (id)",
+        "index_name": "deposits_pkey",
+        "indisvalid": true,
+        "table_name": "deposits",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_deposits_status ON public.deposits USING btree (status)",
+        "index_name": "idx_deposits_status",
+        "indisvalid": true,
+        "table_name": "deposits",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_deposits_user_id ON public.deposits USING btree (user_id)",
+        "index_name": "idx_deposits_user_id",
+        "indisvalid": true,
+        "table_name": "deposits",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_deposits_vehicle_id ON public.deposits USING btree (vehicle_id)",
+        "index_name": "idx_deposits_vehicle_id",
+        "indisvalid": true,
+        "table_name": "deposits",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": "((status)::text = 'DEPOSITED'::text)",
+        "definition": "CREATE UNIQUE INDEX uq_deposits_vehicle_deposited ON public.deposits USING btree (vehicle_id) WHERE ((status)::text = 'DEPOSITED'::text)",
+        "index_name": "uq_deposits_vehicle_deposited",
+        "indisvalid": true,
+        "table_name": "deposits",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_listings_crawled_at ON public.listings USING btree (crawled_at DESC)",
+        "index_name": "idx_listings_crawled_at",
+        "indisvalid": true,
+        "table_name": "listings",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": "(mileage IS NOT NULL)",
+        "definition": "CREATE INDEX idx_listings_mileage ON public.listings USING btree (mileage) WHERE (mileage IS NOT NULL)",
+        "index_name": "idx_listings_mileage",
+        "indisvalid": true,
+        "table_name": "listings",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_listings_price ON public.listings USING btree (price)",
+        "index_name": "idx_listings_price",
+        "indisvalid": true,
+        "table_name": "listings",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_listings_vehicle_id ON public.listings USING btree (vehicle_id)",
+        "index_name": "idx_listings_vehicle_id",
+        "indisvalid": true,
+        "table_name": "listings",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX listings_pkey ON public.listings USING btree (id)",
+        "index_name": "listings_pkey",
+        "indisvalid": true,
+        "table_name": "listings",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX listings_source_url_key ON public.listings USING btree (source_url)",
+        "index_name": "listings_source_url_key",
+        "indisvalid": true,
+        "table_name": "listings",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX password_reset_sessions_pkey ON public.password_reset_sessions USING btree (id)",
+        "index_name": "password_reset_sessions_pkey",
+        "indisvalid": true,
+        "table_name": "password_reset_sessions",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX password_reset_sessions_token_hash_key ON public.password_reset_sessions USING btree (token_hash)",
+        "index_name": "password_reset_sessions_token_hash_key",
+        "indisvalid": true,
+        "table_name": "password_reset_sessions",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX showrooms_pkey ON public.showrooms USING btree (id)",
+        "index_name": "showrooms_pkey",
+        "indisvalid": true,
+        "table_name": "showrooms",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX sources_pkey ON public.sources USING btree (id)",
+        "index_name": "sources_pkey",
+        "indisvalid": true,
+        "table_name": "sources",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX sources_source_name_key ON public.sources USING btree (source_name)",
+        "index_name": "sources_source_name_key",
+        "indisvalid": true,
+        "table_name": "sources",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_ledger_deposit_id ON public.transaction_ledger USING btree (deposit_id)",
+        "index_name": "idx_ledger_deposit_id",
+        "indisvalid": true,
+        "table_name": "transaction_ledger",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX transaction_ledger_pkey ON public.transaction_ledger USING btree (id)",
+        "index_name": "transaction_ledger_pkey",
+        "indisvalid": true,
+        "table_name": "transaction_ledger",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": "(body_type IS NOT NULL)",
+        "definition": "CREATE INDEX idx_vehicles_body_type ON public.vehicles USING btree (body_type) WHERE (body_type IS NOT NULL)",
+        "index_name": "idx_vehicles_body_type",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": "(fuel_type IS NOT NULL)",
+        "definition": "CREATE INDEX idx_vehicles_fuel_type ON public.vehicles USING btree (fuel_type) WHERE (fuel_type IS NOT NULL)",
+        "index_name": "idx_vehicles_fuel_type",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_vehicles_search ON public.vehicles USING btree (brand, model, manufacture_year)",
+        "index_name": "idx_vehicles_search",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_vehicles_showroom_id ON public.vehicles USING btree (showroom_id)",
+        "index_name": "idx_vehicles_showroom_id",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_vehicles_status ON public.vehicles USING btree (status)",
+        "index_name": "idx_vehicles_status",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": "(transmission IS NOT NULL)",
+        "definition": "CREATE INDEX idx_vehicles_transmission ON public.vehicles USING btree (transmission) WHERE (transmission IS NOT NULL)",
+        "index_name": "idx_vehicles_transmission",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE INDEX idx_vehicles_vin ON public.vehicles USING btree (vin)",
+        "index_name": "idx_vehicles_vin",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": false,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX uq_vehicles_demo_key ON public.vehicles USING btree (demo_key)",
+        "index_name": "uq_vehicles_demo_key",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX vehicles_pkey ON public.vehicles USING btree (id)",
+        "index_name": "vehicles_pkey",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": true
+      },
+      {
+        "predicate": null,
+        "definition": "CREATE UNIQUE INDEX vehicles_vin_key ON public.vehicles USING btree (vin)",
+        "index_name": "vehicles_vin_key",
+        "indisvalid": true,
+        "table_name": "vehicles",
+        "expressions": null,
+        "indisunique": true,
+        "indisprimary": false
+      }
+    ],
+    "triggers": [
+      {
+        "name": "RI_ConstraintTrigger_a_31486",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31486\" AFTER DELETE ON app_users FROM auth_otps NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31487",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31487\" AFTER UPDATE ON app_users FROM auth_otps NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31501",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31501\" AFTER DELETE ON app_users FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31502",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31502\" AFTER UPDATE ON app_users FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31516",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31516\" AFTER DELETE ON app_users FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31517",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31517\" AFTER UPDATE ON app_users FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31546",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31546\" AFTER DELETE ON app_users FROM password_reset_sessions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_cascade_del\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31547",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31547\" AFTER UPDATE ON app_users FROM password_reset_sessions NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "app_users"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31493",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31493\" AFTER INSERT ON appointments FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31494",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31494\" AFTER UPDATE ON appointments FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31498",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31498\" AFTER INSERT ON appointments FROM showrooms NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31499",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31499\" AFTER UPDATE ON appointments FROM showrooms NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31503",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31503\" AFTER INSERT ON appointments FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31504",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31504\" AFTER UPDATE ON appointments FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31508",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31508\" AFTER INSERT ON appointments FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31509",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31509\" AFTER UPDATE ON appointments FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "appointments"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31488",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31488\" AFTER INSERT ON auth_otps FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "auth_otps"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31489",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31489\" AFTER UPDATE ON auth_otps FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "auth_otps"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31491",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31491\" AFTER DELETE ON deposits FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_setnull_del\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31492",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31492\" AFTER UPDATE ON deposits FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31526",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31526\" AFTER DELETE ON deposits FROM transaction_ledger NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31527",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31527\" AFTER UPDATE ON deposits FROM transaction_ledger NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31513",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31513\" AFTER INSERT ON deposits FROM showrooms NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31514",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31514\" AFTER UPDATE ON deposits FROM showrooms NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31518",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31518\" AFTER INSERT ON deposits FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31519",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31519\" AFTER UPDATE ON deposits FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31523",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31523\" AFTER INSERT ON deposits FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31524",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31524\" AFTER UPDATE ON deposits FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "deposits"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31533",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31533\" AFTER INSERT ON listings FROM sources NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "listings"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31534",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31534\" AFTER UPDATE ON listings FROM sources NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "listings"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31538",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31538\" AFTER INSERT ON listings FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "listings"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31539",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31539\" AFTER UPDATE ON listings FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "listings"
+      },
+      {
+        "name": "update_listings_updated_at",
+        "enabled": "O",
+        "internal": false,
+        "definition": "CREATE TRIGGER update_listings_updated_at BEFORE UPDATE ON listings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()",
+        "table_name": "listings"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31548",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31548\" AFTER INSERT ON password_reset_sessions FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "password_reset_sessions"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31549",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31549\" AFTER UPDATE ON password_reset_sessions FROM app_users NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "password_reset_sessions"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31496",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31496\" AFTER DELETE ON showrooms FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "showrooms"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31497",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31497\" AFTER UPDATE ON showrooms FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "showrooms"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31511",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31511\" AFTER DELETE ON showrooms FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "showrooms"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31512",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31512\" AFTER UPDATE ON showrooms FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "showrooms"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31541",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31541\" AFTER DELETE ON showrooms FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_setnull_del\"()",
+        "table_name": "showrooms"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31542",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31542\" AFTER UPDATE ON showrooms FROM vehicles NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "showrooms"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31531",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31531\" AFTER DELETE ON sources FROM listings NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "sources"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31532",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31532\" AFTER UPDATE ON sources FROM listings NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "sources"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31528",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31528\" AFTER INSERT ON transaction_ledger FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "transaction_ledger"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31529",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31529\" AFTER UPDATE ON transaction_ledger FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "transaction_ledger"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31506",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31506\" AFTER DELETE ON vehicles FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31507",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31507\" AFTER UPDATE ON vehicles FROM appointments NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31521",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31521\" AFTER DELETE ON vehicles FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31522",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31522\" AFTER UPDATE ON vehicles FROM deposits NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31536",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31536\" AFTER DELETE ON vehicles FROM listings NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_restrict_del\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_a_31537",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_a_31537\" AFTER UPDATE ON vehicles FROM listings NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_noaction_upd\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31543",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31543\" AFTER INSERT ON vehicles FROM showrooms NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_ins\"()",
+        "table_name": "vehicles"
+      },
+      {
+        "name": "RI_ConstraintTrigger_c_31544",
+        "enabled": "O",
+        "internal": true,
+        "definition": "CREATE CONSTRAINT TRIGGER \"RI_ConstraintTrigger_c_31544\" AFTER UPDATE ON vehicles FROM showrooms NOT DEFERRABLE INITIALLY IMMEDIATE FOR EACH ROW EXECUTE FUNCTION \"RI_FKey_check_upd\"()",
+        "table_name": "vehicles"
+      }
+    ],
+    "functions": [
+      {
+        "name": "update_updated_at_column",
+        "arguments": "",
+        "definition": "CREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = CURRENT_TIMESTAMP;\r\n    RETURN NEW;\r\nEND;\r\n$function$\n"
+      }
+    ],
+    "constraints": [
+      {
+        "columns": [
+          "active"
+        ],
+        "definition": "NOT NULL active",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_active_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "email"
+        ],
+        "definition": "UNIQUE (email)",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_email_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "email"
+        ],
+        "definition": "NOT NULL email",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_email_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "email_verified"
+        ],
+        "definition": "NOT NULL email_verified",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_email_verified_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "full_name"
+        ],
+        "definition": "NOT NULL full_name",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_full_name_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "locked"
+        ],
+        "definition": "NOT NULL locked",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_locked_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "password_hash"
+        ],
+        "definition": "NOT NULL password_hash",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_password_hash_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "role"
+        ],
+        "definition": "NOT NULL role",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_role_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "updated_at"
+        ],
+        "definition": "NOT NULL updated_at",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_updated_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "username"
+        ],
+        "definition": "UNIQUE (username)",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_username_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "username"
+        ],
+        "definition": "NOT NULL username",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "app_users_username_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "email"
+        ],
+        "definition": "CHECK (email::text = btrim(email::text) AND email::text = lower(email::text))",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_app_users_email_normalized",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "email",
+          "full_name",
+          "password_hash"
+        ],
+        "definition": "CHECK (email::text ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'::text AND btrim(full_name::text) <> ''::text AND btrim(password_hash::text) <> ''::text)",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_app_users_required_identity",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "role"
+        ],
+        "definition": "CHECK (role::text = ANY (ARRAY['CUSTOMER'::character varying::text, 'STAFF'::character varying::text, 'ADMIN'::character varying::text]))",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_app_users_role",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "username"
+        ],
+        "definition": "CHECK (username::text = btrim(username::text) AND char_length(username::text) >= 3 AND char_length(username::text) <= 50 AND username::text ~ '^[A-Za-z0-9._-]+$'::text)",
+        "table_name": "app_users",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_app_users_username",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "appointment_date"
+        ],
+        "definition": "NOT NULL appointment_date",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_appointment_date_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "has_test_drive"
+        ],
+        "definition": "NOT NULL has_test_drive",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_has_test_drive_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "showroom_id"
+        ],
+        "definition": "NOT NULL showroom_id",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_showroom_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "NOT NULL status",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_status_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "updated_at"
+        ],
+        "definition": "NOT NULL updated_at",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_updated_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "NOT NULL user_id",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_user_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "vehicle_id"
+        ],
+        "definition": "NOT NULL vehicle_id",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "appointments_vehicle_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "CHECK (status::text = ANY (ARRAY['PENDING'::character varying::text, 'COMPLETED'::character varying::text, 'CANCELLED'::character varying::text]))",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_appointments_status",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "deposit_id"
+        ],
+        "definition": "FOREIGN KEY (deposit_id) REFERENCES deposits(id) ON DELETE SET NULL",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": "SET NULL",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_appointments_deposit",
+        "constraint_type": "f",
+        "referenced_table": "deposits",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "showroom_id"
+        ],
+        "definition": "FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE RESTRICT",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_appointments_showroom",
+        "constraint_type": "f",
+        "referenced_table": "showrooms",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE RESTRICT",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_appointments_user",
+        "constraint_type": "f",
+        "referenced_table": "app_users",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "vehicle_id"
+        ],
+        "definition": "FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE RESTRICT",
+        "table_name": "appointments",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_appointments_vehicle",
+        "constraint_type": "f",
+        "referenced_table": "vehicles",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "attempt_count"
+        ],
+        "definition": "NOT NULL attempt_count",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_attempt_count_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "code_hash"
+        ],
+        "definition": "NOT NULL code_hash",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_code_hash_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "email"
+        ],
+        "definition": "NOT NULL email",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_email_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "expires_at"
+        ],
+        "definition": "NOT NULL expires_at",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_expires_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "last_sent_at"
+        ],
+        "definition": "NOT NULL last_sent_at",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_last_sent_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "purpose"
+        ],
+        "definition": "NOT NULL purpose",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_purpose_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": "CASCADE",
+        "update_policy": "NO ACTION",
+        "constraint_name": "auth_otps_user_id_fkey",
+        "constraint_type": "f",
+        "referenced_table": "app_users",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "NOT NULL user_id",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "auth_otps_user_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "attempt_count"
+        ],
+        "definition": "CHECK (attempt_count >= 0 AND attempt_count <= 5)",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_auth_otps_attempt_count",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "purpose"
+        ],
+        "definition": "CHECK (purpose::text = ANY (ARRAY['VERIFY_EMAIL'::character varying::text, 'RESET_PASSWORD'::character varying::text]))",
+        "table_name": "auth_otps",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_auth_otps_purpose",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "amount"
+        ],
+        "definition": "CHECK (amount > 0::numeric)",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_deposits_amount_positive",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "CHECK (status::text = ANY (ARRAY['PENDING'::character varying::text, 'DEPOSITED'::character varying::text, 'CANCELLED'::character varying::text, 'REFUNDED'::character varying::text]))",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_deposits_status",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "amount"
+        ],
+        "definition": "NOT NULL amount",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_amount_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "deposit_code"
+        ],
+        "definition": "UNIQUE (deposit_code)",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_deposit_code_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "deposit_code"
+        ],
+        "definition": "NOT NULL deposit_code",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_deposit_code_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "showroom_id"
+        ],
+        "definition": "NOT NULL showroom_id",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_showroom_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "NOT NULL status",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_status_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "NOT NULL user_id",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_user_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "vehicle_id"
+        ],
+        "definition": "NOT NULL vehicle_id",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "deposits_vehicle_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "showroom_id"
+        ],
+        "definition": "FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE RESTRICT",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_deposits_showroom",
+        "constraint_type": "f",
+        "referenced_table": "showrooms",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE RESTRICT",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_deposits_user",
+        "constraint_type": "f",
+        "referenced_table": "app_users",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "vehicle_id"
+        ],
+        "definition": "FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE RESTRICT",
+        "table_name": "deposits",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_deposits_vehicle",
+        "constraint_type": "f",
+        "referenced_table": "vehicles",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "mileage"
+        ],
+        "definition": "CHECK (mileage IS NULL OR mileage >= 0)",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_listings_mileage",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "price"
+        ],
+        "definition": "CHECK (price > 0::numeric)",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_listings_price",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "source_id"
+        ],
+        "definition": "FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_listings_source",
+        "constraint_type": "f",
+        "referenced_table": "sources",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "vehicle_id"
+        ],
+        "definition": "FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE RESTRICT",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_listings_vehicle",
+        "constraint_type": "f",
+        "referenced_table": "vehicles",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "crawled_at"
+        ],
+        "definition": "NOT NULL crawled_at",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_crawled_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "price"
+        ],
+        "definition": "NOT NULL price",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_price_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "source_id"
+        ],
+        "definition": "NOT NULL source_id",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_source_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "source_url"
+        ],
+        "definition": "UNIQUE (source_url)",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_source_url_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "source_url"
+        ],
+        "definition": "NOT NULL source_url",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_source_url_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "updated_at"
+        ],
+        "definition": "NOT NULL updated_at",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_updated_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "vehicle_id"
+        ],
+        "definition": "NOT NULL vehicle_id",
+        "table_name": "listings",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "listings_vehicle_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "expires_at"
+        ],
+        "definition": "NOT NULL expires_at",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_expires_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "token_hash"
+        ],
+        "definition": "UNIQUE (token_hash)",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_token_hash_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "token_hash"
+        ],
+        "definition": "NOT NULL token_hash",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_token_hash_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "FOREIGN KEY (user_id) REFERENCES app_users(id) ON DELETE CASCADE",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": "CASCADE",
+        "update_policy": "NO ACTION",
+        "constraint_name": "password_reset_sessions_user_id_fkey",
+        "constraint_type": "f",
+        "referenced_table": "app_users",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "user_id"
+        ],
+        "definition": "NOT NULL user_id",
+        "table_name": "password_reset_sessions",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "password_reset_sessions_user_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "address"
+        ],
+        "definition": "NOT NULL address",
+        "table_name": "showrooms",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "showrooms_address_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "showrooms",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "showrooms_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "showrooms",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "showrooms_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "name"
+        ],
+        "definition": "NOT NULL name",
+        "table_name": "showrooms",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "showrooms_name_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "showrooms",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "showrooms_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "sources",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "sources_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "sources",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "sources_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "sources",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "sources_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "source_name"
+        ],
+        "definition": "UNIQUE (source_name)",
+        "table_name": "sources",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "sources_source_name_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "source_name"
+        ],
+        "definition": "NOT NULL source_name",
+        "table_name": "sources",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "sources_source_name_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status",
+          "transaction_type",
+          "amount"
+        ],
+        "definition": "CHECK (status::text <> 'CONFIRMED'::text OR (transaction_type::text <> ALL (ARRAY['DEPOSIT_RECEIVED'::character varying::text, 'REFUND'::character varying::text])) OR transaction_type::text = 'DEPOSIT_RECEIVED'::text AND amount > 0::numeric AND amount <> 'NaN'::numeric OR transaction_type::text = 'REFUND'::text AND amount < 0::numeric)",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_ledger_confirmed_amount",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "CHECK (status::text = ANY (ARRAY['CONFIRMED'::character varying::text, 'PROCESSED'::character varying::text, 'REVERSED'::character varying::text]))",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_ledger_status",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "transaction_type"
+        ],
+        "definition": "CHECK (transaction_type::text = ANY (ARRAY['DEPOSIT_RECEIVED'::character varying::text, 'REFUND'::character varying::text, 'FORFEIT'::character varying::text]))",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_ledger_transaction_type",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "deposit_id"
+        ],
+        "definition": "FOREIGN KEY (deposit_id) REFERENCES deposits(id) ON DELETE RESTRICT",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": "RESTRICT",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_ledger_deposit",
+        "constraint_type": "f",
+        "referenced_table": "deposits",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "amount"
+        ],
+        "definition": "NOT NULL amount",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_amount_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "deposit_id"
+        ],
+        "definition": "NOT NULL deposit_id",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_deposit_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "NOT NULL status",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_status_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "transaction_type"
+        ],
+        "definition": "NOT NULL transaction_type",
+        "table_name": "transaction_ledger",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "transaction_ledger_transaction_type_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "engine_size"
+        ],
+        "definition": "CHECK (engine_size IS NULL OR engine_size > 0::double precision)",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_engine_size",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "fuel_type"
+        ],
+        "definition": "CHECK (fuel_type IS NULL OR (fuel_type::text = ANY (ARRAY['Gasoline'::character varying::text, 'Diesel'::character varying::text, 'Hybrid'::character varying::text, 'Electric'::character varying::text])))",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_fuel_type",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "manufacture_year"
+        ],
+        "definition": "CHECK (manufacture_year >= 1900 AND manufacture_year <= 2100)",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_manufacture_year",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "origin"
+        ],
+        "definition": "CHECK (origin IS NULL OR (origin::text = ANY (ARRAY['Domestic'::character varying::text, 'Imported'::character varying::text])))",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_origin",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "seat_count"
+        ],
+        "definition": "CHECK (seat_count IS NULL OR seat_count >= 2 AND seat_count <= 60)",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_seat_count",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "CHECK (status::text = ANY (ARRAY['ARCHIVED'::character varying::text, 'AVAILABLE'::character varying::text, 'HOLD'::character varying::text, 'RESERVED'::character varying::text, 'SOLD'::character varying::text]))",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_status",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "transmission"
+        ],
+        "definition": "CHECK (transmission IS NULL OR (transmission::text = ANY (ARRAY['Automatic'::character varying::text, 'Manual'::character varying::text, 'CVT'::character varying::text])))",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "chk_vehicles_transmission",
+        "constraint_type": "c",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "showroom_id"
+        ],
+        "definition": "FOREIGN KEY (showroom_id) REFERENCES showrooms(id) ON DELETE SET NULL",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": "SET NULL",
+        "update_policy": "NO ACTION",
+        "constraint_name": "fk_vehicles_showroom",
+        "constraint_type": "f",
+        "referenced_table": "showrooms",
+        "referenced_columns": [
+          "id"
+        ]
+      },
+      {
+        "columns": [
+          "brand"
+        ],
+        "definition": "NOT NULL brand",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_brand_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "created_at"
+        ],
+        "definition": "NOT NULL created_at",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_created_at_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "NOT NULL id",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_id_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "manufacture_year"
+        ],
+        "definition": "NOT NULL manufacture_year",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_manufacture_year_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "model"
+        ],
+        "definition": "NOT NULL model",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_model_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "id"
+        ],
+        "definition": "PRIMARY KEY (id)",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_pkey",
+        "constraint_type": "p",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "status"
+        ],
+        "definition": "NOT NULL status",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_status_not_null",
+        "constraint_type": "n",
+        "referenced_table": null,
+        "referenced_columns": []
+      },
+      {
+        "columns": [
+          "vin"
+        ],
+        "definition": "UNIQUE (vin)",
+        "table_name": "vehicles",
+        "convalidated": true,
+        "delete_policy": null,
+        "update_policy": null,
+        "constraint_name": "vehicles_vin_key",
+        "constraint_type": "u",
+        "referenced_table": null,
+        "referenced_columns": []
+      }
+    ]
+  },
+  "sequences": {
+    "app_users_id_seq": "17|t",
+    "appointments_id_seq": "17|t",
+    "auth_otps_id_seq": "28|t",
+    "deposits_id_seq": "26|t",
+    "listings_id_seq": "10814|t",
+    "password_reset_sessions_id_seq": "11|t",
+    "showrooms_id_seq": "5|t",
+    "sources_id_seq": "4|t",
+    "transaction_ledger_id_seq": "51|t",
+    "vehicles_id_seq": "10851|t"
+  },
+  "private_backup": "D:\\CONG_NGHE_PHAN_MEM\\AutoTrade-TV3\\database\\backups\\staff_appointments_20261002_reverification\\autotrade_final.full.dump",
+  "backup_sha256": "1534040f0805b01deefac5cdfc2648c56781bcabb7a8ad4bd6711e19e6751582",
+  "test_database": "tv3_staff_20261002_184524",
+  "full_backup_restore_verified": true,
+  "files": {
+    "database\\migrations\\V3_0_7__staff_showroom_and_assigned_appointments.sql": "eb2423f7c4f4945cb9ea95b42f83e8fd1601005a0179d9b3fd8145eda65d5bb5",
+    "database\\seed\\demo_showroom_staff.sql": "f84debe0c0e087accf73e955bb8ca058fa76a1195f75333ae2dcf910f06601dc",
+    "database\\tests\\staff_appointment_integrity.sql": "ad53e808be2b31e7f0e792c7446ebf11d57ce4cf072d98d47d2597cfe21be79d",
+    "database\\tests\\run_staff_database.py": "110ff38e9bbcd4afa3f79e27864ad72445c6054e73ee5f30bc504967a06deb7b"
+  },
+  "tests": [
+    "restore full rows/schema/sequences",
+    "combined migration/seed rollback",
+    "migration atomic repeat rejection",
+    "seed idempotence",
+    "original full-row preservation",
+    "NULL legacy compatibility",
+    "FK delete policies",
+    "PENDING/SCHEDULED conflict",
+    "cancel/completed slot reuse",
+    "concurrent one winner",
+    "seed existing credentials/state preservation",
+    "seed collision rollback",
+    "missing/ambiguous showroom rejection",
+    "P0 deposit uniqueness/positive amount"
+  ]
+}
