@@ -181,7 +181,7 @@
   object-fit: contain;
   position: relative;
   z-index: 1;
-  filter: drop-shadow(0 1px 1px rgba(10, 38, 90, 0.25));
+  filter: drop-shadow(0 1px 1px rgba(24, 80, 180, 0.2));
   user-select: none;
   -webkit-user-drag: none;
 }
