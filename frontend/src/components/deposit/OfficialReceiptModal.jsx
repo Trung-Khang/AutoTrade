@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaTimes, FaPrint, FaCheckCircle } from 'react-icons/fa';
 import { formatFullPrice } from '../../utils/formatters';
+import ceoSignatureImg from '../../assets/images/ceo_signature.png';
 import './OfficialReceiptModal.css';
 
 export const formatReceiptDate = (dateVal) => {
@@ -128,18 +129,47 @@ export const OfficialReceiptContent = ({ receiptData }) => {
 
         <div className="receipt-sig-item">
           <span className="sig-role">ĐẠI DIỆN HỆ THỐNG / TỔNG GIÁM ĐỐC</span>
-          <span className="sig-note">(Ký số & Đóng dấu điện tử)</span>
-          <div className="ceo-stamp-badge">
-            <div className="ceo-stamp-inner">
-              <div className="ceo-stamp-header">
-                <FaCheckCircle className="ceo-stamp-icon" />
-                <span>CERTIFIED DIGITAL SIGNATURE</span>
-              </div>
-              <div className="ceo-stamp-title">AUTOTRADE VIETNAM</div>
-              <div className="ceo-stamp-person">NGUYỄN TRUNG KHANG</div>
-              <div className="ceo-stamp-role">CHỦ TỊCH & TỔNG GIÁM ĐỐC</div>
-              <div className="ceo-stamp-date">Ký ngày: {confirmedAtFormatted}</div>
+          <span className="sig-note">(Ký số & Đóng dấu mộc đỏ điện tử)</span>
+          <div className="ceo-signature-stamp-wrapper">
+            {/* Chữ ký tay thật của Chủ tịch Nguyễn Trung Khang */}
+            <img
+              src={ceoSignatureImg}
+              alt="Chữ ký Chủ tịch Nguyễn Trung Khang"
+              className="ceo-handwritten-signature-img"
+            />
+
+            {/* Con dấu mộc đỏ tròn công ty đè trùm lên chữ ký */}
+            <div className="corporate-seal-overlay" title="Chứng thực con dấu điện tử AutoTrade Việt Nam">
+              <svg viewBox="0 0 200 200" className="corporate-seal-svg" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="95" fill="none" stroke="#dc2626" strokeWidth="4" />
+                <circle cx="100" cy="100" r="88" fill="none" stroke="#dc2626" strokeWidth="1.5" />
+                <circle cx="100" cy="100" r="58" fill="none" stroke="#dc2626" strokeWidth="1.5" />
+                <defs>
+                  <path id="sealTopArc" d="M 22,100 A 78,78 0 1,1 178,100" fill="none" />
+                  <path id="sealBottomArc" d="M 172,100 A 72,72 0 0,1 28,100" fill="none" />
+                </defs>
+                <text fill="#dc2626" fontSize="11.5" fontWeight="900" letterSpacing="1.2" fontFamily="Arial, Helvetica, sans-serif">
+                  <textPath href="#sealTopArc" startOffset="50%" textAnchor="middle">
+                    CÔNG TY CỔ PHẦN AUTOTRADE
+                  </textPath>
+                </text>
+                <text fill="#dc2626" fontSize="9.5" fontWeight="800" letterSpacing="1.5" fontFamily="Arial, Helvetica, sans-serif">
+                  <textPath href="#sealBottomArc" startOffset="50%" textAnchor="middle">
+                    ★ MST: 0317899999 - TP.HCM ★
+                  </textPath>
+                </text>
+                <text x="100" y="82" fill="#dc2626" fontSize="16" textAnchor="middle">★</text>
+                <text x="100" y="103" fill="#dc2626" fontSize="12" fontWeight="900" letterSpacing="0.8" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif">
+                  TỔNG GIÁM ĐỐC
+                </text>
+                <text x="100" y="120" fill="#dc2626" fontSize="9.5" fontWeight="800" letterSpacing="0.5" textAnchor="middle" fontFamily="Arial, Helvetica, sans-serif">
+                  ĐÃ KÝ SỐ
+                </text>
+              </svg>
             </div>
+          </div>
+          <div className="ceo-sig-verified-meta">
+            [✓ Ký số: NGUYỄN TRUNG KHANG - {confirmedAtFormatted}]
           </div>
           <strong className="sig-name">Nguyễn Trung Khang</strong>
         </div>
