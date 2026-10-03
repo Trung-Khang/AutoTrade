@@ -79,15 +79,12 @@ const DepositPage = () => {
     }
   }, [user]);
 
-  // Tìm kiếm thông tin Showroom nơi xe đang trưng bày
+  // Tìm kiếm thông tin Showroom nơi xe đang trưng bày (không tự đoán mặc định)
   const matchedShowroom = useMemo(() => {
     if (!vehicle) return null;
-    if (vehicle.showroomId) {
-      const found = SHOWROOMS_DATA.find((s) => s.id === Number(vehicle.showroomId));
-      if (found) return found;
-    }
-    if (vehicle.showroom?.id) {
-      const found = SHOWROOMS_DATA.find((s) => s.id === Number(vehicle.showroom.id));
+    const sId = vehicle.showroomId || vehicle.showroom?.id;
+    if (sId) {
+      const found = SHOWROOMS_DATA.find((s) => s.id === Number(sId));
       if (found) return found;
     }
     if (vehicle.location) {
@@ -97,13 +94,16 @@ const DepositPage = () => {
       );
       if (found) return found;
     }
-    // Mặc định showroom TP. Hồ Chí Minh (hoặc showroom đầu tiên)
-    return SHOWROOMS_DATA.find((s) => s.city.includes('Hồ Chí Minh')) || SHOWROOMS_DATA[0];
+    return null;
   }, [vehicle]);
 
   // Tự động tải danh sách nhân viên showroom khi showroom hoặc ngày giờ được chọn
   useEffect(() => {
-    if (!matchedShowroom) return;
+    if (!matchedShowroom?.id) {
+      setStaffList([]);
+      setSelectedStaffId(null);
+      return;
+    }
     let isCancelled = false;
 
     const fetchStaff = async () => {
@@ -117,7 +117,7 @@ const DepositPage = () => {
           const staffArr = Array.isArray(list) ? list : [];
           setStaffList(staffArr);
 
-          // Tự động chọn (Auto-select) nhân viên rảnh đầu tiên theo yêu cầu HANDOFF
+          // Tự động chọn chuyên viên rảnh đầu tiên
           const firstAvailable = staffArr.find((s) => s.isAvailable);
           if (firstAvailable) {
             setSelectedStaffId(firstAvailable.id);
@@ -126,7 +126,11 @@ const DepositPage = () => {
           }
         }
       } catch (err) {
-        console.error('Lỗi lấy danh sách chuyên viên tư vấn:', err);
+        console.error('Lỗi lấy danh sách chuyên viên tư vấn từ Backend:', err);
+        if (!isCancelled) {
+          setStaffList([]);
+          setSelectedStaffId(null);
+        }
       } finally {
         if (!isCancelled) setLoadingStaff(false);
       }
@@ -157,6 +161,11 @@ const DepositPage = () => {
     }
     if (!vehicle) return;
 
+    if (!matchedShowroom?.id) {
+      alert('Xe này hiện chưa được gán thông tin Showroom cụ thể trong hệ thống. Không thể tạo đơn cọc.');
+      return;
+    }
+
     if (!appointmentDate) {
       alert('Vui lòng chọn ngày hẹn xem xe!');
       return;
@@ -181,13 +190,13 @@ const DepositPage = () => {
 
       const depositPayload = {
         vehicleId: targetVehicleId,
-        showroomId: matchedShowroom?.id || vehicle.showroomId || 1,
+        showroomId: matchedShowroom.id,
         appointmentDate: fullAppointmentDateTime,
         hasTestDrive,
-        assignedStaffId: selectedStaffId || null,
+        assignedStaffId: selectedStaffId ? Number(selectedStaffId) : null,
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim(),
-        customerEmail: customerEmail.trim() || 'khachhang@autotrade.vn',
+        customerEmail: customerEmail.trim() || user?.email || '',
         customerNote: note.trim()
       };
 
@@ -210,7 +219,7 @@ const DepositPage = () => {
       if (err.status === 409 || err.message?.includes('409') || err.message?.includes('Xung đột')) {
         setConflictError(err.message || 'Rất tiếc! Xe này vừa được một khách hàng khác đặt cọc trước bạn.');
       } else {
-        alert('Có lỗi xảy ra khi tạo đơn cọc: ' + err.message);
+        alert('Có lỗi xảy ra khi tạo đơn cọc: ' + (err?.response?.data?.message || err.message));
       }
     } finally {
       setIsSubmitting(false);
@@ -236,18 +245,18 @@ const DepositPage = () => {
         confirmedAt: res.confirmedAt || new Date().toLocaleString('vi-VN'),
         depositAmount: res.depositAmount || pendingDeposit.depositAmount || depositAmount,
         message: res.message || 'Thanh toán cọc và xác nhận lịch hẹn thành công',
-        showroomName: res.showroomName || showroomObj?.name || 'AutoTrade TP. Hồ Chí Minh',
-        showroomAddress: res.showroomAddress || showroomObj?.address || 'Số 1 Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP.HCM',
-        showroomPhone: res.showroomPhone || showroomObj?.hotline || '028 7300 8888',
-        assignedStaffName: res.assignedStaffName || staffObj?.fullName || 'Lê Hoàng Nam',
-        assignedStaffPhone: res.assignedStaffPhone || staffObj?.phone || '0987.654.301'
+        showroomName: res.showroomName || showroomObj?.name || 'Showroom AutoTrade',
+        showroomAddress: res.showroomAddress || showroomObj?.address || '',
+        showroomPhone: res.showroomPhone || showroomObj?.hotline || '',
+        assignedStaffName: res.assignedStaffName || staffObj?.fullName || (pendingDeposit.assignedStaffId ? 'Chuyên viên tư vấn' : 'Chưa phân công'),
+        assignedStaffPhone: res.assignedStaffPhone || staffObj?.phone || ''
       });
     } catch (err) {
       if (err.status === 409 || err.message?.includes('409') || err.message?.includes('cọc trước') || err.message?.includes('Xung đột')) {
         setConflictError(err.message || 'Rất tiếc! Chiếc xe này vừa có khách hàng khác đặt cọc thành công trong cùng thời điểm. Giao dịch giữ xe của bạn bị hủy.');
         setPendingDeposit(null);
       } else {
-        alert('Lỗi xác nhận thanh toán: ' + err.message);
+        alert('Lỗi xác nhận thanh toán: ' + (err?.response?.data?.message || err.message));
       }
     } finally {
       setIsSubmitting(false);
@@ -423,7 +432,7 @@ const DepositPage = () => {
       )}
 
       {/* THÔNG TIN SHOWROOM TRƯNG BÀY XE */}
-      {matchedShowroom && (
+      {matchedShowroom ? (
         <div className="showroom-location-banner">
           <div className="showroom-banner-content">
             <div className="showroom-banner-title">
@@ -436,6 +445,13 @@ const DepositPage = () => {
               Hotline chi nhánh: <strong>{matchedShowroom.hotline}</strong> · Giờ đón tiếp: {matchedShowroom.hours}
             </div>
           </div>
+        </div>
+      ) : (
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '16px', borderRadius: '10px', marginBottom: '24px' }}>
+          <strong>Lỗi xác định Showroom:</strong>
+          <p style={{ margin: '4px 0 0', fontSize: '14px' }}>
+            Chiếc xe này hiện chưa được gán thông tin Showroom cụ thể trong hệ thống. Để đảm bảo tính toàn vẹn khi bàn giao xe và lái thử, chức năng đặt cọc tạm thời bị khóa cho phương tiện này.
+          </p>
         </div>
       )}
 
@@ -609,8 +625,17 @@ const DepositPage = () => {
                 <strong>Cam kết hoàn cọc 100%:</strong> Khách hàng được hoàn trả đủ tiền đặt cọc nếu xe thực tế không đúng cam kết kiểm định 160 điểm.
               </div>
 
-              <button type="submit" className="deposit-submit-btn" disabled={isSubmitting}>
-                {isSubmitting ? 'Đang tạo đơn cọc...' : 'Tiếp Tục: Quét Mã QR & Thanh Toán Cọc'}
+              <button
+                type="submit"
+                className="deposit-submit-btn"
+                disabled={isSubmitting || !matchedShowroom}
+                style={!matchedShowroom ? { backgroundColor: '#94a3b8', cursor: 'not-allowed' } : {}}
+              >
+                {!matchedShowroom
+                  ? 'Chức năng đặt cọc bị khóa (Thiếu Showroom)'
+                  : isSubmitting
+                  ? 'Đang tạo đơn cọc...'
+                  : 'Tiếp Tục: Quét Mã QR & Thanh Toán Cọc'}
               </button>
             </form>
           ) : (
