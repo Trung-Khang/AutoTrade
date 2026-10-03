@@ -19,6 +19,9 @@ public class DepositResponse {
     private String showroomName;
     private String showroomAddress;
     private Instant createdAt;
+    private Long assignedStaffId;
+    private String assignedStaffName;
+    private String assignedStaffPhone;
 
     public DepositResponse() {
     }
@@ -126,4 +129,11 @@ public class DepositResponse {
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
     }
+
+    public Long getAssignedStaffId() { return assignedStaffId; }
+    public void setAssignedStaffId(Long assignedStaffId) { this.assignedStaffId = assignedStaffId; }
+    public String getAssignedStaffName() { return assignedStaffName; }
+    public void setAssignedStaffName(String assignedStaffName) { this.assignedStaffName = assignedStaffName; }
+    public String getAssignedStaffPhone() { return assignedStaffPhone; }
+    public void setAssignedStaffPhone(String assignedStaffPhone) { this.assignedStaffPhone = assignedStaffPhone; }
 }

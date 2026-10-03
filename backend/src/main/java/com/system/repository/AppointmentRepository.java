@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, Long> {
@@ -26,6 +27,14 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
     List<Appointment> findByStatus(String status);
 
     boolean existsByUserId(Long userId);
+
+    boolean existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+            Long assignedStaffId, LocalDateTime appointmentDate, Collection<String> statuses);
+
+    boolean existsByAssignedStaffIdAndAppointmentDateAndStatusInAndIdNot(
+            Long assignedStaffId, LocalDateTime appointmentDate, Collection<String> statuses, Long id);
+
+    List<Appointment> findByAssignedStaffIdOrderByAppointmentDateAsc(Long assignedStaffId);
 
     Optional<Appointment> findFirstByUserIdAndVehicleIdAndDepositIdIsNullOrderByCreatedAtDesc(Long userId, Long vehicleId);
 

@@ -26,6 +26,7 @@ public class VehicleResponse {
     private String imageUrl;
     private String description;
     private String status;
+    private Long showroomId;
     private Showroom showroom;
     private Instant createdAt;
 
@@ -51,6 +52,7 @@ public class VehicleResponse {
         this.imageUrl = v.getImageUrl();
         this.description = v.getDescription();
         this.status = v.getStatus();
+        this.showroomId = v.getShowroomId();
         this.showroom = s;
         this.createdAt = v.getCreatedAt();
     }
@@ -197,6 +199,14 @@ public class VehicleResponse {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Long getShowroomId() {
+        return showroomId;
+    }
+
+    public void setShowroomId(Long showroomId) {
+        this.showroomId = showroomId;
     }
 
     public Showroom getShowroom() {

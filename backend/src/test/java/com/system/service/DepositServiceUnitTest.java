@@ -38,6 +38,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -85,6 +86,7 @@ class DepositServiceUnitTest {
         sampleVehicle.setBrand("Toyota");
         sampleVehicle.setModel("Camry");
         sampleVehicle.setStatus("AVAILABLE");
+        sampleVehicle.setShowroomId(10L);
 
         sampleShowroom = new Showroom("Showroom Thủ Đức", "Số 1 Võ Văn Ngân, Thủ Đức", "0901234567", "TP.HCM");
         sampleShowroom.setId(10L);
@@ -183,6 +185,9 @@ class DepositServiceUnitTest {
             a.setId(99L);
             return a;
         });
+        when(appUserRepository.findByShowroomIdAndRoleAndActiveTrueAndLockedFalse(
+                eq(10L), eq(com.system.entity.Role.STAFF)))
+                .thenReturn(List.of(availableStaff(20L, 10L)));
 
         DepositResponse response = depositService.createDeposit(request, 100L);
 
@@ -193,6 +198,124 @@ class DepositServiceUnitTest {
         assertNotNull(response.getQrPaymentUrl(), "Phải tự động sinh link mã QR thanh toán giả lập");
         verify(depositRepository, times(1)).save(any(Deposit.class));
         verify(appointmentRepository, times(1)).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("Gán đúng Staff cùng showroom khi khách chọn nhân viên còn trống")
+    void createDepositAssignsSelectedAvailableStaff() {
+        sampleVehicle.setShowroomId(10L);
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAssignedStaffId(21L);
+        request.setAppointmentDate(LocalDateTime.now().plusDays(2));
+
+        com.system.entity.AppUser staff = new com.system.entity.AppUser();
+        org.springframework.test.util.ReflectionTestUtils.setField(staff, "id", 21L);
+        staff.setRole(com.system.entity.Role.STAFF);
+        staff.setActive(true);
+        staff.setLocked(false);
+        staff.setShowroomId(10L);
+        staff.setFullName("Staff Test");
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appUserRepository.findById(21L)).thenReturn(Optional.of(staff));
+        when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                eq(21L), eq(request.getAppointmentDate()), any())).thenReturn(false);
+        when(depositRepository.save(any(Deposit.class))).thenAnswer(i -> {
+            Deposit d = i.getArgument(0);
+            d.setId(50L);
+            return d;
+        });
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(i -> {
+            Appointment a = i.getArgument(0);
+            a.setId(99L);
+            return a;
+        });
+
+        depositService.createDeposit(request, 100L);
+
+        ArgumentCaptor<Appointment> captor = ArgumentCaptor.forClass(Appointment.class);
+        verify(appointmentRepository).save(captor.capture());
+        assertEquals(21L, captor.getValue().getAssignedStaffId());
+    }
+
+    @Test
+    @DisplayName("Không tạo cọc khi Staff được chọn đã kín lịch")
+    void createDepositRejectsBusySelectedStaff() {
+        sampleVehicle.setShowroomId(10L);
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAssignedStaffId(21L);
+        request.setAppointmentDate(LocalDateTime.now().plusDays(2));
+
+        com.system.entity.AppUser staff = new com.system.entity.AppUser();
+        org.springframework.test.util.ReflectionTestUtils.setField(staff, "id", 21L);
+        staff.setRole(com.system.entity.Role.STAFF);
+        staff.setActive(true);
+        staff.setShowroomId(10L);
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appUserRepository.findById(21L)).thenReturn(Optional.of(staff));
+        when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                eq(21L), eq(request.getAppointmentDate()), any())).thenReturn(true);
+
+        assertThrows(com.system.exception.AuthException.class,
+                () -> depositService.createDeposit(request, 100L));
+        verify(depositRepository, never()).save(any(Deposit.class));
+    }
+
+    @Test
+    void createDepositRejectsWhenAllShowroomStaffAreBusy() {
+        sampleVehicle.setShowroomId(10L);
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAppointmentDate(LocalDateTime.now().plusDays(2));
+
+        com.system.entity.AppUser firstStaff = availableStaff(21L, 10L);
+        com.system.entity.AppUser secondStaff = availableStaff(22L, 10L);
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appUserRepository.findByShowroomIdAndRoleAndActiveTrueAndLockedFalse(
+                10L, com.system.entity.Role.STAFF)).thenReturn(List.of(firstStaff, secondStaff));
+        when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                anyLong(), eq(request.getAppointmentDate()), any())).thenReturn(true);
+
+        com.system.exception.AuthException error = assertThrows(com.system.exception.AuthException.class,
+                () -> depositService.createDeposit(request, 100L));
+
+        assertEquals(org.springframework.http.HttpStatus.CONFLICT, error.getStatus());
+        verify(depositRepository, never()).save(any(Deposit.class));
+        verify(appointmentRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    void createDepositRejectsAnyNonAvailableVehicleStatus() {
+        sampleVehicle.setStatus("ARCHIVED");
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAppointmentDate(LocalDateTime.now().plusDays(2));
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+
+        assertThrows(VehicleNotAvailableException.class, () -> depositService.createDeposit(request, 100L));
+        verify(depositRepository, never()).save(any(Deposit.class));
+    }
+
+    private com.system.entity.AppUser availableStaff(Long id, Long showroomId) {
+        com.system.entity.AppUser staff = new com.system.entity.AppUser();
+        org.springframework.test.util.ReflectionTestUtils.setField(staff, "id", id);
+        staff.setRole(com.system.entity.Role.STAFF);
+        staff.setActive(true);
+        staff.setLocked(false);
+        staff.setShowroomId(showroomId);
+        return staff;
     }
 
     @Test
@@ -292,8 +415,9 @@ class DepositServiceUnitTest {
         TransactionLedgerRepository mockLedgerRepo = mock(TransactionLedgerRepository.class);
         AppointmentRepository mockAppointmentRepo = mock(AppointmentRepository.class);
         AppUserRepository mockUserRepo = mock(AppUserRepository.class);
+        ShowroomRepository mockShowroomRepo = mock(ShowroomRepository.class);
         AdminLedgerService ledgerService = new AdminLedgerService(mockLedgerRepo, mockDepRepo, mockVehRepo,
-                mockAppointmentRepo, mockUserRepo);
+                mockAppointmentRepo, mockUserRepo, mockShowroomRepo);
 
         when(mockDepRepo.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
         when(mockAppointmentRepo.findLockedByDepositId(50L)).thenReturn(Optional.empty());

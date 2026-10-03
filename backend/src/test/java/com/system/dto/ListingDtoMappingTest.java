@@ -30,6 +30,7 @@ class ListingDtoMappingTest {
         Vehicle vehicle = new Vehicle("Toyota", "Vios", "1.5G", 2021, "Gasoline", "Automatic", 1.5, 5, "Domestic", "Sedan");
         vehicle.setId(10L);
         vehicle.setStatus("ARCHIVED");
+        vehicle.setShowroomId(2L);
 
         Source source = new Source("bonbanh", "https://bonbanh.com");
         source.setId(1L);
@@ -64,7 +65,9 @@ class ListingDtoMappingTest {
         assertEquals(5, dto.getSeatCount());
         assertEquals("Domestic", dto.getOrigin());
         assertEquals("Sedan", dto.getBodyType());
-        assertEquals("AVAILABLE", dto.getStatus());
+        assertEquals("ARCHIVED", dto.getStatus());
+        assertEquals(2L, dto.getShowroomId());
+        assertFalse(dto.isDepositEligible());
 
         // Source info
         assertEquals(1L, dto.getSourceId());
@@ -95,6 +98,8 @@ class ListingDtoMappingTest {
         assertNull(dto.getTransmission());
         assertNull(dto.getSourceId());
         assertNull(dto.getSourceName());
+        assertNull(dto.getShowroomId());
+        assertFalse(dto.isDepositEligible());
     }
 
     @Test

@@ -44,6 +44,9 @@ public class Appointment {
     @Column(name = "staff_note", length = 500)
     private String staffNote;
 
+    @Column(name = "assigned_staff_id")
+    private Long assignedStaffId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -145,6 +148,14 @@ public class Appointment {
 
     public void setStaffNote(String staffNote) {
         this.staffNote = staffNote;
+    }
+
+    public Long getAssignedStaffId() {
+        return assignedStaffId;
+    }
+
+    public void setAssignedStaffId(Long assignedStaffId) {
+        this.assignedStaffId = assignedStaffId;
     }
 
     public Instant getCreatedAt() {

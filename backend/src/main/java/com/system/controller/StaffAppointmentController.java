@@ -5,13 +5,15 @@ import com.system.entity.Appointment;
 import com.system.service.AppointmentService;
 import com.system.service.AdminLedgerService;
 import com.system.dto.AppointmentResponse;
+import com.system.entity.Role;
+import com.system.security.AppUserPrincipal;
+import com.system.security.SecurityUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/staff/appointments")
@@ -33,10 +35,11 @@ public class StaffAppointmentController {
     public ResponseEntity<List<AppointmentResponse>> getAppointments(
             @RequestParam(required = false) Long showroomId,
             @RequestParam(required = false) String status) {
-        Set<Long> showroomAppointmentIds = showroomId == null ? null : appointmentService.getAppointments(showroomId, null)
-                .stream().map(Appointment::getId).collect(java.util.stream.Collectors.toSet());
+        AppUserPrincipal currentUser = SecurityUtils.currentUser();
         List<AppointmentResponse> list = ledgerService.getAppointments().stream()
-                .filter(item -> showroomAppointmentIds == null || showroomAppointmentIds.contains(item.id()))
+                .filter(item -> currentUser.role() == Role.ADMIN
+                        || (item.assignedStaffId() != null && item.assignedStaffId().equals(currentUser.id())))
+                .filter(item -> showroomId == null || showroomId.equals(item.showroomId()))
                 .filter(item -> status == null || status.isBlank() || status.equalsIgnoreCase(item.status()))
                 .toList();
         return ResponseEntity.ok(list);
@@ -49,7 +52,7 @@ public class StaffAppointmentController {
     public ResponseEntity<Appointment> checkIn(
             @PathVariable Long id,
             @RequestBody CheckInRequest request) {
-        Appointment updated = appointmentService.checkIn(id, request);
+        Appointment updated = appointmentService.checkIn(id, request, SecurityUtils.currentUser());
         return ResponseEntity.ok(updated);
     }
 }

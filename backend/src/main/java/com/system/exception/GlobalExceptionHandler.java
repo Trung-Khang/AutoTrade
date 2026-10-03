@@ -31,6 +31,12 @@ public class GlobalExceptionHandler {
         while (cause != null) {
             if (cause instanceof ConstraintViolationException violation
                     && "23505".equals(violation.getSQLState())
+                    && "uq_staff_appointment_slot".equals(violation.getConstraintName())) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(409, "Conflict",
+                        "Khung giờ này vừa được nhân viên khác nhận. Vui lòng chọn giờ khác.", request.getRequestURI()));
+            }
+            if (cause instanceof ConstraintViolationException violation
+                    && "23505".equals(violation.getSQLState())
                     && violation.getConstraintName() != null
                     && identityKeys.contains(violation.getConstraintName())) {
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(409, "Conflict",

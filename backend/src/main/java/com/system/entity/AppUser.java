@@ -40,6 +40,9 @@ public class AppUser {
     @Column(nullable = false)
     private boolean locked = false;
 
+    @Column(name = "showroom_id")
+    private Long showroomId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -61,6 +64,7 @@ public class AppUser {
     public boolean isActive() { return active; }
     public boolean isEmailVerified() { return emailVerified; }
     public boolean isLocked() { return locked; }
+    public Long getShowroomId() { return showroomId; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public void setUsername(String username) { this.username = username; }
@@ -72,4 +76,5 @@ public class AppUser {
     public void setActive(boolean active) { this.active = active; }
     public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
     public void setLocked(boolean locked) { this.locked = locked; }
+    public void setShowroomId(Long showroomId) { this.showroomId = showroomId; }
 }

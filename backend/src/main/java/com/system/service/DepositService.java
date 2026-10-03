@@ -14,6 +14,7 @@ import com.system.exception.VehicleAlreadyReservedException;
 import com.system.exception.VehicleNotAvailableException;
 import com.system.exception.AuthException;
 import com.system.repository.AppointmentRepository;
+import com.system.repository.AppUserRepository;
 import com.system.repository.DepositRepository;
 import com.system.repository.ShowroomRepository;
 import com.system.repository.TransactionLedgerRepository;
@@ -35,19 +36,22 @@ public class DepositService {
     private final AppointmentRepository appointmentRepository;
     private final TransactionLedgerRepository ledgerRepository;
     private final com.system.repository.ListingRepository listingRepository;
+    private final AppUserRepository appUserRepository;
 
     public DepositService(DepositRepository depositRepository,
                           VehicleRepository vehicleRepository,
                           ShowroomRepository showroomRepository,
                           AppointmentRepository appointmentRepository,
                           TransactionLedgerRepository ledgerRepository,
-                          com.system.repository.ListingRepository listingRepository) {
+                          com.system.repository.ListingRepository listingRepository,
+                          AppUserRepository appUserRepository) {
         this.depositRepository = depositRepository;
         this.vehicleRepository = vehicleRepository;
         this.showroomRepository = showroomRepository;
         this.appointmentRepository = appointmentRepository;
         this.ledgerRepository = ledgerRepository;
         this.listingRepository = listingRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     /**
@@ -70,21 +74,30 @@ public class DepositService {
         }
 
         String currentStatus = vehicle.getStatus() != null ? vehicle.getStatus().toUpperCase() : "AVAILABLE";
-        if ("HOLD".equals(currentStatus) || "RESERVED".equals(currentStatus) || "SOLD".equals(currentStatus)) {
+        if (!"AVAILABLE".equals(currentStatus)) {
             throw new VehicleNotAvailableException("Rất tiếc! Xe này hiện tại không thể đặt cọc (Trạng thái hiện tại: " + currentStatus + ").");
         }
 
         // 2. Kiểm tra showroom (fallback về showroom đầu tiên nếu không tìm thấy)
         Showroom showroom = null;
-        if (request.getShowroomId() != null) {
-            showroom = showroomRepository.findById(request.getShowroomId()).orElse(null);
+        if (request.getAppointmentDate() == null) {
+            throw new IllegalArgumentException("Ngày giờ hẹn là bắt buộc.");
         }
-        if (showroom == null) {
-            showroom = showroomRepository.findAll().stream().findFirst()
-                    .orElseGet(() -> new Showroom("Showroom AutoTrade Trung Tâm", "Hồ Chí Minh"));
+        Long vehicleShowroomId = vehicle.getShowroomId();
+        Long showroomId = vehicleShowroomId;
+        if (showroomId == null || request.getShowroomId() == null) {
+            throw new IllegalArgumentException("Xe chưa được gắn showroom hợp lệ.");
         }
+        if (request.getShowroomId() != null && vehicleShowroomId != null
+                && !request.getShowroomId().equals(vehicleShowroomId)) {
+            throw new IllegalArgumentException("Showroom đặt lịch không trùng showroom của xe.");
+        }
+        showroom = showroomRepository.findById(showroomId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy showroom với ID: " + showroomId));
 
         // 3. Tính tiền cọc: 10% giá trị xe (hoặc tối thiểu 10.000.000 VNĐ)
+        Long assignedStaffId = resolveAssignedStaff(request.getAssignedStaffId(), showroom.getId(),
+                request.getAppointmentDate(), false);
         BigDecimal vehiclePrice = BigDecimal.ZERO;
         if (listingRepository != null) {
             List<com.system.entity.Listing> listings = listingRepository.findByVehicleId(vehicle.getId());
@@ -119,6 +132,7 @@ public class DepositService {
                 request.isHasTestDrive(),
                 request.getCustomerNote()
         );
+        appointment.setAssignedStaffId(assignedStaffId);
         appointment = appointmentRepository.save(appointment);
 
         // 5. Chuẩn bị response
@@ -135,9 +149,60 @@ public class DepositService {
         response.setHasTestDrive(appointment.isHasTestDrive());
         response.setShowroomName(showroom.getName());
         response.setShowroomAddress(showroom.getAddress());
+        response.setAssignedStaffId(appointment.getAssignedStaffId());
+        if (appointment.getAssignedStaffId() != null) {
+            appUserRepository.findById(appointment.getAssignedStaffId()).ifPresent(staff -> {
+                response.setAssignedStaffName(staff.getFullName());
+                response.setAssignedStaffPhone(staff.getPhone());
+            });
+        }
         response.setCreatedAt(deposit.getCreatedAt());
 
         return response;
+    }
+
+    private Long resolveAssignedStaff(Long requestedStaffId, Long showroomId,
+                                      java.time.LocalDateTime appointmentDate,
+                                      boolean allowLegacyUnassigned) {
+        if (requestedStaffId != null) {
+            com.system.entity.AppUser staff = appUserRepository.findById(requestedStaffId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên được chọn."));
+            validateStaffForShowroom(staff, showroomId);
+            rejectIfBusy(staff.getId(), appointmentDate);
+            return staff.getId();
+        }
+
+        List<com.system.entity.AppUser> staffList = appUserRepository
+                .findByShowroomIdAndRoleAndActiveTrueAndLockedFalse(showroomId, com.system.entity.Role.STAFF);
+        if (staffList.isEmpty() && allowLegacyUnassigned) {
+            return null;
+        }
+        for (com.system.entity.AppUser staff : staffList) {
+            if (!appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                    staff.getId(), appointmentDate, java.util.Set.of("PENDING", "SCHEDULED"))) {
+                return staff.getId();
+            }
+        }
+
+        throw new AuthException(HttpStatus.CONFLICT,
+                "Khung giờ này hiện không còn nhân viên trống. Vui lòng chọn giờ khác.");
+    }
+
+    private void validateStaffForShowroom(com.system.entity.AppUser staff, Long showroomId) {
+        if (staff.getRole() != com.system.entity.Role.STAFF || !staff.isActive() || staff.isLocked()) {
+            throw new IllegalArgumentException("Nhân viên được chọn không còn hoạt động.");
+        }
+        if (!showroomId.equals(staff.getShowroomId())) {
+            throw new IllegalArgumentException("Nhân viên không thuộc showroom của xe.");
+        }
+    }
+
+    private void rejectIfBusy(Long staffId, java.time.LocalDateTime appointmentDate) {
+        if (appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                staffId, appointmentDate, java.util.Set.of("PENDING", "SCHEDULED"))) {
+            throw new AuthException(HttpStatus.CONFLICT,
+                    "Nhân viên đã kín lịch ở khung giờ này. Vui lòng chọn nhân viên hoặc giờ khác.");
+        }
     }
 
     /**
@@ -239,6 +304,24 @@ public class DepositService {
         receipt.setDepositAmount(deposit.getAmount());
         receipt.setConfirmedAt(deposit.getConfirmedAt());
         receipt.setMessage("Biên lai xác nhận đặt cọc giữ xe.");
+
+        Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
+        if (appointment != null) {
+            receipt.setShowroomId(appointment.getShowroomId());
+            if (appointment.getShowroomId() != null) {
+                showroomRepository.findById(appointment.getShowroomId()).ifPresent(showroom -> {
+                    receipt.setShowroomName(showroom.getName());
+                    receipt.setShowroomAddress(showroom.getAddress());
+                });
+            }
+            receipt.setAssignedStaffId(appointment.getAssignedStaffId());
+            if (appointment.getAssignedStaffId() != null) {
+                appUserRepository.findById(appointment.getAssignedStaffId()).ifPresent(staff -> {
+                    receipt.setAssignedStaffName(staff.getFullName());
+                    receipt.setAssignedStaffPhone(staff.getPhone());
+                });
+            }
+        }
 
         return receipt;
     }

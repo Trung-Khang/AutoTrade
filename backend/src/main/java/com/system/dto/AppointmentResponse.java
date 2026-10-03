@@ -18,4 +18,10 @@ public record AppointmentResponse(
         boolean hasTestDrive,
         String status,
         String customerNote,
-        String staffNote) { }
+        String staffNote,
+        Long showroomId,
+        String showroomName,
+        String showroomAddress,
+        Long assignedStaffId,
+        String assignedStaffName,
+        String assignedStaffPhone) { }
