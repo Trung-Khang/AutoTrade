@@ -8,8 +8,10 @@ import com.system.entity.Role;
 import com.system.security.AppUserPrincipal;
 import org.springframework.http.HttpStatus;
 import com.system.repository.AppointmentRepository;
+import com.system.repository.DepositRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.Instant;
 import java.util.List;
@@ -18,9 +20,17 @@ import java.util.List;
 public class AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
+    private final DepositRepository depositRepository;
 
-    public AppointmentService(AppointmentRepository appointmentRepository) {
+    @Autowired
+    public AppointmentService(AppointmentRepository appointmentRepository, DepositRepository depositRepository) {
         this.appointmentRepository = appointmentRepository;
+        this.depositRepository = depositRepository;
+    }
+
+    // Giữ constructor tương thích cho các test/consumer cũ không dùng dữ liệu deposit.
+    public AppointmentService(AppointmentRepository appointmentRepository) {
+        this(appointmentRepository, null);
     }
 
     /**
@@ -58,6 +68,15 @@ public class AppointmentService {
 
         if (!"PENDING".equalsIgnoreCase(appointment.getStatus())) {
             throw new AuthException(HttpStatus.CONFLICT, "Chỉ lịch hẹn PENDING mới được check-in.");
+        }
+
+        if (appointment.getDepositId() != null && depositRepository != null) {
+            com.system.entity.Deposit deposit = depositRepository.findById(appointment.getDepositId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn cọc liên kết với lịch hẹn."));
+            if (!"DEPOSITED".equalsIgnoreCase(deposit.getStatus())) {
+                throw new AuthException(HttpStatus.CONFLICT,
+                        "Đơn cọc chưa được thanh toán nên chưa thể tiếp nhận hoặc check-in lịch hẹn.");
+            }
         }
 
         appointment.setStatus("COMPLETED");

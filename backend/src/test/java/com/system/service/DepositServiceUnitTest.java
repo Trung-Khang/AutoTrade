@@ -87,7 +87,7 @@ class DepositServiceUnitTest {
         sampleVehicle.setModel("Camry");
         sampleVehicle.setStatus("AVAILABLE");
         sampleVehicle.setShowroomId(10L);
-        when(vehicleRepository.findLockedById(1L)).thenReturn(Optional.of(sampleVehicle));
+        lenient().when(vehicleRepository.findLockedById(1L)).thenReturn(Optional.of(sampleVehicle));
 
         sampleShowroom = new Showroom("Showroom Thủ Đức", "Số 1 Võ Văn Ngân, Thủ Đức", "0901234567", "TP.HCM");
         sampleShowroom.setId(10L);
@@ -407,6 +407,34 @@ class DepositServiceUnitTest {
     }
 
     @Test
+    @DisplayName("Không check-in lịch khi đơn cọc chưa thanh toán")
+    void unpaidDepositAppointmentCannotBeCheckedIn() {
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L,
+                LocalDateTime.now(), true, "Lái thử");
+        appointment.setId(89L);
+        appointment.setStatus("PENDING");
+        when(appointmentRepository.findLockedById(89L)).thenReturn(Optional.of(appointment));
+        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
+
+        assertThrows(com.system.exception.AuthException.class,
+                () -> appointmentService.checkIn(89L, new CheckInRequest()));
+        verify(appointmentRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("Danh sách Admin không trả lịch của đơn cọc PENDING")
+    void adminAppointmentListExcludesUnpaidDeposit() {
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L,
+                LocalDateTime.now(), true, null);
+        appointment.setId(92L);
+        appointment.setStatus("PENDING");
+        when(appointmentRepository.findAll()).thenReturn(List.of(appointment));
+        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
+
+        assertTrue(adminLedgerService.getAppointments().isEmpty());
+    }
+
+    @Test
     @DisplayName("6. Admin duyệt hoàn tiền cọc -> Mở lại xe về AVAILABLE")
     void testAdminRefundDeposit() {
         sampleDeposit.setStatus("DEPOSITED");
@@ -496,7 +524,9 @@ class DepositServiceUnitTest {
         appointment.setId(90L);
         appointment.setStatus("PENDING");
         LocalDateTime newDate = LocalDateTime.now().plusDays(4);
+        sampleDeposit.setStatus("DEPOSITED");
         when(appointmentRepository.findLockedById(90L)).thenReturn(Optional.of(appointment));
+        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         AppointmentResponse response = adminLedgerService.reschedule(90L,

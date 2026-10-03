@@ -40,6 +40,13 @@ public class ListingSpecification {
                 predicates.add(criteriaBuilder.equal(vehicleJoin.get("id"), filter.getVehicleId()));
             }
 
+            if (filter.getShowroomId() != null) {
+                predicates.add(criteriaBuilder.equal(vehicleJoin.get("showroomId"), filter.getShowroomId()));
+            }
+            if (Boolean.TRUE.equals(filter.getShowroomUnassigned())) {
+                predicates.add(criteriaBuilder.isNull(vehicleJoin.get("showroomId")));
+            }
+
             //Hãng xe (Brand)
             if (filter.getBrand() != null && !filter.getBrand().trim().isEmpty()) {
                 predicates.add(criteriaBuilder.equal(
@@ -136,6 +143,11 @@ public class ListingSpecification {
                 } else {
                     predicates.add(criteriaBuilder.equal(vehicleJoin.get("status"), status));
                 }
+            }
+
+            if (Boolean.TRUE.equals(filter.getDepositEligible())) {
+                predicates.add(criteriaBuilder.isNotNull(vehicleJoin.get("showroomId")));
+                predicates.add(criteriaBuilder.equal(vehicleJoin.get("status"), "AVAILABLE"));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));

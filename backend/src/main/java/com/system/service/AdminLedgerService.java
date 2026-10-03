@@ -61,7 +61,10 @@ public class AdminLedgerService {
 
     @Transactional(readOnly = true)
     public List<AppointmentResponse> getAppointments() {
-        return appointmentRepository.findAll().stream().map(this::toResponse).toList();
+        return appointmentRepository.findAll().stream()
+                .filter(this::isPaidOperationalAppointment)
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -71,6 +74,7 @@ public class AdminLedgerService {
         }
         Appointment appointment = appointmentRepository.findLockedById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
+        requirePaidDeposit(appointment);
         requirePending(appointment);
         if (appointment.getAssignedStaffId() != null
                 && appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusInAndIdNot(
@@ -95,6 +99,7 @@ public class AdminLedgerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn cọc liên kết."));
         Appointment appointment = appointmentRepository.findLockedById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
+        requirePaidDeposit(appointment, deposit);
         requirePending(appointment);
         return refundLockedDeposit(deposit, appointment, reason);
     }
@@ -139,6 +144,29 @@ public class AdminLedgerService {
     private void requirePending(Appointment appointment) {
         if (!"PENDING".equalsIgnoreCase(appointment.getStatus())) {
             throw new AuthException(HttpStatus.CONFLICT, "Chỉ lịch hẹn PENDING mới được đổi hoặc hủy.");
+        }
+    }
+
+    private boolean isPaidOperationalAppointment(Appointment appointment) {
+        if (appointment.getDepositId() == null || "CANCELLED".equalsIgnoreCase(appointment.getStatus())) {
+            return false;
+        }
+        return depositRepository.findById(appointment.getDepositId())
+                .map(deposit -> "DEPOSITED".equalsIgnoreCase(deposit.getStatus()))
+                .orElse(false);
+    }
+
+    private void requirePaidDeposit(Appointment appointment) {
+        Deposit deposit = appointment.getDepositId() == null ? null
+                : depositRepository.findById(appointment.getDepositId()).orElse(null);
+        requirePaidDeposit(appointment, deposit);
+    }
+
+    private void requirePaidDeposit(Appointment appointment, Deposit deposit) {
+        if (appointment.getDepositId() == null || deposit == null
+                || !"DEPOSITED".equalsIgnoreCase(deposit.getStatus())) {
+            throw new AuthException(HttpStatus.CONFLICT,
+                    "Đơn cọc chưa được thanh toán nên lịch hẹn chưa thể xử lý.");
         }
     }
 

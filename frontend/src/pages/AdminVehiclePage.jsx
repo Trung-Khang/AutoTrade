@@ -50,6 +50,7 @@ const AdminVehiclePage = () => {
   const [keywordInput, setKeywordInput] = useState('');
   const [keyword, setKeyword] = useState('');
   const [status, setStatus] = useState('ALL');
+  const [showroomFilter, setShowroomFilter] = useState('ALL');
   const [jumpPage, setJumpPage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -67,6 +68,11 @@ const AdminVehiclePage = () => {
         page, size: PAGE_SIZE, sort: 'id,desc',
         ...(keyword ? { keyword } : {}),
         ...(status !== 'ALL' ? { status } : {}),
+        ...(showroomFilter !== 'ALL' && showroomFilter !== 'UNASSIGNED'
+          ? { showroomId: Number(showroomFilter) }
+          : {}),
+        ...(showroomFilter === 'UNASSIGNED' ? { showroomUnassigned: true } : {}),
+        ...(status === 'AVAILABLE' ? { depositEligible: true } : {}),
       });
       setListings(response.content);
       setPagination(response);
@@ -76,7 +82,7 @@ const AdminVehiclePage = () => {
     } finally {
       setLoading(false);
     }
-  }, [keyword, page, status]);
+  }, [keyword, page, showroomFilter, status]);
 
   useEffect(() => { loadListings(); }, [loadListings]);
 
@@ -205,6 +211,18 @@ const AdminVehiclePage = () => {
             </button>
           ))}
         </div>
+        <select
+          className="admin-showroom-filter"
+          value={showroomFilter}
+          onChange={(event) => { setShowroomFilter(event.target.value); setPage(0); }}
+          aria-label="Lọc theo thành phố showroom"
+        >
+          <option value="ALL">Tất cả thành phố</option>
+          <option value="1">TP. Hồ Chí Minh</option>
+          <option value="2">Hà Nội</option>
+          <option value="3">Đà Nẵng</option>
+          <option value="UNASSIGNED">Chưa phân chi nhánh</option>
+        </select>
       </div>
 
       <div className="admin-table-container">
@@ -215,6 +233,8 @@ const AdminVehiclePage = () => {
             {!loading && listings.length === 0 && <tr><td colSpan="8" className="admin-table-state">Không có tin xe phù hợp.</td></tr>}
             {!loading && listings.map((listing) => {
               const currentStatus = listing.status || 'AVAILABLE';
+              const isDepositEligible = listing.depositEligible === true;
+              const isUnavailableForDeposit = currentStatus.toUpperCase() === 'AVAILABLE' && !isDepositEligible;
               const isBusy = busyId === listing.id;
               return (
                 <tr key={listing.id}>
@@ -224,7 +244,24 @@ const AdminVehiclePage = () => {
                   <td className="admin-price">{formatFullPrice(listing.price)}</td>
                   <td>{formatMileage(listing.mileage)}</td>
                   <td>{listing.location || 'Chưa xác định'}</td>
-                  <td><select className={`status-select ${currentStatus}`} value={currentStatus} disabled={isBusy} title={currentStatus === 'HOLD' ? 'Xe đang có đơn giữ cọc; cần hủy lịch và hoàn cọc trước khi mở bán lại.' : undefined} onChange={(event) => updateStatus(listing, event.target.value)}><option value="AVAILABLE" disabled={currentStatus === 'HOLD'}>AVAILABLE (Mở bán)</option><option value="HOLD">HOLD (Giữ cọc)</option><option value="SOLD">SOLD (Đã bán)</option></select></td>
+                  <td>
+                    <select
+                      className={`status-select ${isUnavailableForDeposit ? 'UNAVAILABLE' : currentStatus}`}
+                      value={isUnavailableForDeposit ? 'UNAVAILABLE' : currentStatus}
+                      disabled={isBusy || isUnavailableForDeposit}
+                      title={isUnavailableForDeposit
+                        ? 'Xe chưa được gán showroom vận hành nên chưa mở đặt cọc.'
+                        : currentStatus === 'HOLD'
+                          ? 'Xe đang có đơn giữ cọc; cần hủy lịch và hoàn cọc trước khi mở bán lại.'
+                          : undefined}
+                      onChange={(event) => updateStatus(listing, event.target.value)}
+                    >
+                      {isUnavailableForDeposit && <option value="UNAVAILABLE">Chưa mở đặt cọc</option>}
+                      <option value="AVAILABLE">AVAILABLE (Mở bán)</option>
+                      <option value="HOLD">HOLD (Giữ cọc)</option>
+                      <option value="SOLD">SOLD (Đã bán)</option>
+                    </select>
+                  </td>
                   <td><div className="action-buttons-cell"><button type="button" onClick={() => openEditModal(listing)} disabled={isBusy} title="Sửa tin xe"><FaEdit /></button><button type="button" onClick={() => deleteListing(listing)} disabled={isBusy} title="Xóa tin xe"><FaTrash /></button></div></td>
                 </tr>
               );

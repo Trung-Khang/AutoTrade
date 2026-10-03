@@ -10,6 +10,13 @@ public class ListingFilterRequest {
     // Lọc theo vehicleId nếu có
     private Long vehicleId;
 
+    // Lọc theo chi nhánh vật lý; không suy đoán từ chuỗi location của listing.
+    private Long showroomId;
+    private Boolean showroomUnassigned;
+
+    // Chỉ lấy xe đủ điều kiện mở đặt cọc tại showroom.
+    private Boolean depositEligible;
+
     // Bộ lọc theo phân loại xe
     private String brand;
     private String model;
@@ -48,6 +55,15 @@ public class ListingFilterRequest {
 
     public Long getVehicleId() { return vehicleId; }
     public void setVehicleId(Long vehicleId) { this.vehicleId = vehicleId; }
+
+    public Long getShowroomId() { return showroomId; }
+    public void setShowroomId(Long showroomId) { this.showroomId = showroomId; }
+
+    public Boolean getShowroomUnassigned() { return showroomUnassigned; }
+    public void setShowroomUnassigned(Boolean showroomUnassigned) { this.showroomUnassigned = showroomUnassigned; }
+
+    public Boolean getDepositEligible() { return depositEligible; }
+    public void setDepositEligible(Boolean depositEligible) { this.depositEligible = depositEligible; }
 
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
