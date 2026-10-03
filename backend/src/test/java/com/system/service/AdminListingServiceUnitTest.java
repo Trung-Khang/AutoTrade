@@ -6,6 +6,8 @@ import com.system.entity.Listing;
 import com.system.entity.Source;
 import com.system.entity.Vehicle;
 import com.system.repository.ListingRepository;
+import com.system.repository.AppointmentRepository;
+import com.system.repository.DepositRepository;
 import com.system.repository.SourceRepository;
 import com.system.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,13 +31,16 @@ class AdminListingServiceUnitTest {
     @Mock private ListingRepository listingRepository;
     @Mock private VehicleRepository vehicleRepository;
     @Mock private SourceRepository sourceRepository;
+    @Mock private DepositRepository depositRepository;
+    @Mock private AppointmentRepository appointmentRepository;
 
     private AdminListingService service;
     private Listing listing;
 
     @BeforeEach
     void setUp() {
-        service = new AdminListingService(listingRepository, vehicleRepository, sourceRepository);
+        service = new AdminListingService(listingRepository, vehicleRepository, sourceRepository,
+                depositRepository, appointmentRepository);
         Vehicle vehicle = new Vehicle("Toyota", "Camry", "2.5Q", 2021,
                 "Gasoline", "Automatic", 2.5, 5, "Imported", "Sedan");
         vehicle.setId(81L);
@@ -50,6 +55,7 @@ class AdminListingServiceUnitTest {
     @Test
     void updateChangesListingAndItsLinkedVehicle() {
         when(listingRepository.findById(10813L)).thenReturn(Optional.of(listing));
+        when(vehicleRepository.findLockedById(81L)).thenReturn(Optional.of(listing.getVehicle()));
         when(listingRepository.save(listing)).thenReturn(listing);
 
         ListingResponseDto response = service.update(10813L, request("HOLD"));
@@ -64,12 +70,28 @@ class AdminListingServiceUnitTest {
     @Test
     void updateStatusUsesListingIdAndUpdatesLinkedVehicle() {
         when(listingRepository.findById(10813L)).thenReturn(Optional.of(listing));
+        when(vehicleRepository.findLockedById(81L)).thenReturn(Optional.of(listing.getVehicle()));
 
         ListingResponseDto response = service.updateStatus(10813L, "SOLD");
 
         assertEquals("SOLD", listing.getVehicle().getStatus());
         assertEquals("SOLD", response.getStatus());
         verify(vehicleRepository).save(listing.getVehicle());
+    }
+
+    @Test
+    void updateStatusRejectsReopeningVehicleWithActiveDeposit() {
+        when(listingRepository.findById(10813L)).thenReturn(Optional.of(listing));
+        when(vehicleRepository.findLockedById(81L)).thenReturn(Optional.of(listing.getVehicle()));
+        when(depositRepository.existsByVehicleIdAndStatusIn(81L, java.util.Set.of("PENDING", "DEPOSITED")))
+                .thenReturn(true);
+
+        com.system.exception.AuthException error = org.junit.jupiter.api.Assertions.assertThrows(
+                com.system.exception.AuthException.class,
+                () -> service.updateStatus(10813L, "AVAILABLE"));
+
+        assertEquals(409, error.getStatus().value());
+        verify(vehicleRepository, never()).save(any(Vehicle.class));
     }
 
     @Test

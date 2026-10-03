@@ -224,7 +224,7 @@ const AdminVehiclePage = () => {
                   <td className="admin-price">{formatFullPrice(listing.price)}</td>
                   <td>{formatMileage(listing.mileage)}</td>
                   <td>{listing.location || 'Chưa xác định'}</td>
-                  <td><select className={`status-select ${currentStatus}`} value={currentStatus} disabled={isBusy} onChange={(event) => updateStatus(listing, event.target.value)}><option value="AVAILABLE">AVAILABLE (Mở bán)</option><option value="HOLD">HOLD (Giữ cọc)</option><option value="SOLD">SOLD (Đã bán)</option></select></td>
+                  <td><select className={`status-select ${currentStatus}`} value={currentStatus} disabled={isBusy} title={currentStatus === 'HOLD' ? 'Xe đang có đơn giữ cọc; cần hủy lịch và hoàn cọc trước khi mở bán lại.' : undefined} onChange={(event) => updateStatus(listing, event.target.value)}><option value="AVAILABLE" disabled={currentStatus === 'HOLD'}>AVAILABLE (Mở bán)</option><option value="HOLD">HOLD (Giữ cọc)</option><option value="SOLD">SOLD (Đã bán)</option></select></td>
                   <td><div className="action-buttons-cell"><button type="button" onClick={() => openEditModal(listing)} disabled={isBusy} title="Sửa tin xe"><FaEdit /></button><button type="button" onClick={() => deleteListing(listing)} disabled={isBusy} title="Xóa tin xe"><FaTrash /></button></div></td>
                 </tr>
               );

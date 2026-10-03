@@ -14,6 +14,7 @@ export const depositApi = {
   createDeposit: (depositData) => apiClient.post('/deposits', depositData),
   confirmPayment: (depositId) => apiClient.post(`/deposits/${depositId}/confirm`),
   getReceipt: (depositId) => apiClient.get(`/deposits/${depositId}/receipt`),
+  getPendingPayment: (depositId) => apiClient.get(`/deposits/${depositId}/pending`),
   getMyDeposits: () => apiClient.get('/deposits/my'),
   getStaffAppointments: (params = {}) => apiClient.get('/staff/appointments', { params }),
   checkInAppointment: (appointmentId, data) => apiClient.put(`/staff/appointments/${appointmentId}/check-in`, data),

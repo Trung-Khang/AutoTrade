@@ -1,6 +1,7 @@
 package com.system.controller;
 
 import com.system.dto.CustomerDepositResponse;
+import com.system.dto.DepositResponse;
 import com.system.exception.AuthException;
 import com.system.security.AppUserPrincipal;
 import com.system.service.DepositService;
@@ -66,5 +67,20 @@ class CustomerDepositHistoryControllerTest {
         assertEquals(HttpStatus.FORBIDDEN, createError.getStatus());
         assertEquals(HttpStatus.FORBIDDEN, confirmError.getStatus());
         verifyNoInteractions(depositService);
+    }
+
+    @Test
+    void currentCustomerCanResumeOwnPendingPayment() {
+        AppUserPrincipal principal = new AppUserPrincipal(73L, "customer", "hash", "Customer",
+                "customer@example.test", "0900000000", com.system.entity.Role.CUSTOMER, true, false);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities()));
+        DepositResponse expected = new DepositResponse();
+        expected.setDepositId(50L);
+        expected.setStatus("PENDING");
+        when(depositService.getPendingPayment(50L, 73L)).thenReturn(expected);
+
+        assertSame(expected, controller.getPendingPayment(50L).getBody());
+        verify(depositService).getPendingPayment(50L, 73L);
     }
 }
