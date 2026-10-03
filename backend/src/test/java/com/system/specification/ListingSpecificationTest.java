@@ -149,4 +149,41 @@ class ListingSpecificationTest {
         assertEquals(1, held.size());
         assertEquals("CR-V", held.get(0).getVehicle().getModel());
     }
+
+    @Test
+    @DisplayName("Kho xe lọc theo showroomId thật, không theo location text")
+    void testFilterByShowroomId() {
+        vios.setShowroomId(1L);
+        crv.setShowroomId(2L);
+        vehicleRepository.saveAll(List.of(vios, crv));
+
+        ListingFilterRequest filter = new ListingFilterRequest();
+        filter.setShowroomId(1L);
+        List<Listing> results = listingRepository.findAll(ListingSpecification.filterBy(filter));
+
+        assertEquals(1, results.size());
+        assertEquals("Vios", results.get(0).getVehicle().getModel());
+    }
+
+    @Test
+    @DisplayName("Xe chưa gán showroom không được tính là đủ điều kiện đặt cọc")
+    void testDepositEligibleRequiresShowroomAndAvailableStatus() {
+        vios.setShowroomId(1L);
+        vios.setStatus("AVAILABLE");
+        crv.setShowroomId(2L);
+        crv.setStatus("HOLD");
+        vehicleRepository.saveAll(List.of(vios, crv));
+
+        ListingFilterRequest eligibleFilter = new ListingFilterRequest();
+        eligibleFilter.setDepositEligible(true);
+        List<Listing> eligible = listingRepository.findAll(ListingSpecification.filterBy(eligibleFilter));
+        assertEquals(1, eligible.size());
+        assertEquals("Vios", eligible.get(0).getVehicle().getModel());
+
+        ListingFilterRequest unassignedFilter = new ListingFilterRequest();
+        unassignedFilter.setShowroomUnassigned(true);
+        List<Listing> unassigned = listingRepository.findAll(ListingSpecification.filterBy(unassignedFilter));
+        assertEquals(1, unassigned.size());
+        assertEquals("VF 3", unassigned.get(0).getVehicle().getModel());
+    }
 }

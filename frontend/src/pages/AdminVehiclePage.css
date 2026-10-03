@@ -102,6 +102,16 @@
 .admin-status-tabs button { padding: 0 13px; border: 1px solid #e2e8f0; border-radius: 6px; }
 .admin-status-tabs button.active { background: #2563eb; border-color: #2563eb; color: #fff; }
 
+.admin-showroom-filter {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #fff;
+  color: #334155;
+  font-weight: 700;
+}
+
 .admin-table-container {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -167,6 +177,7 @@
 .status-select.AVAILABLE { color: #15803d; background: #f0fdf4; border-color: #86efac; }
 .status-select.HOLD { color: #b45309; background: #fffbeb; border-color: #fde68a; }
 .status-select.SOLD { color: #475569; background: #f8fafc; border-color: #cbd5e1; }
+.status-select.UNAVAILABLE { color: #64748b; background: #f1f5f9; border-color: #cbd5e1; cursor: not-allowed; }
 
 .admin-vehicle-table .action-buttons-cell { display: flex; gap: 8px; }
 .admin-vehicle-table .action-buttons-cell button,
