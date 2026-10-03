@@ -8,6 +8,7 @@ import com.system.entity.Vehicle;
 import com.system.repository.ListingRepository;
 import com.system.repository.AppointmentRepository;
 import com.system.repository.DepositRepository;
+import com.system.repository.ShowroomRepository;
 import com.system.repository.SourceRepository;
 import com.system.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ class AdminListingServiceUnitTest {
     @Mock private ListingRepository listingRepository;
     @Mock private VehicleRepository vehicleRepository;
     @Mock private SourceRepository sourceRepository;
+    @Mock private ShowroomRepository showroomRepository;
     @Mock private DepositRepository depositRepository;
     @Mock private AppointmentRepository appointmentRepository;
 
@@ -40,7 +42,7 @@ class AdminListingServiceUnitTest {
     @BeforeEach
     void setUp() {
         service = new AdminListingService(listingRepository, vehicleRepository, sourceRepository,
-                depositRepository, appointmentRepository);
+                showroomRepository, depositRepository, appointmentRepository);
         Vehicle vehicle = new Vehicle("Toyota", "Camry", "2.5Q", 2021,
                 "Gasoline", "Automatic", 2.5, 5, "Imported", "Sedan");
         vehicle.setId(81L);
@@ -131,6 +133,6 @@ class AdminListingServiceUnitTest {
         return new AdminListingRequest("Hyundai", "SantaFe", "Cao cấp", 2021,
                 "Diesel", "Automatic", 2.2, 7, "Imported", "SUV / Crossover",
                 new BigDecimal("880000000"), 75000, "Đen", "Hà Nội",
-                "https://example.test/new-car.jpg", status);
+                "https://example.test/new-car.jpg", status, null);
     }
 }

@@ -18,6 +18,7 @@ public record AdminListingRequest(
         String color,
         String location,
         String imageUrl,
-        String status
+        String status,
+        Long showroomId
 ) {
 }

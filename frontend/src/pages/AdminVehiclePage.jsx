@@ -9,11 +9,16 @@ import './AdminVehiclePage.css';
 
 const PAGE_SIZE = 20;
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80';
+const SHOWROOM_OPTIONS = [
+  { id: 1, label: 'TP. Hồ Chí Minh' },
+  { id: 2, label: 'Hà Nội' },
+  { id: 3, label: 'Đà Nẵng' },
+];
 const EMPTY_FORM = {
   brand: '', model: '', variant: '', manufactureYear: new Date().getFullYear(),
   price: '', mileage: '', fuelType: 'Gasoline', transmission: 'Automatic',
   engineSize: '', seatCount: 5, origin: 'Domestic', bodyType: 'Sedan',
-  color: '', location: '', imageUrl: '', status: 'AVAILABLE',
+  color: '', location: '', showroomId: '', imageUrl: '', status: 'AVAILABLE',
 };
 
 const toForm = (listing) => ({
@@ -30,7 +35,10 @@ const toForm = (listing) => ({
   origin: listing.origin || 'Domestic',
   bodyType: listing.bodyType || listing.body_type || 'Sedan',
   color: listing.color || '',
-  location: listing.location || '',
+  showroomId: listing.showroomId ?? '',
+  location: listing.showroomId
+    ? (SHOWROOM_OPTIONS.find((showroom) => showroom.id === Number(listing.showroomId))?.label || '')
+    : '',
   imageUrl: listing.imageUrl || listing.image_url || '',
   status: listing.status || 'AVAILABLE',
 });
@@ -135,6 +143,7 @@ const AdminVehiclePage = () => {
         mileage: formData.mileage === '' ? null : Number(formData.mileage),
         engineSize: formData.engineSize === '' ? null : Number(formData.engineSize),
         seatCount: formData.seatCount === '' ? null : Number(formData.seatCount),
+        showroomId: formData.showroomId === '' ? null : Number(formData.showroomId),
       };
       if (editingListing) {
         await adminListingApi.updateListing(editingListing.id, payload);
@@ -307,7 +316,24 @@ const AdminVehiclePage = () => {
                 <label>Số chỗ<input type="number" min="2" max="60" value={formData.seatCount} onChange={(event) => setField('seatCount', event.target.value)} /></label>
                 <label>Dung tích động cơ<input type="number" min="0.1" step="0.1" value={formData.engineSize} onChange={(event) => setField('engineSize', event.target.value)} /></label>
                 <label>Màu sắc<input value={formData.color} onChange={(event) => setField('color', event.target.value)} /></label>
-                <label>Khu vực<input value={formData.location} onChange={(event) => setField('location', event.target.value)} /></label>
+                <label>Chi nhánh showroom *
+                  <select
+                    value={formData.showroomId}
+                    onChange={(event) => {
+                      const selectedId = event.target.value;
+                      const selectedShowroom = SHOWROOM_OPTIONS.find((showroom) => String(showroom.id) === selectedId);
+                      setFormData((current) => ({
+                        ...current,
+                        showroomId: selectedId,
+                        location: selectedShowroom?.label || '',
+                      }));
+                    }}
+                    required={!editingListing}
+                  >
+                    <option value="">Chưa phân chi nhánh</option>
+                    {SHOWROOM_OPTIONS.map((showroom) => <option key={showroom.id} value={showroom.id}>{showroom.label}</option>)}
+                  </select>
+                </label>
                 <label>Trạng thái<select value={formData.status} onChange={(event) => setField('status', event.target.value)}><option value="AVAILABLE">Đang mở bán</option><option value="HOLD">Đang giữ cọc</option><option value="SOLD">Đã bán</option></select></label>
                 <label className="admin-form-wide">URL hình ảnh<input type="url" value={formData.imageUrl} onChange={(event) => setField('imageUrl', event.target.value)} /></label>
               </div>
