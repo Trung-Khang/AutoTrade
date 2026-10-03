@@ -100,11 +100,7 @@ export default function FaqPage() {
   return (
     <div className="faq-page">
       <div className="faq-hero">
-        <div className="faq-hero-badge">
-          <FaQuestionCircle /> Trung Tâm Trợ Giúp
-        </div>
         <h1>Câu Hỏi Thường Gặp (FAQ)</h1>
-        <p>Giải đáp toàn bộ thắc mắc về quy trình mua bán xe, đặt cọc giữ chỗ và chính sách tại AutoTrade.</p>
       </div>
 
       <div className="faq-categories">

@@ -88,12 +88,9 @@ const CustomerDepositHistoryPage = () => {
   return (
     <div style={{ maxWidth: '1000px', margin: '36px auto', padding: '0 20px 60px' }}>
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>
+        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
           Đơn Đặt Cọc & Lịch Hẹn Của Tôi
         </h1>
-        <p style={{ color: '#64748b', fontSize: '14px' }}>
-          Theo dõi tiến trình hồ sơ đặt cọc giữ chỗ và lịch lái thử tại showroom AutoTrade
-        </p>
       </div>
 
       {loading ? (

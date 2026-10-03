@@ -1,16 +1,11 @@
 import React from 'react';
-import { FaFileContract, FaShieldAlt } from 'react-icons/fa';
 import './TermsPage.css';
 
 export default function TermsPage() {
   return (
     <div className="terms-page">
       <div className="terms-header">
-        <div className="terms-header-badge">
-          <FaFileContract /> Văn Bản Pháp Lý
-        </div>
         <h1>Điều Khoản Sử Dụng Dịch Vụ AutoTrade</h1>
-        <p>Quy chế hoạt động sàn giao dịch thương mại điện tử ô tô và các điều khoản giao kết đặt cọc trực tuyến.</p>
       </div>
 
       <div className="terms-card">

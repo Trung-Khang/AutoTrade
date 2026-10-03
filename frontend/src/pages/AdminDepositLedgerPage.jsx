@@ -170,7 +170,6 @@ export default function AdminDepositLedgerPage() {
       <div className="ledger-header">
         <div className="ledger-header-title">
           <h1>Quản lý Lịch hẹn & Sổ cái Đặt cọc</h1>
-          <p>Hệ thống giám sát tiền cọc bảo chứng và quản lý lịch hẹn trực tiếp giữa khách hàng & showroom.</p>
         </div>
         <button
           type="button"
