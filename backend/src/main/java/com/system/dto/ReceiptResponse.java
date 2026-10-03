@@ -17,6 +17,12 @@ public class ReceiptResponse {
     private BigDecimal depositAmount;
     private Instant confirmedAt;
     private String message;
+    private Long showroomId;
+    private String showroomName;
+    private String showroomAddress;
+    private Long assignedStaffId;
+    private String assignedStaffName;
+    private String assignedStaffPhone;
 
     public ReceiptResponse() {
     }
@@ -116,4 +122,17 @@ public class ReceiptResponse {
     public void setMessage(String message) {
         this.message = message;
     }
+
+    public Long getShowroomId() { return showroomId; }
+    public void setShowroomId(Long showroomId) { this.showroomId = showroomId; }
+    public String getShowroomName() { return showroomName; }
+    public void setShowroomName(String showroomName) { this.showroomName = showroomName; }
+    public String getShowroomAddress() { return showroomAddress; }
+    public void setShowroomAddress(String showroomAddress) { this.showroomAddress = showroomAddress; }
+    public Long getAssignedStaffId() { return assignedStaffId; }
+    public void setAssignedStaffId(Long assignedStaffId) { this.assignedStaffId = assignedStaffId; }
+    public String getAssignedStaffName() { return assignedStaffName; }
+    public void setAssignedStaffName(String assignedStaffName) { this.assignedStaffName = assignedStaffName; }
+    public String getAssignedStaffPhone() { return assignedStaffPhone; }
+    public void setAssignedStaffPhone(String assignedStaffPhone) { this.assignedStaffPhone = assignedStaffPhone; }
 }

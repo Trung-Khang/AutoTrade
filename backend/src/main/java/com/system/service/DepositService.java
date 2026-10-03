@@ -96,6 +96,8 @@ public class DepositService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy showroom với ID: " + showroomId));
 
         // 3. Tính tiền cọc: 10% giá trị xe (hoặc tối thiểu 10.000.000 VNĐ)
+        Long assignedStaffId = resolveAssignedStaff(request.getAssignedStaffId(), showroom.getId(),
+                request.getAppointmentDate(), vehicle.getShowroomId() == null);
         BigDecimal vehiclePrice = BigDecimal.ZERO;
         if (listingRepository != null) {
             List<com.system.entity.Listing> listings = listingRepository.findByVehicleId(vehicle.getId());
@@ -130,8 +132,7 @@ public class DepositService {
                 request.isHasTestDrive(),
                 request.getCustomerNote()
         );
-        appointment.setAssignedStaffId(resolveAssignedStaff(request.getAssignedStaffId(), showroom.getId(),
-                request.getAppointmentDate(), vehicle.getShowroomId() == null));
+        appointment.setAssignedStaffId(assignedStaffId);
         appointment = appointmentRepository.save(appointment);
 
         // 5. Chuẩn bị response
@@ -148,6 +149,13 @@ public class DepositService {
         response.setHasTestDrive(appointment.isHasTestDrive());
         response.setShowroomName(showroom.getName());
         response.setShowroomAddress(showroom.getAddress());
+        response.setAssignedStaffId(appointment.getAssignedStaffId());
+        if (appointment.getAssignedStaffId() != null) {
+            appUserRepository.findById(appointment.getAssignedStaffId()).ifPresent(staff -> {
+                response.setAssignedStaffName(staff.getFullName());
+                response.setAssignedStaffPhone(staff.getPhone());
+            });
+        }
         response.setCreatedAt(deposit.getCreatedAt());
 
         return response;
@@ -296,6 +304,22 @@ public class DepositService {
         receipt.setDepositAmount(deposit.getAmount());
         receipt.setConfirmedAt(deposit.getConfirmedAt());
         receipt.setMessage("Biên lai xác nhận đặt cọc giữ xe.");
+
+        Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
+        if (appointment != null) {
+            receipt.setShowroomId(appointment.getShowroomId());
+            showroomRepository.findById(appointment.getShowroomId()).ifPresent(showroom -> {
+                receipt.setShowroomName(showroom.getName());
+                receipt.setShowroomAddress(showroom.getAddress());
+            });
+            receipt.setAssignedStaffId(appointment.getAssignedStaffId());
+            if (appointment.getAssignedStaffId() != null) {
+                appUserRepository.findById(appointment.getAssignedStaffId()).ifPresent(staff -> {
+                    receipt.setAssignedStaffName(staff.getFullName());
+                    receipt.setAssignedStaffPhone(staff.getPhone());
+                });
+            }
+        }
 
         return receipt;
     }

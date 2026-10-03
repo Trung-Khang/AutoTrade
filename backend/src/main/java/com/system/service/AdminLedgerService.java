@@ -7,6 +7,7 @@ import com.system.entity.Appointment;
 import com.system.entity.Deposit;
 import com.system.entity.TransactionLedger;
 import com.system.entity.Vehicle;
+import com.system.entity.Showroom;
 import com.system.exception.AuthException;
 import com.system.exception.ResourceNotFoundException;
 import com.system.repository.AppUserRepository;
@@ -14,6 +15,7 @@ import com.system.repository.AppointmentRepository;
 import com.system.repository.DepositRepository;
 import com.system.repository.TransactionLedgerRepository;
 import com.system.repository.VehicleRepository;
+import com.system.repository.ShowroomRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,15 +35,17 @@ public class AdminLedgerService {
     private final VehicleRepository vehicleRepository;
     private final AppointmentRepository appointmentRepository;
     private final AppUserRepository appUserRepository;
+    private final ShowroomRepository showroomRepository;
 
     public AdminLedgerService(TransactionLedgerRepository ledgerRepository, DepositRepository depositRepository,
                               VehicleRepository vehicleRepository, AppointmentRepository appointmentRepository,
-                              AppUserRepository appUserRepository) {
+                              AppUserRepository appUserRepository, ShowroomRepository showroomRepository) {
         this.ledgerRepository = ledgerRepository;
         this.depositRepository = depositRepository;
         this.vehicleRepository = vehicleRepository;
         this.appointmentRepository = appointmentRepository;
         this.appUserRepository = appUserRepository;
+        this.showroomRepository = showroomRepository;
     }
 
     @Transactional(readOnly = true)
@@ -68,6 +72,13 @@ public class AdminLedgerService {
         Appointment appointment = appointmentRepository.findLockedById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy lịch hẹn với ID: " + appointmentId));
         requirePending(appointment);
+        if (appointment.getAssignedStaffId() != null
+                && appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusInAndIdNot(
+                appointment.getAssignedStaffId(), request.appointmentDate(),
+                java.util.Set.of("PENDING", "SCHEDULED"), appointment.getId())) {
+            throw new AuthException(HttpStatus.CONFLICT,
+                    "Nhân viên phụ trách đã kín lịch ở thời gian mới. Vui lòng chọn giờ khác.");
+        }
         appointment.setAppointmentDate(request.appointmentDate());
         appointment.setUpdatedAt(Instant.now());
         return toResponse(appointmentRepository.save(appointment));
@@ -144,6 +155,8 @@ public class AdminLedgerService {
         Vehicle vehicle = vehicleId != null ? vehicleRepository.findById(vehicleId).orElse(null) : null;
         AppUser assignedStaff = appointment.getAssignedStaffId() != null
                 ? appUserRepository.findById(appointment.getAssignedStaffId()).orElse(null) : null;
+        Showroom showroom = appointment.getShowroomId() != null
+                ? showroomRepository.findById(appointment.getShowroomId()).orElse(null) : null;
 
         String vehicleInfo = vehicle != null
                 ? String.join(" ", Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
@@ -156,7 +169,8 @@ public class AdminLedgerService {
                 customer == null ? null : customer.getPhone(), vehicleInfo, vehicleId,
                 appointment.getAppointmentDate(), appointment.isHasTestDrive(), appointment.getStatus(),
                 appointment.getCustomerNote(), appointment.getStaffNote(), appointment.getShowroomId(),
-                null, null, appointment.getAssignedStaffId(),
+                showroom == null ? null : showroom.getName(), showroom == null ? null : showroom.getAddress(),
+                appointment.getAssignedStaffId(),
                 assignedStaff == null ? null : assignedStaff.getFullName(),
                 assignedStaff == null ? null : assignedStaff.getPhone());
     }

@@ -38,6 +38,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -196,6 +197,74 @@ class DepositServiceUnitTest {
     }
 
     @Test
+    @DisplayName("Gán đúng Staff cùng showroom khi khách chọn nhân viên còn trống")
+    void createDepositAssignsSelectedAvailableStaff() {
+        sampleVehicle.setShowroomId(10L);
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAssignedStaffId(21L);
+        request.setAppointmentDate(LocalDateTime.now().plusDays(2));
+
+        com.system.entity.AppUser staff = new com.system.entity.AppUser();
+        org.springframework.test.util.ReflectionTestUtils.setField(staff, "id", 21L);
+        staff.setRole(com.system.entity.Role.STAFF);
+        staff.setActive(true);
+        staff.setLocked(false);
+        staff.setShowroomId(10L);
+        staff.setFullName("Staff Test");
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appUserRepository.findById(21L)).thenReturn(Optional.of(staff));
+        when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                eq(21L), eq(request.getAppointmentDate()), any())).thenReturn(false);
+        when(depositRepository.save(any(Deposit.class))).thenAnswer(i -> {
+            Deposit d = i.getArgument(0);
+            d.setId(50L);
+            return d;
+        });
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(i -> {
+            Appointment a = i.getArgument(0);
+            a.setId(99L);
+            return a;
+        });
+
+        depositService.createDeposit(request, 100L);
+
+        ArgumentCaptor<Appointment> captor = ArgumentCaptor.forClass(Appointment.class);
+        verify(appointmentRepository).save(captor.capture());
+        assertEquals(21L, captor.getValue().getAssignedStaffId());
+    }
+
+    @Test
+    @DisplayName("Không tạo cọc khi Staff được chọn đã kín lịch")
+    void createDepositRejectsBusySelectedStaff() {
+        sampleVehicle.setShowroomId(10L);
+        CreateDepositRequest request = new CreateDepositRequest();
+        request.setVehicleId(1L);
+        request.setShowroomId(10L);
+        request.setAssignedStaffId(21L);
+        request.setAppointmentDate(LocalDateTime.now().plusDays(2));
+
+        com.system.entity.AppUser staff = new com.system.entity.AppUser();
+        org.springframework.test.util.ReflectionTestUtils.setField(staff, "id", 21L);
+        staff.setRole(com.system.entity.Role.STAFF);
+        staff.setActive(true);
+        staff.setShowroomId(10L);
+
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appUserRepository.findById(21L)).thenReturn(Optional.of(staff));
+        when(appointmentRepository.existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
+                eq(21L), eq(request.getAppointmentDate()), any())).thenReturn(true);
+
+        assertThrows(com.system.exception.AuthException.class,
+                () -> depositService.createDeposit(request, 100L));
+        verify(depositRepository, never()).save(any(Deposit.class));
+    }
+
+    @Test
     @DisplayName("2. Báo lỗi khi đặt cọc xe đang ở trạng thái HOLD (không AVAILABLE)")
     void testCreateDeposit_VehicleNotAvailable_ThrowsException() {
         sampleVehicle.setStatus("HOLD"); // Xe đang bị giữ chỗ
@@ -292,8 +361,9 @@ class DepositServiceUnitTest {
         TransactionLedgerRepository mockLedgerRepo = mock(TransactionLedgerRepository.class);
         AppointmentRepository mockAppointmentRepo = mock(AppointmentRepository.class);
         AppUserRepository mockUserRepo = mock(AppUserRepository.class);
+        ShowroomRepository mockShowroomRepo = mock(ShowroomRepository.class);
         AdminLedgerService ledgerService = new AdminLedgerService(mockLedgerRepo, mockDepRepo, mockVehRepo,
-                mockAppointmentRepo, mockUserRepo);
+                mockAppointmentRepo, mockUserRepo, mockShowroomRepo);
 
         when(mockDepRepo.findLockedById(50L)).thenReturn(Optional.of(sampleDeposit));
         when(mockAppointmentRepo.findLockedByDepositId(50L)).thenReturn(Optional.empty());
