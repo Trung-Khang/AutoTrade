@@ -3,6 +3,7 @@ package com.system.service;
 import com.system.dto.AdminListingRequest;
 import com.system.dto.ListingResponseDto;
 import com.system.entity.Listing;
+import com.system.entity.Showroom;
 import com.system.entity.Source;
 import com.system.entity.Vehicle;
 import com.system.exception.ResourceNotFoundException;
@@ -11,6 +12,7 @@ import com.system.repository.ListingRepository;
 import com.system.repository.AppointmentRepository;
 import com.system.repository.DepositRepository;
 import com.system.repository.SourceRepository;
+import com.system.repository.ShowroomRepository;
 import com.system.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,17 +32,20 @@ public class AdminListingService {
     private final ListingRepository listingRepository;
     private final VehicleRepository vehicleRepository;
     private final SourceRepository sourceRepository;
+    private final ShowroomRepository showroomRepository;
     private final DepositRepository depositRepository;
     private final AppointmentRepository appointmentRepository;
 
     public AdminListingService(ListingRepository listingRepository,
                                VehicleRepository vehicleRepository,
                                SourceRepository sourceRepository,
+                               ShowroomRepository showroomRepository,
                                DepositRepository depositRepository,
                                AppointmentRepository appointmentRepository) {
         this.listingRepository = listingRepository;
         this.vehicleRepository = vehicleRepository;
         this.sourceRepository = sourceRepository;
+        this.showroomRepository = showroomRepository;
         this.depositRepository = depositRepository;
         this.appointmentRepository = appointmentRepository;
     }
@@ -48,6 +53,7 @@ public class AdminListingService {
     @Transactional
     public ListingResponseDto create(AdminListingRequest request) {
         validate(request);
+        Showroom showroom = resolveShowroom(request.showroomId());
 
         Vehicle vehicle = new Vehicle();
         applyVehicleFields(vehicle, request);
@@ -56,6 +62,7 @@ public class AdminListingService {
         vehicle.setMileage(request.mileage());
         vehicle.setColor(blankToNull(request.color()));
         vehicle.setImageUrl(blankToNull(request.imageUrl()));
+        vehicle.setShowroomId(request.showroomId());
         vehicle.setStatus(normalizeStatus(request.status()));
         vehicle = vehicleRepository.save(vehicle);
 
@@ -63,7 +70,7 @@ public class AdminListingService {
                 .orElseGet(() -> sourceRepository.save(new Source(ADMIN_SOURCE, "https://autotrade.vn")));
 
         Listing listing = new Listing(vehicle, source, request.price(), request.mileage(),
-                blankToNull(request.location()), "autotrade://admin/" + UUID.randomUUID(),
+                resolveLocation(showroom, request.location()), "autotrade://admin/" + UUID.randomUUID(),
                 blankToNull(request.imageUrl()), Instant.now());
         listing.setColor(blankToNull(request.color()));
         return ListingResponseDto.fromEntity(listingRepository.save(listing));
@@ -79,12 +86,18 @@ public class AdminListingService {
         }
         Vehicle vehicle = vehicleRepository.findLockedById(listingVehicle.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + listingVehicle.getId()));
+        Showroom showroom = request.showroomId() != null
+                ? resolveShowroom(request.showroomId())
+                : resolveShowroom(vehicle.getShowroomId());
 
         applyVehicleFields(vehicle, request);
         vehicle.setPrice(request.price());
         vehicle.setMileage(request.mileage());
         vehicle.setColor(blankToNull(request.color()));
         vehicle.setImageUrl(blankToNull(request.imageUrl()));
+        if (request.showroomId() != null) {
+            vehicle.setShowroomId(request.showroomId());
+        }
         String nextStatus = normalizeStatus(request.status());
         if ("AVAILABLE".equals(nextStatus)) {
             assertCanReopen(vehicle.getId());
@@ -94,7 +107,7 @@ public class AdminListingService {
         listing.setPrice(request.price());
         listing.setMileage(request.mileage());
         listing.setColor(blankToNull(request.color()));
-        listing.setLocation(blankToNull(request.location()));
+        listing.setLocation(resolveLocation(showroom, request.location()));
         listing.setImageUrl(blankToNull(request.imageUrl()));
 
         vehicleRepository.save(vehicle);
@@ -156,7 +169,19 @@ public class AdminListingService {
         if (request.mileage() != null && request.mileage() < 0) {
             throw new IllegalArgumentException("Số km đã đi không được âm.");
         }
+        resolveShowroom(request.showroomId());
         normalizeStatus(request.status());
+    }
+
+    private Showroom resolveShowroom(Long showroomId) {
+        if (showroomId == null) return null;
+        return showroomRepository.findById(showroomId)
+                .orElseThrow(() -> new IllegalArgumentException("Không tìm thấy showroom với ID: " + showroomId));
+    }
+
+    private String resolveLocation(Showroom showroom, String requestedLocation) {
+        if (showroom == null) return blankToNull(requestedLocation);
+        return !isBlank(showroom.getCity()) ? showroom.getCity().trim() : blankToNull(showroom.getName());
     }
 
     private String normalizeStatus(String status) {
