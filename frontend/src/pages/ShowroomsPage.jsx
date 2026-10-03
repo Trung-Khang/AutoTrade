@@ -12,9 +12,19 @@ import {
 import './ShowroomsPage.css';
 
 export const SHOWROOMS_DATA = [
-  // ==================== MIỀN BẮC (21 TỈNH THÀNH) ====================
+  // ==================== 3 SHOWROOM TRỌNG ĐIỂM TOÀN QUỐC (KHỚP DATABASE POSTGRESQL) ====================
   {
     id: 1,
+    name: 'AutoTrade TP.HCM - Thủ Đức',
+    city: 'TP. Hồ Chí Minh',
+    region: 'south',
+    address: 'Số 1 Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh',
+    hotline: '028 3722 9999',
+    hours: '08:00 - 20:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Thẩm định 160 điểm', 'Hỗ trợ trả góp', 'Khu giao xe VIP']
+  },
+  {
+    id: 2,
     name: 'AutoTrade Hà Nội - Cầu Giấy',
     city: 'Hà Nội',
     region: 'north',
@@ -24,7 +34,17 @@ export const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Thẩm định 160 điểm', 'Hỗ trợ trả góp', 'Khu giao xe VIP']
   },
   {
-    id: 2,
+    id: 3,
+    name: 'AutoTrade Đà Nẵng - Hải Châu',
+    city: 'Đà Nẵng',
+    region: 'central',
+    address: 'Số 123 Đường 2 Tháng 9, Quận Hải Châu, TP. Đà Nẵng',
+    hotline: '0236 388 9999',
+    hours: '08:00 - 20:00 (Hàng ngày)',
+    amenities: ['Lái thử xe', 'Thẩm định 160 điểm', 'Hỗ trợ trả góp', 'Xưởng dịch vụ']
+  },
+  {
+    id: 102,
     name: 'AutoTrade Hải Phòng',
     city: 'Hải Phòng',
     region: 'north',
@@ -34,7 +54,7 @@ export const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Bảo dưỡng nhanh', 'Rút hồ sơ gốc']
   },
   {
-    id: 3,
+    id: 103,
     name: 'AutoTrade Quảng Ninh',
     city: 'Quảng Ninh',
     region: 'north',
@@ -226,8 +246,8 @@ export const SHOWROOMS_DATA = [
 
   // ==================== MIỀN TRUNG (18 TỈNH THÀNH) ====================
   {
-    id: 22,
-    name: 'AutoTrade Đà Nẵng - Hải Châu',
+    id: 122,
+    name: 'AutoTrade Đà Nẵng - Cẩm Lệ',
     city: 'Đà Nẵng',
     region: 'central',
     address: 'Số 186 Nguyễn Văn Linh, Phường Nam Dương, Quận Hải Châu, Đà Nẵng',
@@ -418,8 +438,8 @@ export const SHOWROOMS_DATA = [
     amenities: ['Lái thử xe', 'Thẩm định 160 điểm', 'Phòng công chứng tại chỗ', 'Giao xe VIP']
   },
   {
-    id: 41,
-    name: 'AutoTrade TP.HCM - Thủ Đức',
+    id: 141,
+    name: 'AutoTrade TP.HCM - Quận 9',
     city: 'TP. Hồ Chí Minh',
     region: 'south',
     address: 'Số 01 Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh',
