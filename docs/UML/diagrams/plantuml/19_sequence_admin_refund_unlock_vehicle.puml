@@ -1,0 +1,42 @@
+@startuml
+actor "Quản trị viên" as A
+boundary "AdminLedgerPage\n(React UI)" as UI
+control "AdminLedgerController" as C
+control "AdminLedgerService" as S
+entity "DepositRepository" as DR
+entity "VehicleRepository" as VR
+entity "TransactionLedgerRepository" as LR
+database "PostgreSQL" as DB
+
+A -> UI : 1. Chọn giao dịch cần hoàn cọc, nhập lý do
+UI -> C : 2. POST /api/v1/admin/ledger/{depositId}/refund
+C -> S : 3. refundDeposit(depositId, refundReason)
+S -> DR : 4. tìm deposit theo ID
+DR -> DB : 5. SELECT deposit
+DB --> DR : 6. Deposit
+DR --> S : 7. Deposit
+
+alt Deposit đủ điều kiện hoàn cọc
+  S -> DR : 8a. cập nhật trạng thái REFUNDED
+  DR -> DB : 8b. UPDATE deposit
+  DB --> DR : 8c. Deposit đã cập nhật
+  S -> VR : 8d. đặt trạng thái xe AVAILABLE
+  VR -> DB : 8e. UPDATE vehicle status = AVAILABLE
+  DB --> VR : 8f. số dòng cập nhật
+  S -> LR : 8g. tạo bút toán âm REFUND
+  LR -> DB : 8h. INSERT transaction_ledger
+  DB --> LR : 8i. Ledger entry
+  S --> C : 8j. kết quả hoàn cọc
+  C --> UI : 8k. 200 OK
+  UI --> A : 8l. Hiển thị hoàn cọc thành công, xe đã mở trạng thái
+else Deposit không tồn tại / không đủ điều kiện
+  S --> C : 9a. lỗi nghiệp vụ
+  C --> UI : 9b. 4xx Error
+  UI --> A : 9c. Hiển thị lý do thất bại
+end
+
+note over S,DB
+Các cập nhật cần được xử lý trong transaction
+để tránh trạng thái hoàn cọc và trạng thái xe lệch nhau.
+end note
+@enduml
