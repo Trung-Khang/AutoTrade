@@ -13,12 +13,16 @@ import {
   FaShieldAlt,
   FaMapMarkerAlt
 } from 'react-icons/fa';
+import OfficialReceiptModal from '../components/deposit/OfficialReceiptModal';
 
 const CustomerDepositHistoryPage = () => {
   const { user } = useAuth();
   const [deposits, setDeposits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedReceipt, setSelectedReceipt] = useState(null);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [loadingReceiptId, setLoadingReceiptId] = useState(null);
 
   useEffect(() => {
     const loadDeposits = async () => {
@@ -85,6 +89,37 @@ const CustomerDepositHistoryPage = () => {
     return `${day}/${month}/${year} (${time})`;
   };
 
+  const handleViewReceipt = async (item) => {
+    const depId = item.depositId || item.id;
+    setLoadingReceiptId(depId);
+    try {
+      const fullReceipt = await depositApi.getReceipt(depId);
+      setSelectedReceipt({
+        ...fullReceipt,
+        customerName: fullReceipt.customerName || user?.fullName || user?.username,
+        customerPhone: fullReceipt.customerPhone || user?.phone,
+        customerEmail: fullReceipt.customerEmail || user?.email,
+        vehicleTitle: fullReceipt.vehicleTitle || item.vehicleTitle,
+        vehiclePrice: fullReceipt.vehiclePrice || item.vehiclePrice,
+        depositAmount: fullReceipt.depositAmount || item.depositAmount,
+        showroomName: fullReceipt.showroomName || item.showroomName,
+        appointmentDate: fullReceipt.appointmentDate || item.appointmentDate,
+        hasTestDrive: fullReceipt.hasTestDrive ?? item.hasTestDrive,
+      });
+      setReceiptModalOpen(true);
+    } catch {
+      setSelectedReceipt({
+        ...item,
+        customerName: user?.fullName || user?.username,
+        customerPhone: user?.phone,
+        customerEmail: user?.email,
+      });
+      setReceiptModalOpen(true);
+    } finally {
+      setLoadingReceiptId(null);
+    }
+  };
+
   return (
     <div style={{ maxWidth: '1000px', margin: '36px auto', padding: '0 20px 60px' }}>
       <div style={{ marginBottom: '24px' }}>
@@ -149,21 +184,58 @@ const CustomerDepositHistoryPage = () => {
                   </div>
                 </div>
 
-                {item.status === 'PENDING' && (
-                  <Link
-                    to={`/deposit/payment/${item.depositId}`}
-                    style={{ marginTop: '14px', display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#2563eb', color: '#fff', padding: '9px 14px', borderRadius: '7px', fontWeight: '700', textDecoration: 'none', fontSize: '13px' }}
-                  >
-                    Tiếp tục thanh toán
-                  </Link>
-                )}
-                {item.hasTestDrive && <div style={{ marginTop: '14px', marginLeft: item.status === 'PENDING' ? '10px' : 0, backgroundColor: '#eff6ff', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Có đăng ký lái thử xe trong buổi hẹn</div>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginTop: '14px' }}>
+                  {item.status === 'PENDING' && (
+                    <Link
+                      to={`/deposit/payment/${item.depositId}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#2563eb', color: '#fff', padding: '8px 14px', borderRadius: '7px', fontWeight: '700', textDecoration: 'none', fontSize: '13px' }}
+                    >
+                      Tiếp tục thanh toán
+                    </Link>
+                  )}
+                  {item.status === 'DEPOSITED' && (
+                    <button
+                      type="button"
+                      onClick={() => handleViewReceipt(item)}
+                      disabled={loadingReceiptId === (item.depositId || item.id)}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        backgroundColor: '#1e293b',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '8px 14px',
+                        borderRadius: '7px',
+                        fontWeight: '600',
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                        transition: 'background-color 0.15s'
+                      }}
+                    >
+                      <FaReceipt /> {loadingReceiptId === (item.depositId || item.id) ? 'Đang mở biên lai...' : 'Xem Biên Lai & Hợp Đồng'}
+                    </button>
+                  )}
+                  {item.hasTestDrive && (
+                    <div style={{ backgroundColor: '#eff6ff', padding: '7px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <FaCheckCircle /> Có đăng ký lái thử xe
+                    </div>
+                  )}
+                </div>
                 {customerNote && <div style={{ marginTop: '10px', fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>Ghi chú: "{customerNote}"</div>}
               </div>
             );
           })}
         </div>
       )}
+
+      {/* MODAL XEM LẠI BIÊN LAI & HỢP ĐỒNG ĐIỆN TỬ */}
+      <OfficialReceiptModal
+        isOpen={receiptModalOpen}
+        onClose={() => setReceiptModalOpen(false)}
+        receiptData={selectedReceipt}
+      />
     </div>
   );
 };
