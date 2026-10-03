@@ -192,7 +192,7 @@
 
 .users-table {
   width: 100%;
-  min-width: 1120px;
+  min-width: 1200px;
   border-collapse: collapse;
   text-align: left;
   font-size: 14px;
@@ -224,6 +224,76 @@
 .users-table td {
   padding: 16px 18px;
   vertical-align: middle;
+}
+
+/* Column Specific Widths & Layout */
+.users-table th.col-id,
+.users-table td.col-id {
+  width: 60px;
+  min-width: 60px;
+  font-weight: 600;
+  color: #888888;
+}
+
+.users-table th.col-user,
+.users-table td.col-user {
+  min-width: 190px;
+}
+
+.users-table th.col-contact,
+.users-table td.col-contact {
+  min-width: 240px;
+}
+
+.users-table th.col-role,
+.users-table td.col-role {
+  min-width: 170px;
+}
+
+.users-table th.col-verify,
+.users-table td.col-verify {
+  min-width: 140px;
+  white-space: nowrap;
+}
+
+.users-table th.col-status,
+.users-table td.col-status {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+.users-table th.col-actions,
+.users-table td.col-actions {
+  width: 270px;
+  min-width: 270px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Contact Cell Styling */
+.user-contact-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.user-contact-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #333333;
+  word-break: break-all;
+}
+
+.user-contact-item.phone {
+  color: #666666;
+}
+
+.contact-icon {
+  color: #888888;
+  font-size: 13px;
+  flex-shrink: 0;
 }
 
 /* User Identity Cell */
@@ -332,11 +402,14 @@
 }
 
 .verify-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   font-weight: 500;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
+  white-space: nowrap;
 }
 
 .verify-tag.verified {
@@ -350,19 +423,30 @@
 }
 
 /* Action Buttons */
-.action-buttons-cell {
-  display: flex;
+.user-action-buttons-cell {
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  min-width: 240px;
   white-space: nowrap;
 }
 
 .users-table th:last-child,
 .users-table td:last-child {
-  min-width: 240px;
+  min-width: 270px;
+  width: 270px;
   white-space: nowrap;
+}
+
+.btn-status-toggle,
+.btn-user-delete,
+.btn-user-edit {
+  width: auto !important;
+  height: auto !important;
+  min-width: unset !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }
 
 .btn-status-toggle {

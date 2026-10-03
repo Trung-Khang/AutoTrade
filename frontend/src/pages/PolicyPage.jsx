@@ -135,11 +135,7 @@ export default function PolicyPage() {
   return (
     <div className="policy-page">
       <div className="policy-hero">
-        <div className="policy-hero-badge">
-          <FaShieldAlt /> Cam Kết & Minh Bạch
-        </div>
         <h1>Chính Sách Hoạt Động & Bảo Vệ Khách Hàng</h1>
-        <p>Mọi quy định về đặt cọc, thẩm định kỹ thuật, bảo hành và bảo vệ quyền lợi người mua tại AutoTrade.</p>
       </div>
 
       <div className="policy-layout">

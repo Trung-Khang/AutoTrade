@@ -181,8 +181,7 @@ const AdminVehiclePage = () => {
     <div className="admin-page-container">
       <div className="admin-header-row">
         <div>
-          <h1><FaWarehouse /> Quản Lý Kho Xe</h1>
-          <p>{pagination.totalElements.toLocaleString('vi-VN')} tin xe đang được quản lý và hiển thị trên Showroom</p>
+          <h1>Quản Lý Kho Xe</h1>
         </div>
         <button type="button" onClick={openCreateModal} className="admin-btn-primary"><FaPlus /> Thêm xe</button>
       </div>

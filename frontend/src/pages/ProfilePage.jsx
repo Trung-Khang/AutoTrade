@@ -56,7 +56,6 @@ const ProfilePage = () => {
           <div className="profile-icon"><FaUser /></div>
           <div>
             <h1>Thông tin cá nhân</h1>
-            <p>Quản lý họ tên và số điện thoại dùng trong tài khoản.</p>
           </div>
         </div>
 
