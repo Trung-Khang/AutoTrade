@@ -105,7 +105,11 @@ const VehicleCard = ({ vehicle }) => {
 
         <div className="card-price-row">
           <span className="card-price-val">{formatPrice(price)}</span>
-          {canSeeDepositFlow && <span className="card-deposit-rate">Cọc trước 20 triệu</span>}
+          {canSeeDepositFlow && (
+            <span className="card-deposit-rate">
+              {price ? `Cọc 10%: ${formatPrice(Math.round(price * 0.1))}` : 'Cọc trước 10%'}
+            </span>
+          )}
         </div>
 
         <div className="card-actions-row">

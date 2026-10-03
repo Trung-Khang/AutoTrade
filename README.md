@@ -79,17 +79,23 @@ npm run dev
 - Đăng nhập: [http://localhost:5173/login](http://localhost:5173/login)
 - Swagger: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
 
-## Tài khoản demo
+## Tài khoản demo & Chuyên viên Showroom
 
-| Vai trò | Tên đăng nhập | Mật khẩu |
-|---|---|---|
-| ADMIN | `admin` | `AutoTrade@Admin2026` |
-| STAFF | `staff` | `AutoTrade@Staff2026` |
-| CUSTOMER | `customer` | `AutoTrade@Customer2026` |
+Tất cả các tài khoản quản trị và chuyên viên showroom nạp sẵn trong database `autotrade_final` đều sử dụng mật khẩu đăng nhập chuẩn: **`Password@123`**.
 
-Ba tài khoản trên thuộc seed chính thức của `autotrade_final`. Nếu cả ba cùng
-không đăng nhập được hoặc trả lỗi `500`, kiểm tra máy TV3, Radmin VPN và kết nối
-database trước khi kết luận tài khoản sai.
+| STT | Vai trò (Role) | Tên đăng nhập | Email đăng nhập | Mật khẩu chuẩn | Chi nhánh Showroom | Họ và tên |
+|:---:|:---|:---|:---|:---:|:---|:---|
+| 1 | `ADMIN` | `admin` | `admin@example.test` | `Password@123` | Toàn hệ thống | Quản trị viên hệ thống |
+| 2 | `STAFF` | `staff_hn_01` | `staff_hn1@autotrade.vn` | `Password@123` | Hà Nội - Cầu Giấy (ID 2) | Nguyễn Văn Tuấn (0912.345.601) |
+| 3 | `STAFF` | `staff_hn_02` | `staff_hn2@autotrade.vn` | `Password@123` | Hà Nội - Cầu Giấy (ID 2) | Trần Thị Thu Hà (0912.345.602) |
+| 4 | `STAFF` | `staff_hcm_01` | `staff_hcm1@autotrade.vn` | `Password@123` | Sài Gòn - Thủ Đức (ID 1) | Lê Hoàng Nam (0987.654.301) |
+| 5 | `STAFF` | `staff_hcm_02` | `staff_hcm2@autotrade.vn` | `Password@123` | Sài Gòn - Thủ Đức (ID 1) | Phạm Minh Đức (0987.654.302) |
+| 6 | `STAFF` | `staff_hcm_03` | `staff_hcm3@autotrade.vn` | `Password@123` | Sài Gòn - Thủ Đức (ID 1) | Đỗ Thùy Linh (0987.654.303) |
+| 7 | `STAFF` | `staff_dn_01` | `staff_dn1@autotrade.vn` | `Password@123` | Đà Nẵng - Hải Châu (ID 3) | Võ Quốc Huy (0905.123.401) |
+| 8 | `STAFF` | `staff_dn_02` | `staff_dn2@autotrade.vn` | `Password@123` | Đà Nẵng - Hải Châu (ID 3) | Ngô Bảo Trân (0905.123.402) |
+| 9 | `CUSTOMER` | `customer` | `customer@example.test` | `Password@123` | Khách cá nhân | Khách hàng Demo |
+
+Các tài khoản trên thuộc seed chính thức của `autotrade_final`. Nếu không đăng nhập được hoặc trả lỗi `500`, kiểm tra máy TV3, Radmin VPN và kết nối database trước khi kết luận tài khoản sai.
 
 OTP được gửi qua email đã đăng ký. Nếu chưa thấy email, kiểm tra cả Inbox và
 Spam. Luồng quên mật khẩu yêu cầu username và gửi OTP tới email liên kết với
