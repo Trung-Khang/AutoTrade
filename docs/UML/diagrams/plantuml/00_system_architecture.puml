@@ -1,0 +1,24 @@
+@startuml
+skinparam rectangle {
+    RoundCorner 15
+}
+
+rectangle "Frontend\nReact + Vite\nPages / Components / AuthContext" as Frontend #EBF2FF
+
+rectangle "REST API\n/api/v1\nJSON + HTTP" as API #FFFFFF
+
+rectangle "Backend\nSpring Boot + Spring Data JPA\nController -> Service -> Repository" as Backend #EAF7ED
+
+rectangle "Database\nPostgreSQL\nVehicles / Listings / Deposits / Appointments\nLedger / Users / OTP" as DB #F0EAFB
+
+rectangle "External support\nGmail SMTP (OTP)\nMock QR / reference" as External #FDEDF0
+
+rectangle "Security\nSpring Security + JWT\nRBAC CUSTOMER / STAFF / ADMIN" as Security #FFF6EA
+
+Frontend --> API
+API --> Backend
+Backend --> DB
+Backend ..> External
+Backend ..> Security : request filter
+Frontend ..> Security : route guard / token
+@enduml

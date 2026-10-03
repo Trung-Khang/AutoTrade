@@ -1,0 +1,49 @@
+@startuml
+left to right direction
+skinparam objectAttributeIconSize 0
+actor "Khách truy cập" as G
+boundary "RegisterPage / VerifyEmailPage" as UI
+control "AuthController" as C
+control "AuthService" as S
+control "PasswordEncoder" as PE
+control "OtpService" as OTP
+entity "AppUserRepository" as UR
+entity "AuthOtpRepository" as OR
+control "OtpMailService / Gmail SMTP" as MAIL
+database "PostgreSQL" as DB
+
+G --> UI : 1. Nhập thông tin đăng ký
+UI --> C : 2. POST /api/v1/auth/register
+C --> S : 3. register(request)
+S --> UR : 4. Tìm email / username trùng
+UR --> DB : 5. SELECT app_users
+DB --> UR : 6. Kết quả truy vấn
+UR --> S : 7. User hiện có / không có
+S --> PE : 8. encode(password)
+PE --> S : 9. passwordHash
+S --> UR : 10. saveAndFlush(CUSTOMER, chưa xác minh)
+UR --> DB : 11. INSERT app_users
+S --> OTP : 12. issue(VERIFY_EMAIL)
+OTP --> OR : 13. Lưu hash OTP và hạn dùng
+OR --> DB : 14. INSERT auth_otp
+OTP --> MAIL : 15. Gửi OTP qua Gmail SMTP
+MAIL --> OTP : 16. Kết quả gửi email
+OTP --> S : 17. OtpDispatch
+S --> C : 18. MessageResponse
+C --> UI : 19. 200 OK
+UI --> G : 20. Yêu cầu nhập OTP
+
+G --> UI : 21. Nhập email + OTP
+UI --> C : 22. POST /api/v1/auth/verify-email
+C --> S : 23. verifyEmail(email, code)
+S --> OTP : 24. verify(VERIFY_EMAIL)
+OTP --> OR : 25. Tìm OTP hợp lệ
+OR --> DB : 26. SELECT auth_otp
+DB --> OR : 27. OTP record
+OTP --> S : 28. User nếu hợp lệ / lỗi nếu không
+S --> UR : 29. Cập nhật emailVerified = true
+UR --> DB : 30. UPDATE app_users
+S --> C : 31. MessageResponse
+C --> UI : 32. 200 OK / lỗi xác minh
+UI --> G : 33. Thông báo kết quả
+@enduml
