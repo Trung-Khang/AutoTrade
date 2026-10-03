@@ -8,25 +8,27 @@ import './VehicleListPage.css';
 
 const VehicleListPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const locationFromUrl = searchParams.get('location') || '';
 
   const [vehicles, setVehicles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Trạng thái bộ lọc tìm kiếm
-  const [filters, setFilters] = useState({
-    keyword: searchParams.get('keyword') || '',
-    location: locationFromUrl,
-    brand: searchParams.get('brand') || '',
-    minPrice: '',
-    maxPrice: '',
-    fuelType: '',
-    transmission: '',
-    sort: 'id,desc',
-    page: 0,
+  // Chuyển đổi URL query parameters thành đối tượng filters chuẩn
+  const getFiltersFromParams = useCallback((params) => ({
+    keyword: params.get('keyword') || '',
+    location: params.get('location') || '',
+    brand: params.get('brand') || '',
+    minPrice: params.get('minPrice') || '',
+    maxPrice: params.get('maxPrice') || '',
+    fuelType: params.get('fuelType') || '',
+    transmission: params.get('transmission') || '',
+    sort: params.get('sort') || 'id,desc',
+    page: parseInt(params.get('page') || '0', 10),
     size: 20,
-  });
+  }), []);
+
+  // Trạng thái bộ lọc tìm kiếm: khởi tạo trực tiếp từ URL Search Params
+  const [filters, setFilters] = useState(() => getFiltersFromParams(searchParams));
 
   // Trạng thái phân trang từ PageResponse
   const [pagination, setPagination] = useState({
@@ -37,6 +39,36 @@ const VehicleListPage = () => {
     isFirst: true,
     isLast: true,
   });
+
+  // Đồng bộ trạng thái filters lên URL Search Params (URL-driven state)
+  const syncFiltersToUrl = useCallback((newFilters) => {
+    const params = {};
+    Object.keys(newFilters).forEach((key) => {
+      const val = newFilters[key];
+      if (
+        val !== '' &&
+        val !== null &&
+        val !== undefined &&
+        !(key === 'page' && Number(val) === 0) &&
+        !(key === 'size' && Number(val) === 20) &&
+        !(key === 'sort' && val === 'id,desc')
+      ) {
+        params[key] = val;
+      }
+    });
+    setSearchParams(params, { replace: true });
+  }, [setSearchParams]);
+
+  // Đồng bộ filters khi searchParams thay đổi (ví dụ: bấm Back/Forward trình duyệt hoặc link từ ShowroomsPage)
+  useEffect(() => {
+    const urlFilters = getFiltersFromParams(searchParams);
+    setFilters((prev) => {
+      const isChanged = Object.keys(urlFilters).some(
+        (key) => String(prev[key] ?? '') !== String(urlFilters[key] ?? '')
+      );
+      return isChanged ? urlFilters : prev;
+    });
+  }, [searchParams, getFiltersFromParams]);
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
@@ -71,31 +103,20 @@ const VehicleListPage = () => {
     fetchListings();
   }, [fetchListings]);
 
-  // Đồng bộ location từ URL query param khi người dùng bấm từ Showroom hoặc link trực tiếp
-  useEffect(() => {
-    const locParam = searchParams.get('location') || '';
-    if (locParam !== filters.location) {
-      setFilters((prev) => ({
-        ...prev,
-        location: locParam,
-        page: 0,
-      }));
-    }
-  }, [searchParams]);
-
   // Cập nhật bộ lọc
   const handleFilterChange = (key, value) => {
-    setFilters((prev) => ({
-      ...prev,
+    const updated = {
+      ...filters,
       [key]: value,
       page: 0,
-    }));
+    };
+    setFilters(updated);
+    syncFiltersToUrl(updated);
   };
 
   // Đặt lại bộ lọc
   const handleResetFilters = () => {
-    setSearchParams({});
-    setFilters({
+    const defaultFilters = {
       keyword: '',
       location: '',
       brand: '',
@@ -106,16 +127,20 @@ const VehicleListPage = () => {
       sort: 'id,desc',
       page: 0,
       size: 20,
-    });
+    };
+    setFilters(defaultFilters);
+    setSearchParams({}, { replace: true });
   };
 
   // Chuyển trang
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < pagination.totalPages) {
-      setFilters((prev) => ({
-        ...prev,
+      const updated = {
+        ...filters,
         page: newPage,
-      }));
+      };
+      setFilters(updated);
+      syncFiltersToUrl(updated);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };

@@ -17,89 +17,6 @@ import {
   FaBuilding
 } from 'react-icons/fa';
 
-const DEMO_APPOINTMENTS = [
-  {
-    id: 1,
-    appointmentId: 1,
-    depositCode: 'DEP-20261002-10850',
-    contractNumber: 'HD-20261002-10850',
-    customerName: 'Nguyễn Văn Kha',
-    customerPhone: '0918.234.567',
-    customerEmail: 'kha.nguyen@gmail.com',
-    vehicleInfo: 'Toyota Camry 2.5Q (2022)',
-    appointmentDate: '2026-10-05 09:30',
-    hasTestDrive: true,
-    status: 'PENDING',
-    customerNote: 'Muốn kiểm tra kỹ phần thước lái và phanh ABS',
-    showroomId: 42,
-    showroomName: 'AutoTrade TP. Hồ Chí Minh - Thủ Đức',
-    showroomAddress: 'Số 01 Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh',
-    assignedStaffId: 101,
-    assignedStaffName: 'Lê Hoàng Nam',
-    assignedStaffPhone: '0987.654.301'
-  },
-  {
-    id: 2,
-    appointmentId: 2,
-    depositCode: 'DEP-20261002-10851',
-    contractNumber: 'HD-20261002-10851',
-    customerName: 'Trần Thị Thu Thảo',
-    customerPhone: '0909.888.777',
-    customerEmail: 'thao.tran@gmail.com',
-    vehicleInfo: 'Mazda 3 1.5L Luxury (2022)',
-    appointmentDate: '2026-10-05 14:00',
-    hasTestDrive: false,
-    status: 'PENDING',
-    customerNote: 'Tư vấn thêm về gói bảo hành 2 năm mở rộng',
-    showroomId: 42,
-    showroomName: 'AutoTrade TP. Hồ Chí Minh - Thủ Đức',
-    showroomAddress: 'Số 01 Võ Văn Ngân, Phường Linh Chiểu, TP. Thủ Đức, TP. Hồ Chí Minh',
-    assignedStaffId: 102,
-    assignedStaffName: 'Phạm Minh Đức',
-    assignedStaffPhone: '0987.654.302'
-  },
-  {
-    id: 3,
-    appointmentId: 3,
-    depositCode: 'DEP-20261002-10852',
-    contractNumber: 'HD-20261002-10852',
-    customerName: 'Lê Hoàng Long',
-    customerPhone: '0933.123.456',
-    customerEmail: 'long.le@gmail.com',
-    vehicleInfo: 'Honda CR-V 1.5L Turbo (2020)',
-    appointmentDate: '2026-10-04 10:30',
-    hasTestDrive: true,
-    status: 'COMPLETED',
-    staffNote: 'Khách đã lái thử xe 5km, kiểm tra gầm bệ tốt, hẹn ngày mai ký hợp đồng chuyển nhượng.',
-    showroomId: 1,
-    showroomName: 'AutoTrade Hà Nội - Cầu Giấy',
-    showroomAddress: 'Số 68 Đường Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội',
-    assignedStaffId: 101,
-    assignedStaffName: 'Lê Hoàng Nam',
-    assignedStaffPhone: '0987.654.301'
-  },
-  {
-    id: 4,
-    appointmentId: 4,
-    depositCode: 'DEP-20261002-10853',
-    contractNumber: 'HD-20261002-10853',
-    customerName: 'Vũ Đức Đạt',
-    customerPhone: '0945.678.910',
-    customerEmail: 'dat.vu@gmail.com',
-    vehicleInfo: 'Hyundai Santa Fe 2.2D Premium (2021)',
-    appointmentDate: '2026-10-06 15:30',
-    hasTestDrive: true,
-    status: 'PENDING',
-    customerNote: 'Cần thẩm định xe cũ tại nhà để đổi xe bù tiền',
-    showroomId: 1,
-    showroomName: 'AutoTrade Hà Nội - Cầu Giấy',
-    showroomAddress: 'Số 68 Đường Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội',
-    assignedStaffId: 103,
-    assignedStaffName: 'Hoàng Thu Trang',
-    assignedStaffPhone: '0987.654.303'
-  }
-];
-
 const StaffAppointmentPage = () => {
   const { user, isAdmin, isStaff } = useAuth();
 
@@ -111,12 +28,12 @@ const StaffAppointmentPage = () => {
   const [actionNotice, setActionNotice] = useState('');
   const [error, setError] = useState('');
 
-  // Xác định showroom của nhân viên hiện tại
+  // Xác định showroom của nhân viên hiện tại (không tự đoán nếu chưa có showroomId)
   const staffShowroom = useMemo(() => {
     if (user?.showroomId) {
-      return SHOWROOMS_DATA.find((s) => s.id === Number(user.showroomId));
+      return SHOWROOMS_DATA.find((s) => s.id === Number(user.showroomId)) || null;
     }
-    return SHOWROOMS_DATA.find((s) => s.city.includes('Hồ Chí Minh')) || SHOWROOMS_DATA[0];
+    return null;
   }, [user]);
 
   const loadAppointments = async () => {
@@ -132,15 +49,15 @@ const StaffAppointmentPage = () => {
       }
 
       const data = await depositApi.getStaffAppointments(params);
-      if (Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         setAppointments(data);
       } else {
-        // Fallback demo data để kiểm thử kịch bản TC-05, TC-06, TC-07
-        setAppointments(DEMO_APPOINTMENTS);
+        setAppointments([]);
       }
     } catch (err) {
-      console.warn('API /staff/appointments chưa có dữ liệu, dùng dữ liệu mẫu cho TV2 test:', err?.message);
-      setAppointments(DEMO_APPOINTMENTS);
+      const errMsg = err?.response?.data?.message || err?.message || 'Không thể tải danh sách lịch hẹn từ Backend.';
+      setError(errMsg);
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -167,7 +84,7 @@ const StaffAppointmentPage = () => {
       setActionNotice(`Đã xác nhận Check-in thành công cho lịch hẹn của khách ${item.customerName}`);
       setTimeout(() => setActionNotice(''), 3500);
 
-      // Cập nhật trạng thái ngay trên UI (TC-06)
+      // Cập nhật trạng thái ngay trên UI khi Backend trả về thành công
       setAppointments((prev) =>
         prev.map((app) =>
           (app.appointmentId || app.id) === (item.appointmentId || item.id)
@@ -176,39 +93,36 @@ const StaffAppointmentPage = () => {
         )
       );
     } catch (err) {
-      // Cập nhật offline nếu backend chưa deploy endpoint
-      setAppointments((prev) =>
-        prev.map((app) =>
-          (app.appointmentId || app.id) === (item.appointmentId || item.id)
-            ? { ...app, status: 'COMPLETED', staffNote: note }
-            : app
-        )
-      );
-      setActionNotice(`[Mô phỏng] Đã Check-in thành công cho lịch hẹn của khách ${item.customerName}`);
-      setTimeout(() => setActionNotice(''), 3500);
+      const errMsg = err?.response?.data?.message || err?.message || 'Check-in thất bại từ máy chủ.';
+      setActionNotice(`Lỗi: ${errMsg}`);
+      setTimeout(() => setActionNotice(''), 4000);
     }
   };
 
-  // PHÂN QUYỀN RBAC (Section 2.1 & TC-05 / TC-07)
+  // PHÂN QUYỀN RBAC: Không dùng fallback 101, so khớp bằng ID/username/email thật
   const filteredList = useMemo(() => {
     return appointments.filter((item) => {
-      // 1. Phân quyền theo Role người dùng (useAuth)
+      // 1. Phân quyền theo Role người dùng
       if (isStaff && !isAdmin) {
-        // Đối với STAFF: Chỉ thấy các lịch hẹn do chính nhân viên đó tiếp nhận
-        // Kiểm tra theo ID nhân viên hoặc theo username/tên nếu có
-        const currentUserId = user?.id || 101; // Mặc định ID 101 nếu là staff demo
-        const isAssignedToMe =
-          item.assignedStaffId === currentUserId ||
-          item.assignedStaffId === Number(user?.id) ||
-          (user?.username && item.assignedStaffName?.toLowerCase().includes(user.username.toLowerCase())) ||
-          (user?.fullName && item.assignedStaffName === user.fullName);
+        const currentUserId = user?.id ?? user?.userId ?? user?._id;
+        const currentStaffEmail = user?.email?.toLowerCase();
+        const currentStaffUsername = (user?.username || user?.sub)?.toLowerCase();
+        const currentStaffName = user?.fullName || user?.name;
+
+        const isAssignedToMe = Boolean(
+          (currentUserId != null && (Number(item.assignedStaffId) === Number(currentUserId) || Number(item.assignedStaff?.id) === Number(currentUserId))) ||
+          (currentStaffEmail && (item.assignedStaffEmail?.toLowerCase() === currentStaffEmail || item.assignedStaff?.email?.toLowerCase() === currentStaffEmail)) ||
+          (currentStaffUsername && (item.assignedStaffUsername?.toLowerCase() === currentStaffUsername || item.assignedStaff?.username?.toLowerCase() === currentStaffUsername)) ||
+          (currentStaffName && item.assignedStaffName === currentStaffName)
+        );
 
         if (!isAssignedToMe) return false;
       }
 
       // 2. Lọc theo Showroom (Dành cho Admin hoặc lọc chi nhánh)
       if (selectedShowroomId !== 'ALL') {
-        if (Number(item.showroomId) !== Number(selectedShowroomId)) return false;
+        const itemShowroomId = item.showroomId || item.showroom?.id;
+        if (Number(itemShowroomId) !== Number(selectedShowroomId)) return false;
       }
 
       // 3. Lọc theo Trạng thái (PENDING, COMPLETED, CANCELLED)
@@ -244,6 +158,15 @@ const StaffAppointmentPage = () => {
           <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
             Quản Lý Lịch Hẹn
           </h1>
+          {isStaff && !isAdmin && (
+            <div style={{ marginTop: '6px', fontSize: '13px', color: '#64748b' }}>
+              {staffShowroom ? (
+                <span>Chi nhánh phụ trách: <strong>{staffShowroom.name} ({staffShowroom.city})</strong></span>
+              ) : (
+                <span style={{ color: '#dc2626', fontWeight: 600 }}>Tài khoản chuyên viên chưa được phân công chi nhánh Showroom cụ thể</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -268,7 +191,7 @@ const StaffAppointmentPage = () => {
           />
         </div>
 
-        {/* BỘ LỌC SHOWROOM DÀNH CHO ADMIN (Section 2.1 - Step 2) */}
+        {/* BỘ LỌC SHOWROOM DÀNH CHO ADMIN */}
         {isAdmin && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <select
@@ -344,6 +267,7 @@ const StaffAppointmentPage = () => {
             const isPending = rawStatus === 'PENDING' || rawStatus === 'SCHEDULED';
             const isCompleted = rawStatus === 'COMPLETED';
             const isCancelled = rawStatus === 'CANCELLED';
+            const showroomDisplayName = item.showroomName || item.showroom?.name || 'Showroom AutoTrade';
 
             return (
               <div
@@ -377,7 +301,7 @@ const StaffAppointmentPage = () => {
 
                   {/* THÔNG TIN SHOWROOM */}
                   <div style={{ fontSize: '13px', color: '#475569' }}>
-                    Showroom: <strong>{item.showroomName || 'AutoTrade TP. Hồ Chí Minh'}</strong>
+                    Showroom: <strong>{showroomDisplayName}</strong>
                   </div>
 
                   {/* THÔNG TIN CHUYÊN VIÊN PHỤ TRÁCH */}
