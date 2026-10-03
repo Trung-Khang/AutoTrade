@@ -189,25 +189,10 @@ export const userApi = {
    * Đổi vai trò tài khoản (CUSTOMER <-> STAFF <-> ADMIN)
    * Target endpoint Backend: PATCH /api/v1/admin/users/{id}/role
    */
-  updateUserRole: async (userId, role) => {
-    try {
-      const updated = await apiClient.patch(`/admin/users/${userId}/role`, null, {
-        params: { role },
-      });
-      return updated;
-    } catch {
-      // Fallback local
-    }
-
-    const list = getStoredUsers();
-    const idx = list.findIndex((u) => u.id === Number(userId));
-    if (idx !== -1) {
-      list[idx].role = role;
-      saveStoredUsers(list);
-      return list[idx];
-    }
-    throw new Error('Không tìm thấy tài khoản người dùng.');
-  },
+  updateUserRole: (userId, role, showroomId = null) =>
+    apiClient.patch(`/admin/users/${userId}/role`, { role, showroomId }, {
+      params: { role },
+    }),
 
   updateCustomerProfile: (userId, profile) =>
     apiClient.patch(`/admin/users/${userId}/profile`, profile),

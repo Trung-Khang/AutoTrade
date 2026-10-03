@@ -215,7 +215,7 @@ public class AuthService {
     }
 
     public CurrentUserResponse currentUser(AppUser user) {
-        return new CurrentUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().name());
+        return new CurrentUserResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().name(), user.getShowroomId());
     }
 
     @Transactional
@@ -244,7 +244,7 @@ public class AuthService {
     }
 
     private AuthResponse toAuthResponse(AppUser user, String token) {
-        return new AuthResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().name(), token);
+        return new AuthResponse(user.getId(), user.getUsername(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole().name(), token, user.getShowroomId());
     }
 
     private MessageResponse verificationDispatchMessage(OtpService.OtpDispatch dispatch) {

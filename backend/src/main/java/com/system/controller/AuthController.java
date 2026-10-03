@@ -72,7 +72,7 @@ public class AuthController {
     public ResponseEntity<CurrentUserResponse> currentUser() {
         AppUserPrincipal principal = SecurityUtils.currentUser();
         return ResponseEntity.ok(new CurrentUserResponse(principal.id(), principal.username(), principal.fullName(),
-                principal.email(), principal.phone(), principal.role().name()));
+                principal.email(), principal.phone(), principal.role().name(), principal.showroomId()));
     }
 
     @PatchMapping("/me")

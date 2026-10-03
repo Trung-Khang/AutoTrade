@@ -10,10 +10,15 @@ import java.util.Collection;
 import java.util.List;
 
 public record AppUserPrincipal(Long id, String username, String password, String fullName, String email, String phone, Role role,
-                               boolean active, boolean locked) implements UserDetails {
+                               boolean active, boolean locked, Long showroomId) implements UserDetails {
+    public AppUserPrincipal(Long id, String username, String password, String fullName, String email, String phone,
+                            Role role, boolean active, boolean locked) {
+        this(id, username, password, fullName, email, phone, role, active, locked, null);
+    }
+
     public static AppUserPrincipal from(AppUser user) {
         return new AppUserPrincipal(user.getId(), user.getUsername(), user.getPasswordHash(), user.getFullName(), user.getEmail(), user.getPhone(), user.getRole(),
-                user.isActive(), user.isLocked());
+                user.isActive(), user.isLocked(), user.getShowroomId());
     }
 
     @Override

@@ -1,0 +1,70 @@
+@startuml
+actor "Khách truy cập" as G
+boundary "RegisterPage / VerifyEmailPage\n(React UI)" as UI
+control "AuthController" as C
+control "AuthService" as S
+control "PasswordEncoder" as PE
+control "OtpService" as OTP
+entity "AppUserRepository" as UR
+entity "AuthOtpRepository" as OR
+control "OtpMailService / Gmail SMTP" as MAIL
+database "PostgreSQL" as DB
+
+== Đăng ký và gửi OTP ==
+G -> UI : 1. Nhập thông tin đăng ký
+UI -> C : 2. POST /api/v1/auth/register
+C -> S : 3. register(request)
+S -> UR : 4. findByEmailIgnoreCase(email)
+UR -> DB : 5. SELECT app_users
+DB --> UR : 6. Existing user / none
+UR --> S : 7. Kết quả tra cứu
+
+alt Email đã xác minh hoặc username trùng
+  S --> C : 8a. AuthException (409 Conflict)
+  C --> UI : 8b. 409 / thông báo lỗi
+else Email mới hoặc tài khoản chưa xác minh
+  S -> PE : 9. encode(password)
+  PE --> S : 10. passwordHash
+  
+  opt Tài khoản mới
+    S -> UR : 11. saveAndFlush(CUSTOMER, emailVerified=false)
+    UR -> DB : 12. INSERT app_users
+    DB --> UR : 13. AppUser
+  end
+  
+  S -> OTP : 14. issue(user, VERIFY_EMAIL, resendIfNeeded)
+  OTP -> OR : 15. lưu hash OTP + hạn dùng
+  OR -> DB : 16. INSERT auth_otp
+  DB --> OR : 17. OTP record
+  OTP -> MAIL : 18. gửi mã xác minh tới email
+  MAIL --> OTP : 19. emailSent / lỗi gửi
+  OTP --> S : 20. OtpDispatch
+  S --> C : 21. MessageResponse
+  C --> UI : 22. 200 OK
+  UI --> G : 23. Hướng dẫn nhập OTP
+end
+
+== Xác minh email ==
+G -> UI : 1. Nhập email và OTP
+UI -> C : 2. POST /api/v1/auth/verify-email
+C -> S : 3. verifyEmail(email, code)
+S -> OTP : 4. verify(email, code, VERIFY_EMAIL)
+OTP -> OR : 5. tìm OTP hợp lệ mới nhất
+OR -> DB : 6. SELECT auth_otp
+DB --> OR : 7. OTP record
+OR --> OTP : 8. OTP record
+OTP -> OTP : 9. kiểm tra hash, hạn dùng, trạng thái
+
+alt OTP hợp lệ
+  OTP --> S : 10a. AppUser
+  S -> S : 10b. set emailVerified = true
+  S --> C : 10c. MessageResponse thành công
+  C --> UI : 10d. 200 OK
+  UI --> G : 10e. Tài khoản đã xác minh
+else OTP sai / hết hạn
+  OTP --> S : 11a. AuthException
+  S --> C : 11b. lỗi xác minh
+  C --> UI : 11c. 400 Bad Request
+  UI --> G : 11d. Hiển thị lỗi, cho phép thử lại
+end
+@enduml
