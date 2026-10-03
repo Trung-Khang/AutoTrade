@@ -125,9 +125,6 @@ const VehicleListPage = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Kho Xe Showroom AutoTrade</h1>
-          <p className="page-subtitle">
-            Khám phá các dòng xe ô tô đã qua sử dụng được kiểm định chất lượng, hỗ trợ đặt cọc giữ chỗ và hẹn lịch lái thử
-          </p>
         </div>
         {!isLoading && !error && (
           <div className="vehicle-count-badge">
@@ -147,7 +144,7 @@ const VehicleListPage = () => {
                   gap: 4
                 }}
               >
-                📍 {filters.location}
+                {filters.location}
               </span>
             )}
           </div>

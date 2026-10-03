@@ -29,15 +29,7 @@ const FavoritesPage = () => {
         {/* Header Section */}
         <div className="favorites-header">
           <div className="favorites-title-group">
-            <div className="favorites-icon-badge">
-              <FaHeart />
-            </div>
-            <div>
-              <h1 className="favorites-title">Danh Sách Xe Yêu Thích</h1>
-              <p className="favorites-subtitle">
-                Các mẫu xe bạn đã lưu lại để theo dõi biến động giá, so sánh thông số và chuẩn bị đặt cọc giữ chỗ.
-              </p>
-            </div>
+            <h1 className="favorites-title">Danh Sách Xe Yêu Thích</h1>
           </div>
 
           {favoritesCount > 0 && (

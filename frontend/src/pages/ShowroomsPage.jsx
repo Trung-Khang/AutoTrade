@@ -11,7 +11,7 @@ import {
 } from 'react-icons/fa';
 import './ShowroomsPage.css';
 
-const SHOWROOMS_DATA = [
+export const SHOWROOMS_DATA = [
   // ==================== MIỀN BẮC (21 TỈNH THÀNH) ====================
   {
     id: 1,
@@ -627,9 +627,6 @@ export default function ShowroomsPage() {
   return (
     <div className="showrooms-page">
       <div className="showrooms-hero">
-        <div className="showrooms-hero-badge">
-          <FaWarehouse /> Mạng Lưới Toàn Quốc
-        </div>
         <h1>Hệ Thống Showroom AutoTrade Toàn Quốc</h1>
       </div>
 

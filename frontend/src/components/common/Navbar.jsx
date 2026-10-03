@@ -85,7 +85,7 @@ const Navbar = () => {
             className={({ isActive }) => `nav-link nav-fav-link ${isActive ? 'active' : ''}`}
             onClick={closeMenu}
           >
-            <FaHeart className="nav-fav-icon" /> Yêu thích
+            Yêu thích
             {favoritesCount > 0 && <span className="nav-fav-badge">{favoritesCount}</span>}
           </NavLink>
 
@@ -96,7 +96,7 @@ const Navbar = () => {
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <FaCalendarCheck /> Đơn cọc & Lịch hẹn
+              Đơn cọc & Lịch hẹn
             </NavLink>
           )}
 
@@ -106,7 +106,7 @@ const Navbar = () => {
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <FaUser /> Thông tin cá nhân
+              Thông tin cá nhân
             </NavLink>
           )}
 
@@ -117,7 +117,7 @@ const Navbar = () => {
               className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               onClick={closeMenu}
             >
-              <FaClipboardList /> Quản lý lịch hẹn
+              Quản lý lịch hẹn
             </NavLink>
           )}
 
@@ -129,7 +129,7 @@ const Navbar = () => {
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={closeMenu}
               >
-                <FaWarehouse /> Kho xe
+                Kho xe
               </NavLink>
               <NavLink
                 to="/admin/deposits"
@@ -143,7 +143,7 @@ const Navbar = () => {
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                 onClick={closeMenu}
               >
-                <FaUsers /> Tài khoản
+                Tài khoản
               </NavLink>
             </>
           )}

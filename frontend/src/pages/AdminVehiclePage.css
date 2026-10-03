@@ -168,8 +168,8 @@
 .status-select.HOLD { color: #b45309; background: #fffbeb; border-color: #fde68a; }
 .status-select.SOLD { color: #475569; background: #f8fafc; border-color: #cbd5e1; }
 
-.action-buttons-cell { display: flex; gap: 8px; }
-.action-buttons-cell button,
+.admin-vehicle-table .action-buttons-cell { display: flex; gap: 8px; }
+.admin-vehicle-table .action-buttons-cell button,
 .admin-modal-header button {
   width: 38px;
   height: 36px;
@@ -179,9 +179,9 @@
   color: #0f172a;
   cursor: pointer;
 }
-.action-buttons-cell button:hover { background: #eff6ff; border-color: #bfdbfe; }
-.action-buttons-cell button:last-child:hover { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
-.action-buttons-cell button:disabled { opacity: .45; cursor: wait; }
+.admin-vehicle-table .action-buttons-cell button:hover { background: #eff6ff; border-color: #bfdbfe; }
+.admin-vehicle-table .action-buttons-cell button:last-child:hover { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+.admin-vehicle-table .action-buttons-cell button:disabled { opacity: .45; cursor: wait; }
 .admin-table-state { padding: 48px !important; text-align: center; color: #64748b !important; }
 
 .admin-pagination {

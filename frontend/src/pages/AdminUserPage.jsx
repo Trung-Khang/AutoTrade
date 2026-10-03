@@ -190,9 +190,6 @@ const AdminUserPage = () => {
       {/* Page Header */}
       <div className="admin-users-header">
         <h1 className="admin-users-title">Quản lý Tài khoản & Phân quyền</h1>
-        <p className="admin-users-subtitle">
-          Quản trị toàn bộ danh sách người dùng, phân bổ vai trò RBAC và kiểm soát trạng thái hoạt động tài khoản
-        </p>
       </div>
 
       {/* Toast Alert */}
@@ -346,13 +343,13 @@ const AdminUserPage = () => {
           <table className="users-table">
             <thead>
               <tr>
-                <th style={{ width: '60px' }}>ID</th>
-                <th>Người dùng</th>
-                <th>Liên hệ</th>
-                <th>Vai trò (RBAC)</th>
-                <th>Xác thực</th>
-                <th>Trạng thái</th>
-                <th style={{ textAlign: 'right' }}>Thao tác</th>
+                <th className="col-id">ID</th>
+                <th className="col-user">Người dùng</th>
+                <th className="col-contact">Liên hệ</th>
+                <th className="col-role">Vai trò (RBAC)</th>
+                <th className="col-verify">Xác thực</th>
+                <th className="col-status">Trạng thái</th>
+                <th className="col-actions">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -375,10 +372,10 @@ const AdminUserPage = () => {
 
                   return (
                     <tr key={u.id}>
-                      <td style={{ fontWeight: 600, color: '#888888' }}>#{u.id}</td>
+                      <td className="col-id">#{u.id}</td>
 
                       {/* User Info */}
-                      <td>
+                      <td className="col-user">
                         <div className="user-identity-cell">
                           <div className="user-avatar-circle">
                             {(u.fullName || u.username).charAt(0).toUpperCase()}
@@ -393,15 +390,15 @@ const AdminUserPage = () => {
                       </td>
 
                       {/* Contact */}
-                      <td>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                            <FaEnvelope style={{ color: '#888888', fontSize: '12px' }} />
+                      <td className="col-contact">
+                        <div className="user-contact-cell">
+                          <span className="user-contact-item">
+                            <FaEnvelope className="contact-icon" />
                             {u.email}
                           </span>
                           {u.phone && (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#666666' }}>
-                              <FaPhone style={{ color: '#888888', fontSize: '12px' }} />
+                            <span className="user-contact-item phone">
+                              <FaPhone className="contact-icon" />
                               {u.phone}
                             </span>
                           )}
@@ -409,7 +406,7 @@ const AdminUserPage = () => {
                       </td>
 
                       {/* Role Dropdown */}
-                      <td>
+                      <td className="col-role">
                         <select
                           className="role-inline-select"
                           value={u.role}
@@ -423,7 +420,7 @@ const AdminUserPage = () => {
                       </td>
 
                       {/* Email Verification */}
-                      <td>
+                      <td className="col-verify">
                         {u.emailVerified ? (
                           <span className="verify-tag verified">
                             <FaCheckCircle style={{ marginRight: '4px' }} /> Đã xác thực
@@ -436,7 +433,7 @@ const AdminUserPage = () => {
                       </td>
 
                       {/* Status */}
-                      <td>
+                      <td className="col-status">
                         {u.locked ? (
                           <span className="status-pill locked">
                             <FaLock style={{ fontSize: '10px' }} /> Bị khóa
@@ -449,8 +446,8 @@ const AdminUserPage = () => {
                       </td>
 
                       {/* Actions */}
-                      <td style={{ textAlign: 'right' }}>
-                        <div className="action-buttons-cell" style={{ justifyContent: 'flex-end' }}>
+                      <td className="col-actions">
+                        <div className="user-action-buttons-cell">
                           {u.role === 'CUSTOMER' && (
                             <button
                               className="btn-user-edit"
