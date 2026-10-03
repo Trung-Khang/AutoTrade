@@ -308,10 +308,12 @@ public class DepositService {
         Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
         if (appointment != null) {
             receipt.setShowroomId(appointment.getShowroomId());
-            showroomRepository.findById(appointment.getShowroomId()).ifPresent(showroom -> {
-                receipt.setShowroomName(showroom.getName());
-                receipt.setShowroomAddress(showroom.getAddress());
-            });
+            if (appointment.getShowroomId() != null) {
+                showroomRepository.findById(appointment.getShowroomId()).ifPresent(showroom -> {
+                    receipt.setShowroomName(showroom.getName());
+                    receipt.setShowroomAddress(showroom.getAddress());
+                });
+            }
             receipt.setAssignedStaffId(appointment.getAssignedStaffId());
             if (appointment.getAssignedStaffId() != null) {
                 appUserRepository.findById(appointment.getAssignedStaffId()).ifPresent(staff -> {
