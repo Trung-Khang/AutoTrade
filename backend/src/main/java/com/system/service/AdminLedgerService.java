@@ -142,6 +142,8 @@ public class AdminLedgerService {
         Long vehicleId = appointment.getVehicleId() != null ? appointment.getVehicleId()
                 : (deposit != null ? deposit.getVehicleId() : null);
         Vehicle vehicle = vehicleId != null ? vehicleRepository.findById(vehicleId).orElse(null) : null;
+        AppUser assignedStaff = appointment.getAssignedStaffId() != null
+                ? appUserRepository.findById(appointment.getAssignedStaffId()).orElse(null) : null;
 
         String vehicleInfo = vehicle != null
                 ? String.join(" ", Stream.of(vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
@@ -153,6 +155,9 @@ public class AdminLedgerService {
                 deposit == null ? null : deposit.getAmount(), customer == null ? "Khách hàng" : customer.getFullName(),
                 customer == null ? null : customer.getPhone(), vehicleInfo, vehicleId,
                 appointment.getAppointmentDate(), appointment.isHasTestDrive(), appointment.getStatus(),
-                appointment.getCustomerNote(), appointment.getStaffNote());
+                appointment.getCustomerNote(), appointment.getStaffNote(), appointment.getShowroomId(),
+                null, null, appointment.getAssignedStaffId(),
+                assignedStaff == null ? null : assignedStaff.getFullName(),
+                assignedStaff == null ? null : assignedStaff.getPhone());
     }
 }

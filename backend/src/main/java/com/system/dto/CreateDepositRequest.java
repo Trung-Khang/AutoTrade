@@ -6,6 +6,7 @@ public class CreateDepositRequest {
 
     private Long vehicleId;
     private Long showroomId;
+    private Long assignedStaffId;
     private LocalDateTime appointmentDate;
     private boolean hasTestDrive = false;
     private String customerName;
@@ -30,6 +31,14 @@ public class CreateDepositRequest {
 
     public void setShowroomId(Long showroomId) {
         this.showroomId = showroomId;
+    }
+
+    public Long getAssignedStaffId() {
+        return assignedStaffId;
+    }
+
+    public void setAssignedStaffId(Long assignedStaffId) {
+        this.assignedStaffId = assignedStaffId;
     }
 
     public LocalDateTime getAppointmentDate() {

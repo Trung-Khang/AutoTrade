@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 
 import java.util.Optional;
+import java.util.List;
+import com.system.entity.Role;
 
 public interface AppUserRepository extends JpaRepository<AppUser, Long>, JpaSpecificationExecutor<AppUser> {
     Optional<AppUser> findByUsernameIgnoreCase(String username);
@@ -17,6 +19,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long>, JpaSpec
     boolean existsByUsernameIgnoreCase(String username);
     boolean existsByEmailIgnoreCase(String email);
     boolean existsByPhone(String phone);
+
+    List<AppUser> findByShowroomIdAndRoleAndActiveTrueAndLockedFalse(Long showroomId, Role role);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from AppUser u where u.id = :id")

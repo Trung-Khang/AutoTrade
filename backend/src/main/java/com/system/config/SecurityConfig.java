@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PATCH, "/api/v1/auth/me").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/vehicles/**", "/api/v1/listings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/showrooms/*/staff").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/deposits", "/api/v1/deposits/*/confirm").hasRole("CUSTOMER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/deposits/*/receipt", "/api/v1/deposits/my").hasRole("CUSTOMER")
                         .requestMatchers("/api/v1/deposits/**").denyAll()
