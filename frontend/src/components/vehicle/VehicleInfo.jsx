@@ -50,11 +50,13 @@ const VehicleInfo = ({ vehicle }) => {
   const engineSize = vehicle.engineSize || vehicle.engine_size;
   const description = vehicle.description;
   const status = (vehicle.status || 'AVAILABLE').toUpperCase();
+  const isEligible = vehicle.depositEligible ?? (status === 'AVAILABLE');
   const canSeeDepositFlow = !authLoading && (!user || user.role === 'CUSTOMER');
 
-  const isAvailable = status === 'AVAILABLE';
+  const isAvailable = status === 'AVAILABLE' && isEligible;
   const isHold = status === 'HOLD' || status === 'RESERVED';
   const isSold = status === 'SOLD';
+  const isArchived = status === 'ARCHIVED' || (!isAvailable && !isHold && !isSold);
 
   const isFav = isFavorite(vehicle.id);
 
@@ -104,6 +106,11 @@ const VehicleInfo = ({ vehicle }) => {
                 <FaTimesCircle /> Đã hoàn tất bán
               </span>
             )}
+            {isArchived && (
+              <span className="info-status-pill status-sold">
+                <FaTimesCircle /> Tạm ngưng mở bán
+              </span>
+            )}
 
             <button
               type="button"
@@ -151,12 +158,20 @@ const VehicleInfo = ({ vehicle }) => {
                   <p>Hiện đã có khách hàng đặt cọc cho xe này. Nếu giao dịch không thành công, xe sẽ tự động mở bán lại.</p>
                 </div>
               </div>
-            ) : (
+            ) : isSold ? (
               <div className="cta-sold-box">
                 <FaTimesCircle className="cta-status-icon" />
                 <div>
                   <strong>Xe đã được bán</strong>
                   <p>Chiếc xe này đã hoàn tất thủ tục bàn giao cho chủ nhân mới.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="cta-sold-box">
+                <FaTimesCircle className="cta-status-icon" />
+                <div>
+                  <strong>Tạm ngưng mở bán / Chưa đủ điều kiện đặt cọc</strong>
+                  <p>Phương tiện này hiện chưa được mở bán chính thức hoặc chưa hoàn tất thủ tục liên kết showroom.</p>
                 </div>
               </div>
             )}

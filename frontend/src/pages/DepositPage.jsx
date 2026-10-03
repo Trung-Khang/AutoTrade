@@ -79,23 +79,31 @@ const DepositPage = () => {
     }
   }, [user]);
 
-  // Tìm kiếm thông tin Showroom nơi xe đang trưng bày (không tự đoán mặc định)
+  // Tìm kiếm thông tin Showroom nơi xe đang trưng bày (lấy showroomId từ Backend DTO, không đoán mò qua location)
   const matchedShowroom = useMemo(() => {
     if (!vehicle) return null;
     const sId = vehicle.showroomId || vehicle.showroom?.id;
     if (sId) {
       const found = SHOWROOMS_DATA.find((s) => s.id === Number(sId));
       if (found) return found;
-    }
-    if (vehicle.location) {
-      const loc = vehicle.location.toLowerCase();
-      const found = SHOWROOMS_DATA.find(
-        (s) => loc.includes(s.city.toLowerCase()) || s.city.toLowerCase().includes(loc)
-      );
-      if (found) return found;
+      return {
+        id: Number(sId),
+        name: vehicle.showroom?.name || `Showroom AutoTrade Chi nhánh #${sId}`,
+        city: vehicle.showroom?.city || vehicle.location || 'Chi nhánh Showroom',
+        address: vehicle.showroom?.address || vehicle.location || 'Địa chỉ đang cập nhật',
+        hotline: vehicle.showroom?.hotline || '1900 8888',
+        hours: '08:00 - 20:00 (Hàng ngày)'
+      };
     }
     return null;
   }, [vehicle]);
+
+  // Kiểm tra điều kiện đủ điều kiện đặt cọc (khớp chuẩn contract TV4)
+  const isDepositEligible = Boolean(
+    vehicle &&
+    matchedShowroom != null &&
+    (vehicle.depositEligible !== undefined ? vehicle.depositEligible : (vehicle.status || 'AVAILABLE').toUpperCase() === 'AVAILABLE')
+  );
 
   // Tự động tải danh sách nhân viên showroom khi showroom hoặc ngày giờ được chọn
   useEffect(() => {
@@ -162,7 +170,12 @@ const DepositPage = () => {
     if (!vehicle) return;
 
     if (!matchedShowroom?.id) {
-      alert('Xe này hiện chưa được gán thông tin Showroom cụ thể trong hệ thống. Không thể tạo đơn cọc.');
+      alert('Xe này hiện chưa được gắn Showroom hợp lệ trong hệ thống. Không thể tạo đơn cọc.');
+      return;
+    }
+
+    if (!isDepositEligible) {
+      alert(`Phương tiện này hiện không đủ điều kiện đặt cọc (Trạng thái xe: ${vehicle.status || 'Chưa mở bán'}).`);
       return;
     }
 
@@ -455,6 +468,16 @@ const DepositPage = () => {
         </div>
       )}
 
+      {/* CẢNH BÁO XE KHÔNG ĐỦ ĐIỀU KIỆN ĐẶT CỌC */}
+      {matchedShowroom && !isDepositEligible && (
+        <div style={{ backgroundColor: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', padding: '16px', borderRadius: '10px', marginBottom: '24px' }}>
+          <strong>Xe không đủ điều kiện đặt cọc:</strong>
+          <p style={{ margin: '4px 0 0', fontSize: '14px' }}>
+            Chiếc xe này hiện đang ở trạng thái <strong>{vehicle.status || 'Tạm ngưng mở bán'}</strong> và chưa sẵn sàng tiếp nhận đặt cọc theo quy định của hệ thống.
+          </p>
+        </div>
+      )}
+
       <div className="deposit-layout-grid">
         {/* CỘT TRÁI: FORM THÔNG TIN HOẶC XÁC NHẬN QR */}
         <div className="deposit-card">
@@ -628,11 +651,13 @@ const DepositPage = () => {
               <button
                 type="submit"
                 className="deposit-submit-btn"
-                disabled={isSubmitting || !matchedShowroom}
-                style={!matchedShowroom ? { backgroundColor: '#94a3b8', cursor: 'not-allowed' } : {}}
+                disabled={isSubmitting || !matchedShowroom || !isDepositEligible}
+                style={(!matchedShowroom || !isDepositEligible) ? { backgroundColor: '#94a3b8', cursor: 'not-allowed' } : {}}
               >
                 {!matchedShowroom
                   ? 'Chức năng đặt cọc bị khóa (Thiếu Showroom)'
+                  : !isDepositEligible
+                  ? 'Chức năng đặt cọc bị khóa (Xe không đủ điều kiện)'
                   : isSubmitting
                   ? 'Đang tạo đơn cọc...'
                   : 'Tiếp Tục: Quét Mã QR & Thanh Toán Cọc'}

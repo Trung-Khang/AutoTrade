@@ -32,6 +32,7 @@ const VehicleCard = ({ vehicle }) => {
   const price = vehicle.price;
   const seatCount = vehicle.seatCount || vehicle.seat_count;
   const status = (vehicle.status || 'AVAILABLE').toUpperCase();
+  const isEligible = vehicle.depositEligible ?? (status === 'AVAILABLE');
   const canSeeDepositFlow = !authLoading && (!user || user.role === 'CUSTOMER');
 
   // Xác định nhãn trạng thái kinh doanh
@@ -39,7 +40,7 @@ const VehicleCard = ({ vehicle }) => {
     text: 'Đang mở bán',
     className: 'status-available',
     icon: <FaCheckCircle />,
-    canDeposit: true
+    canDeposit: isEligible
   };
 
   if (status === 'HOLD' || status === 'RESERVED') {
@@ -52,6 +53,13 @@ const VehicleCard = ({ vehicle }) => {
   } else if (status === 'SOLD') {
     statusBadge = {
       text: 'Đã bán',
+      className: 'status-sold',
+      icon: <FaTimesCircle />,
+      canDeposit: false
+    };
+  } else if (status === 'ARCHIVED' || !isEligible) {
+    statusBadge = {
+      text: status === 'ARCHIVED' ? 'Tạm ngưng mở bán' : 'Chưa mở đặt cọc',
       className: 'status-sold',
       icon: <FaTimesCircle />,
       canDeposit: false
