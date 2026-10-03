@@ -144,6 +144,7 @@ const CustomerDepositHistoryPage = () => {
                     <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '4px' }}>Lịch hẹn Showroom</div>
                     <div style={{ color: '#0f172a', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}><FaCalendarAlt style={{ color: '#16a34a' }} /> {formatAppointmentDateTime(item.appointmentDate, item.appointmentTime)}</div>
                     {showroomText && <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}><FaMapMarkerAlt style={{ color: '#94a3b8' }} /> {showroomText}</div>}
+                    {item.assignedStaffName && <div style={{ fontSize: '12px', color: '#0369a1', marginTop: '2px' }}>Chuyên viên: <strong>{item.assignedStaffName}</strong></div>}
                     <div style={{ marginTop: '4px' }}>Trạng thái hẹn: {renderAppointmentStatus(item.appointmentStatus, item.status)}</div>
                   </div>
                 </div>
