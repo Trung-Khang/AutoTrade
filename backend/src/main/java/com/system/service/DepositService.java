@@ -74,7 +74,7 @@ public class DepositService {
         }
 
         String currentStatus = vehicle.getStatus() != null ? vehicle.getStatus().toUpperCase() : "AVAILABLE";
-        if ("HOLD".equals(currentStatus) || "RESERVED".equals(currentStatus) || "SOLD".equals(currentStatus)) {
+        if (!"AVAILABLE".equals(currentStatus)) {
             throw new VehicleNotAvailableException("Rất tiếc! Xe này hiện tại không thể đặt cọc (Trạng thái hiện tại: " + currentStatus + ").");
         }
 
@@ -84,8 +84,8 @@ public class DepositService {
             throw new IllegalArgumentException("Ngày giờ hẹn là bắt buộc.");
         }
         Long vehicleShowroomId = vehicle.getShowroomId();
-        Long showroomId = vehicleShowroomId != null ? vehicleShowroomId : request.getShowroomId();
-        if (showroomId == null) {
+        Long showroomId = vehicleShowroomId;
+        if (showroomId == null || request.getShowroomId() == null) {
             throw new IllegalArgumentException("Xe chưa được gắn showroom hợp lệ.");
         }
         if (request.getShowroomId() != null && vehicleShowroomId != null
@@ -97,7 +97,7 @@ public class DepositService {
 
         // 3. Tính tiền cọc: 10% giá trị xe (hoặc tối thiểu 10.000.000 VNĐ)
         Long assignedStaffId = resolveAssignedStaff(request.getAssignedStaffId(), showroom.getId(),
-                request.getAppointmentDate(), vehicle.getShowroomId() == null);
+                request.getAppointmentDate(), false);
         BigDecimal vehiclePrice = BigDecimal.ZERO;
         if (listingRepository != null) {
             List<com.system.entity.Listing> listings = listingRepository.findByVehicleId(vehicle.getId());

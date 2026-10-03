@@ -26,6 +26,7 @@ public class ListingResponseDto {
 
     // Thông tin dòng xe (Vehicle)
     private Long vehicleId;
+    private Long showroomId;
     private String brand;
     private String model;
     private String variant;
@@ -37,6 +38,7 @@ public class ListingResponseDto {
     private String origin;
     private String bodyType;
     private String status;
+    private boolean depositEligible;
 
     // Thông tin nguồn sàn (Source)
     private Long sourceId;
@@ -67,6 +69,7 @@ public class ListingResponseDto {
         Vehicle vehicle = listing.getVehicle();
         if (vehicle != null) {
             dto.setVehicleId(vehicle.getId());
+            dto.setShowroomId(vehicle.getShowroomId());
             dto.setBrand(vehicle.getBrand());
             dto.setModel(vehicle.getModel());
             dto.setVariant(vehicle.getVariant());
@@ -77,7 +80,11 @@ public class ListingResponseDto {
             dto.setSeatCount(vehicle.getSeatCount());
             dto.setOrigin(vehicle.getOrigin());
             dto.setBodyType(vehicle.getBodyType());
-            dto.setStatus("ARCHIVED".equalsIgnoreCase(vehicle.getStatus()) ? "AVAILABLE" : vehicle.getStatus());
+            dto.setStatus(vehicle.getStatus());
+            dto.setDepositEligible(
+                    vehicle.getShowroomId() != null
+                            && "AVAILABLE".equalsIgnoreCase(vehicle.getStatus())
+            );
         }
 
         Source source = listing.getSource();
@@ -128,6 +135,9 @@ public class ListingResponseDto {
     public Long getVehicleId() { return vehicleId; }
     public void setVehicleId(Long vehicleId) { this.vehicleId = vehicleId; }
 
+    public Long getShowroomId() { return showroomId; }
+    public void setShowroomId(Long showroomId) { this.showroomId = showroomId; }
+
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
 
@@ -160,6 +170,9 @@ public class ListingResponseDto {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public boolean isDepositEligible() { return depositEligible; }
+    public void setDepositEligible(boolean depositEligible) { this.depositEligible = depositEligible; }
 
     public Long getSourceId() { return sourceId; }
     public void setSourceId(Long sourceId) { this.sourceId = sourceId; }
