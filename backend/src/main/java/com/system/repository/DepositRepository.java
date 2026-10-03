@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Collection;
 
 @Repository
 public interface DepositRepository extends JpaRepository<Deposit, Long> {
@@ -21,6 +22,8 @@ public interface DepositRepository extends JpaRepository<Deposit, Long> {
     List<Deposit> findByVehicleId(Long vehicleId);
 
     List<Deposit> findByStatus(String status);
+
+    boolean existsByVehicleIdAndStatusIn(Long vehicleId, Collection<String> statuses);
 
     boolean existsByUserId(Long userId);
 

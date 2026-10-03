@@ -87,6 +87,7 @@ class DepositServiceUnitTest {
         sampleVehicle.setModel("Camry");
         sampleVehicle.setStatus("AVAILABLE");
         sampleVehicle.setShowroomId(10L);
+        when(vehicleRepository.findLockedById(1L)).thenReturn(Optional.of(sampleVehicle));
 
         sampleShowroom = new Showroom("Showroom Thủ Đức", "Số 1 Võ Văn Ngân, Thủ Đức", "0901234567", "TP.HCM");
         sampleShowroom.setId(10L);
@@ -515,6 +516,34 @@ class DepositServiceUnitTest {
         when(appointmentRepository.findLockedById(91L)).thenReturn(Optional.of(appointment));
         assertThrows(com.system.exception.AuthException.class, () -> adminLedgerService.reschedule(91L,
                 new RescheduleAppointmentRequest(LocalDateTime.now().plusDays(2), "test")));
+        verify(appointmentRepository, never()).save(any(Appointment.class));
+    }
+
+    @Test
+    @DisplayName("Khôi phục đúng đơn PENDING mà không tạo lại đơn hoặc lịch hẹn")
+    void getPendingPaymentReturnsExistingDepositDetails() {
+        sampleVehicle.setVariant("2.5Q");
+        sampleDeposit.setCreatedAt(Instant.parse("2026-10-02T04:15:00Z"));
+        Appointment appointment = new Appointment(50L, 100L, 1L, 10L,
+                LocalDateTime.parse("2026-10-05T09:30:00"), true, "Xem xe");
+        appointment.setId(15L);
+        appointment.setAssignedStaffId(20L);
+        when(depositRepository.findById(50L)).thenReturn(Optional.of(sampleDeposit));
+        when(vehicleRepository.findById(1L)).thenReturn(Optional.of(sampleVehicle));
+        when(showroomRepository.findById(10L)).thenReturn(Optional.of(sampleShowroom));
+        when(appointmentRepository.findByDepositId(50L)).thenReturn(Optional.of(appointment));
+        com.system.entity.AppUser staff = new com.system.entity.AppUser();
+        staff.setFullName("Nhân viên thật");
+        staff.setPhone("0900000001");
+        when(appUserRepository.findById(20L)).thenReturn(Optional.of(staff));
+
+        DepositResponse response = depositService.getPendingPayment(50L, 100L);
+
+        assertEquals(50L, response.getDepositId());
+        assertEquals("PENDING", response.getStatus());
+        assertEquals(15L, response.getAppointmentId());
+        assertEquals(20L, response.getAssignedStaffId());
+        verify(depositRepository, never()).save(any(Deposit.class));
         verify(appointmentRepository, never()).save(any(Appointment.class));
     }
 }

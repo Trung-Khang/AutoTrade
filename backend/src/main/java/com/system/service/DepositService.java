@@ -61,7 +61,7 @@ public class DepositService {
     @Transactional
     public DepositResponse createDeposit(CreateDepositRequest request, Long userId) {
         // 1. Kiểm tra xe tồn tại và trạng thái (hỗ trợ cả vehicleId hoặc listingId)
-        Vehicle vehicle = vehicleRepository.findById(request.getVehicleId()).orElse(null);
+        Vehicle vehicle = vehicleRepository.findLockedById(request.getVehicleId()).orElse(null);
         if (vehicle == null && listingRepository != null) {
             com.system.entity.Listing listing = listingRepository.findById(request.getVehicleId()).orElse(null);
             if (listing != null) {
@@ -72,6 +72,11 @@ public class DepositService {
         if (vehicle == null) {
             throw new ResourceNotFoundException("Không tìm thấy xe với ID: " + request.getVehicleId());
         }
+
+        // Re-lock the physical vehicle when a legacy listing ID was supplied.
+        Long physicalVehicleId = vehicle.getId();
+        vehicle = vehicleRepository.findLockedById(physicalVehicleId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + physicalVehicleId));
 
         String currentStatus = vehicle.getStatus() != null ? vehicle.getStatus().toUpperCase() : "AVAILABLE";
         if (!"AVAILABLE".equals(currentStatus)) {
@@ -282,6 +287,59 @@ public class DepositService {
         requireOwner(deposit, userId);
 
         return buildReceipt(deposit);
+    }
+
+    /**
+     * Rebuilds the payment screen for an existing pending deposit.
+     * This intentionally does not create or mutate a deposit or appointment.
+     */
+    @Transactional(readOnly = true)
+    public DepositResponse getPendingPayment(Long depositId, Long userId) {
+        Deposit deposit = depositRepository.findById(depositId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn cọc với ID: " + depositId));
+        requireOwner(deposit, userId);
+
+        if (!"PENDING".equalsIgnoreCase(deposit.getStatus())) {
+            throw new AuthException(HttpStatus.CONFLICT,
+                    "Đơn cọc này không còn ở trạng thái chờ thanh toán.");
+        }
+
+        Vehicle vehicle = vehicleRepository.findById(deposit.getVehicleId()).orElse(null);
+        Showroom showroom = deposit.getShowroomId() == null ? null
+                : showroomRepository.findById(deposit.getShowroomId()).orElse(null);
+        Appointment appointment = appointmentRepository.findByDepositId(deposit.getId()).orElse(null);
+
+        DepositResponse response = new DepositResponse();
+        response.setDepositId(deposit.getId());
+        response.setDepositCode(deposit.getDepositCode());
+        response.setVehicleId(deposit.getVehicleId());
+        if (vehicle != null) {
+            response.setVehicleTitle(String.join(" ", java.util.stream.Stream.of(
+                    vehicle.getBrand(), vehicle.getModel(), vehicle.getVariant())
+                    .filter(value -> value != null && !value.isBlank()).toList()));
+        }
+        response.setDepositAmount(deposit.getAmount());
+        response.setStatus(deposit.getStatus());
+        response.setQrPaymentUrl(deposit.getQrCodeUrl());
+        response.setCreatedAt(deposit.getCreatedAt());
+
+        if (showroom != null) {
+            response.setShowroomName(showroom.getName());
+            response.setShowroomAddress(showroom.getAddress());
+        }
+        if (appointment != null) {
+            response.setAppointmentId(appointment.getId());
+            response.setAppointmentDate(appointment.getAppointmentDate());
+            response.setHasTestDrive(appointment.isHasTestDrive());
+            response.setAssignedStaffId(appointment.getAssignedStaffId());
+            if (appointment.getAssignedStaffId() != null) {
+                appUserRepository.findById(appointment.getAssignedStaffId()).ifPresent(staff -> {
+                    response.setAssignedStaffName(staff.getFullName());
+                    response.setAssignedStaffPhone(staff.getPhone());
+                });
+            }
+        }
+        return response;
     }
 
     private ReceiptResponse buildReceipt(Deposit deposit) {

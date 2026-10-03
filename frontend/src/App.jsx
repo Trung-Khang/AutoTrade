@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage';
 import VehicleListPage from './pages/VehicleListPage';
 import VehicleDetailPage from './pages/VehicleDetailPage';
 import DepositPage from './pages/DepositPage';
+import DepositPaymentPage from './pages/DepositPaymentPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
@@ -49,6 +50,14 @@ function App() {
                 element={
                   <CustomerOnlyRoute>
                     <DepositPage />
+                  </CustomerOnlyRoute>
+                }
+              />
+              <Route
+                path="/deposit/payment/:id"
+                element={
+                  <CustomerOnlyRoute>
+                    <DepositPaymentPage />
                   </CustomerOnlyRoute>
                 }
               />

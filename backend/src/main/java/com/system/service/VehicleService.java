@@ -7,6 +7,8 @@ import com.system.entity.Vehicle;
 import com.system.exception.ResourceNotFoundException;
 import com.system.repository.ShowroomRepository;
 import com.system.repository.VehicleRepository;
+import com.system.repository.DepositRepository;
+import com.system.repository.AppointmentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -15,16 +17,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final ShowroomRepository showroomRepository;
+    private final DepositRepository depositRepository;
+    private final AppointmentRepository appointmentRepository;
 
-    public VehicleService(VehicleRepository vehicleRepository, ShowroomRepository showroomRepository) {
+    public VehicleService(VehicleRepository vehicleRepository, ShowroomRepository showroomRepository,
+                          DepositRepository depositRepository, AppointmentRepository appointmentRepository) {
         this.vehicleRepository = vehicleRepository;
         this.showroomRepository = showroomRepository;
+        this.depositRepository = depositRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     // 1. Lấy danh sách xe đang AVAILABLE phục vụ người dùng xem/tìm kiếm (Public Catalog)
@@ -100,7 +108,8 @@ public class VehicleService {
     // Tương thích ngược
     @Transactional
     public Vehicle updateVehicle(Long id, Vehicle vehicleDetails) {
-        Vehicle existing = getVehicleById(id);
+        Vehicle existing = vehicleRepository.findLockedById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + id));
         existing.setBrand(vehicleDetails.getBrand());
         existing.setModel(vehicleDetails.getModel());
         existing.setVariant(vehicleDetails.getVariant());
@@ -114,7 +123,8 @@ public class VehicleService {
     // 5. Admin cập nhật thông tin xe
     @Transactional
     public Vehicle updateVehicle(Long id, VehicleRequest request) {
-        Vehicle existing = getVehicleById(id);
+        Vehicle existing = vehicleRepository.findLockedById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + id));
 
         if (request.getVin() != null) existing.setVin(request.getVin());
         if (request.getBrand() != null) existing.setBrand(request.getBrand());
@@ -133,7 +143,12 @@ public class VehicleService {
         if (request.getImageUrl() != null) existing.setImageUrl(request.getImageUrl());
         if (request.getDescription() != null) existing.setDescription(request.getDescription());
         if (request.getShowroomId() != null) existing.setShowroomId(request.getShowroomId());
-        if (request.getStatus() != null) existing.setStatus(request.getStatus());
+        if (request.getStatus() != null) {
+            if ("AVAILABLE".equalsIgnoreCase(request.getStatus())) {
+                assertCanReopen(id);
+            }
+            existing.setStatus(request.getStatus());
+        }
 
         return vehicleRepository.save(existing);
     }
@@ -141,9 +156,21 @@ public class VehicleService {
     // 6. Admin cập nhật trạng thái xe (AVAILABLE, HOLD, RESERVED, SOLD)
     @Transactional
     public Vehicle updateVehicleStatus(Long id, String newStatus) {
-        Vehicle vehicle = getVehicleById(id);
+        Vehicle vehicle = vehicleRepository.findLockedById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + id));
+        if ("AVAILABLE".equalsIgnoreCase(newStatus)) {
+            assertCanReopen(id);
+        }
         vehicle.setStatus(newStatus);
         return vehicleRepository.save(vehicle);
+    }
+
+    private void assertCanReopen(Long vehicleId) {
+        if (depositRepository.existsByVehicleIdAndStatusIn(vehicleId, Set.of("PENDING", "DEPOSITED"))
+                || appointmentRepository.existsByVehicleIdAndStatusIn(vehicleId, Set.of("PENDING", "SCHEDULED"))) {
+            throw new com.system.exception.AuthException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Xe đang có đơn đặt cọc hoặc lịch hẹn hiệu lực. Vui lòng hủy lịch và hoàn cọc trước khi mở bán lại.");
+        }
     }
 
     // 7. Admin xóa xe

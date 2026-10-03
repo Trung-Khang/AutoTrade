@@ -59,6 +59,15 @@ public class DepositController {
         return ResponseEntity.ok(response);
     }
 
+    // Lấy lại đúng đơn PENDING để khách tiếp tục thanh toán, không tạo đơn mới
+    @GetMapping("/{id}/pending")
+    @Operation(summary = "Lấy lại đơn cọc đang chờ thanh toán")
+    public ResponseEntity<DepositResponse> getPendingPayment(@PathVariable Long id) {
+        AppUserPrincipal customer = requireCustomer();
+        DepositResponse response = depositService.getPendingPayment(id, customer.id());
+        return ResponseEntity.ok(response);
+    }
+
     // 4. Lấy danh sách các đơn cọc của người dùng hiện tại
     @GetMapping("/my")
     @Operation(summary = "Danh sách đơn cọc của tôi", 

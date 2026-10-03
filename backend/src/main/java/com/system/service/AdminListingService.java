@@ -6,7 +6,10 @@ import com.system.entity.Listing;
 import com.system.entity.Source;
 import com.system.entity.Vehicle;
 import com.system.exception.ResourceNotFoundException;
+import com.system.exception.AuthException;
 import com.system.repository.ListingRepository;
+import com.system.repository.AppointmentRepository;
+import com.system.repository.DepositRepository;
 import com.system.repository.SourceRepository;
 import com.system.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,7 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.Collection;
 
 @Service
 public class AdminListingService {
@@ -26,13 +30,19 @@ public class AdminListingService {
     private final ListingRepository listingRepository;
     private final VehicleRepository vehicleRepository;
     private final SourceRepository sourceRepository;
+    private final DepositRepository depositRepository;
+    private final AppointmentRepository appointmentRepository;
 
     public AdminListingService(ListingRepository listingRepository,
                                VehicleRepository vehicleRepository,
-                               SourceRepository sourceRepository) {
+                               SourceRepository sourceRepository,
+                               DepositRepository depositRepository,
+                               AppointmentRepository appointmentRepository) {
         this.listingRepository = listingRepository;
         this.vehicleRepository = vehicleRepository;
         this.sourceRepository = sourceRepository;
+        this.depositRepository = depositRepository;
+        this.appointmentRepository = appointmentRepository;
     }
 
     @Transactional
@@ -63,17 +73,23 @@ public class AdminListingService {
     public ListingResponseDto update(Long listingId, AdminListingRequest request) {
         validate(request);
         Listing listing = findListing(listingId);
-        Vehicle vehicle = listing.getVehicle();
-        if (vehicle == null) {
+        Vehicle listingVehicle = listing.getVehicle();
+        if (listingVehicle == null) {
             throw new ResourceNotFoundException("Tin xe không liên kết với xe nền: " + listingId);
         }
+        Vehicle vehicle = vehicleRepository.findLockedById(listingVehicle.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + listingVehicle.getId()));
 
         applyVehicleFields(vehicle, request);
         vehicle.setPrice(request.price());
         vehicle.setMileage(request.mileage());
         vehicle.setColor(blankToNull(request.color()));
         vehicle.setImageUrl(blankToNull(request.imageUrl()));
-        vehicle.setStatus(normalizeStatus(request.status()));
+        String nextStatus = normalizeStatus(request.status());
+        if ("AVAILABLE".equals(nextStatus)) {
+            assertCanReopen(vehicle.getId());
+        }
+        vehicle.setStatus(nextStatus);
 
         listing.setPrice(request.price());
         listing.setMileage(request.mileage());
@@ -88,11 +104,17 @@ public class AdminListingService {
     @Transactional
     public ListingResponseDto updateStatus(Long listingId, String status) {
         Listing listing = findListing(listingId);
-        Vehicle vehicle = listing.getVehicle();
-        if (vehicle == null) {
+        Vehicle listingVehicle = listing.getVehicle();
+        if (listingVehicle == null) {
             throw new ResourceNotFoundException("Tin xe không liên kết với xe nền: " + listingId);
         }
-        vehicle.setStatus(normalizeStatus(status));
+        Vehicle vehicle = vehicleRepository.findLockedById(listingVehicle.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy xe với ID: " + listingVehicle.getId()));
+        String nextStatus = normalizeStatus(status);
+        if ("AVAILABLE".equals(nextStatus)) {
+            assertCanReopen(vehicle.getId());
+        }
+        vehicle.setStatus(nextStatus);
         vehicleRepository.save(vehicle);
         return ListingResponseDto.fromEntity(listing);
     }
@@ -143,6 +165,16 @@ public class AdminListingService {
             throw new IllegalArgumentException("Trạng thái phải là AVAILABLE, HOLD hoặc SOLD.");
         }
         return normalized;
+    }
+
+    private void assertCanReopen(Long vehicleId) {
+        Collection<String> activeDepositStatuses = Set.of("PENDING", "DEPOSITED");
+        Collection<String> activeAppointmentStatuses = Set.of("PENDING", "SCHEDULED");
+        if (depositRepository.existsByVehicleIdAndStatusIn(vehicleId, activeDepositStatuses)
+                || appointmentRepository.existsByVehicleIdAndStatusIn(vehicleId, activeAppointmentStatuses)) {
+            throw new AuthException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Xe đang có đơn đặt cọc hoặc lịch hẹn hiệu lực. Vui lòng hủy lịch và hoàn cọc trước khi mở bán lại.");
+        }
     }
 
     private String blankToNull(String value) {

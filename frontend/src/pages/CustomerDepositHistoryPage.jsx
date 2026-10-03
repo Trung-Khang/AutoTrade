@@ -149,7 +149,15 @@ const CustomerDepositHistoryPage = () => {
                   </div>
                 </div>
 
-                {item.hasTestDrive && <div style={{ marginTop: '14px', backgroundColor: '#eff6ff', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Có đăng ký lái thử xe trong buổi hẹn</div>}
+                {item.status === 'PENDING' && (
+                  <Link
+                    to={`/deposit/payment/${item.depositId}`}
+                    style={{ marginTop: '14px', display: 'inline-flex', alignItems: 'center', gap: '6px', backgroundColor: '#2563eb', color: '#fff', padding: '9px 14px', borderRadius: '7px', fontWeight: '700', textDecoration: 'none', fontSize: '13px' }}
+                  >
+                    Tiếp tục thanh toán
+                  </Link>
+                )}
+                {item.hasTestDrive && <div style={{ marginTop: '14px', marginLeft: item.status === 'PENDING' ? '10px' : 0, backgroundColor: '#eff6ff', padding: '8px 12px', borderRadius: '6px', fontSize: '12px', color: '#1e40af', display: 'inline-flex', alignItems: 'center', gap: '6px' }}><FaCheckCircle /> Có đăng ký lái thử xe trong buổi hẹn</div>}
                 {customerNote && <div style={{ marginTop: '10px', fontSize: '13px', color: '#475569', fontStyle: 'italic' }}>Ghi chú: "{customerNote}"</div>}
               </div>
             );

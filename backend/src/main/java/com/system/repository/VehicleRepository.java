@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Lock;
+import jakarta.persistence.LockModeType;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +27,10 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
     List<Vehicle> findByStatus(String status);
 
     Page<Vehicle> findByStatus(String status, Pageable pageable);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT v FROM Vehicle v WHERE v.id = :id")
+    Optional<Vehicle> findLockedById(@Param("id") Long id);
 
     List<Vehicle> findByShowroomIdAndStatus(Long showroomId, String status);
 

@@ -28,6 +28,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 
     boolean existsByUserId(Long userId);
 
+    boolean existsByVehicleIdAndStatusIn(Long vehicleId, Collection<String> statuses);
+
     boolean existsByAssignedStaffIdAndAppointmentDateAndStatusIn(
             Long assignedStaffId, LocalDateTime appointmentDate, Collection<String> statuses);
 
