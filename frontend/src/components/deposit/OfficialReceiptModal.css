@@ -221,6 +221,18 @@
    PRINT STYLES CHO MODAL & IN ẤN HỢP ĐỒNG
    ======================================================= */
 @media print {
+  /* Khi modal xem hợp đồng đang mở, ẩn toàn bộ ứng dụng chính (#root) để chỉ in duy nhất modal hợp đồng */
+  body.official-receipt-modal-active > #root {
+    display: none !important;
+  }
+
+  body.official-receipt-modal-active {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
   .no-print,
   .receipt-modal-topbar,
   .receipt-modal-footer,
@@ -234,24 +246,50 @@
     position: static !important;
     background: transparent !important;
     padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
   }
 
   .receipt-modal-wrapper {
+    position: static !important;
     box-shadow: none !important;
     border: none !important;
     max-width: 100% !important;
+    width: 100% !important;
     max-height: none !important;
     overflow: visible !important;
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .receipt-modal-printable-body {
     padding: 0 !important;
+    margin: 0 !important;
     overflow: visible !important;
+    max-height: none !important;
   }
 
   .official-receipt-box {
     box-shadow: none !important;
-    border: 1px solid #94a3b8 !important;
-    margin: 0 !important;
+    border: 1.5px solid #000000 !important;
+    margin: 0 auto !important;
+    padding: 8mm 12mm !important;
+    max-width: 100% !important;
+    border-radius: 0 !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

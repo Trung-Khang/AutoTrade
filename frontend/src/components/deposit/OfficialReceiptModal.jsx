@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FaTimes, FaPrint, FaCheckCircle } from 'react-icons/fa';
 import { formatFullPrice } from '../../utils/formatters';
 import ceoSignatureImg from '../../assets/images/ceo_signature.png';
@@ -179,22 +180,33 @@ export const OfficialReceiptContent = ({ receiptData }) => {
 };
 
 const OfficialReceiptModal = ({ isOpen, onClose, receiptData }) => {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('official-receipt-modal-active');
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.classList.remove('official-receipt-modal-active');
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.classList.remove('official-receipt-modal-active');
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !receiptData) return null;
 
   const handlePrint = () => {
     window.print();
   };
 
-  return (
+  const modalContent = (
     <div className="receipt-modal-backdrop" onClick={onClose} role="presentation">
       <div className="receipt-modal-wrapper" onClick={(e) => e.stopPropagation()}>
         <div className="receipt-modal-topbar no-print">
           <h3>Chi Tiết Biên Lai Đặt Cọc & Hợp Đồng</h3>
           <div className="receipt-modal-top-actions">
-            <button type="button" className="receipt-btn-print" onClick={handlePrint}>
-              <FaPrint /> In Biên Lai
-            </button>
-            <button type="button" className="receipt-btn-close" onClick={onClose}>
+            <button type="button" className="receipt-btn-close" onClick={onClose} title="Đóng">
               <FaTimes />
             </button>
           </div>
@@ -215,6 +227,8 @@ const OfficialReceiptModal = ({ isOpen, onClose, receiptData }) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default OfficialReceiptModal;
