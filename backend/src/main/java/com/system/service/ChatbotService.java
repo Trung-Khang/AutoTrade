@@ -62,8 +62,24 @@ public class ChatbotService {
             // Quy tắc 7: Giới hạn độ dài tin nhắn (tối đa 300 ký tự) để chống spam và prompt injection
             String userMsg = rawMsg.length() > 300 ? rawMsg.substring(0, 300).trim() : rawMsg;
 
+            // Prompt injection luôn được kiểm tra trước khi khôi phục ngữ cảnh "gợi ý thêm".
+            if (containsPromptInjection(userMsg.toLowerCase(Locale.ROOT))) {
+                return new ChatMessageResponse(replyFor(Intent.PROMPT_INJECTION), Collections.emptyList());
+            }
+
+            String previousQuery = request != null && request.getPreviousQuery() != null
+                    ? request.getPreviousQuery().trim() : "";
+            if (previousQuery.length() > 300) previousQuery = previousQuery.substring(0, 300).trim();
+            boolean moreRecommendations = isMoreRecommendations(userMsg) && !previousQuery.isBlank();
+            String recommendationQuery = moreRecommendations ? previousQuery : userMsg;
+
+            Intent intentType = classifyIntent(recommendationQuery);
+            if (intentType != Intent.CAR_QUERY) {
+                return new ChatMessageResponse(replyFor(intentType), Collections.emptyList());
+            }
+
             // 1. Phân tích ý định & tiêu chí tìm kiếm từ câu hỏi
-            ParsedIntent intent = parseUserIntent(userMsg);
+            ParsedIntent intent = parseUserIntent(recommendationQuery);
 
             // 2. Lấy danh sách xe AVAILABLE thật từ Database (chỉ 1 query native nối bảng listings để lấy giá thật >= 50 triệu)
             List<Object[]> rawVehicles = vehicleRepository.findAvailableChatbotVehiclesNative();
@@ -71,11 +87,17 @@ public class ChatbotService {
             // 3. Lọc và xếp hạng xe theo tiêu chí người dùng
             List<RecommendedVehicleDto> matchedCandidates = matchAndRankVehiclesInMemory(rawVehicles, intent);
 
-            // Giới hạn gợi ý top 3 - 4 xe tốt nhất (Rule 9)
-            List<RecommendedVehicleDto> topRecommendations = matchedCandidates.stream().limit(4).toList();
+            // Giữ nguyên giới hạn gợi ý hiện tại; luồng "gợi ý thêm" chỉ loại listing đã hiển thị.
+            Set<Long> excludedListingIds = request != null && request.getExcludedListingIds() != null
+                    ? request.getExcludedListingIds().stream().filter(Objects::nonNull).limit(100).collect(Collectors.toSet())
+                    : Collections.emptySet();
+            List<RecommendedVehicleDto> topRecommendations = matchedCandidates.stream()
+                    .filter(vehicle -> !excludedListingIds.contains(vehicle.getId()))
+                    .limit(4)
+                    .toList();
 
             // 4. Sinh lời thoại tư vấn (gọi Gemini AI hoặc dùng Fallback Template thông minh)
-            String replyText = generateReplyText(userMsg, intent, topRecommendations);
+            String replyText = generateReplyText(recommendationQuery, intent, topRecommendations);
 
             return new ChatMessageResponse(replyText, topRecommendations);
         } catch (Exception ex) {
@@ -87,6 +109,100 @@ public class ChatbotService {
         }
     }
 
+    private Intent classifyIntent(String text) {
+        String lower = text.toLowerCase(Locale.ROOT);
+
+        if (lower.isBlank() || lower.length() < 2) {
+            return Intent.UNCLEAR;
+        }
+
+        if (containsPromptInjection(lower)) {
+            return Intent.PROMPT_INJECTION;
+        }
+
+        if (containsCarSignal(lower)) {
+            return Intent.CAR_QUERY;
+        }
+
+        if (containsAny(lower, "xin chào", "xin chao", "hello", "hi", "chào bạn", "chao ban")) {
+            return Intent.GREETING;
+        }
+
+        if (containsAny(lower, "bạn là ai", "ban la ai", "who are you", "giới thiệu bản thân", "gioi thieu ban than")) {
+            return Intent.ABOUT_BOT;
+        }
+
+        if (containsAny(lower, "thời tiết", "thoi tiet", "giải bài", "giai bai", "bài tập", "bai tap",
+                "tin tức", "tin tuc", "chính trị", "chinh tri", "viết code", "viet code", "lập trình", "lap trinh")) {
+            return Intent.OUT_OF_SCOPE;
+        }
+
+        return Intent.UNCLEAR;
+    }
+
+    private boolean isMoreRecommendations(String text) {
+        String lower = text.toLowerCase(Locale.ROOT);
+        return containsAny(lower,
+                "còn option nào", "con option nao", "còn mẫu xe nào", "con mau xe nao",
+                "còn mẫu nào khác", "con mau nao khac", "còn không", "con khong",
+                "gợi ý thêm", "goi y them", "tham khảo thêm", "tham khao them",
+                "còn lựa chọn nào", "con lua chon nao", "còn xe nào nữa", "con xe nao nua",
+                "hết rồi à", "het roi a", "hết rồi hả", "het roi ha", "nhiêu đó thôi hả", "nhieu do thoi ha",
+                "nhiêu đó thôi à", "nhieu do thoi a", "trong kho còn mẫu nào khác", "trong kho con mau nao khac",
+                "hệ thống chỉ có nhiêu đó thôi", "he thong chi co nhieu do thoi", "thêm nữa đi", "them nua di", "thêm đi", "them di",
+                "tiếp tục gợi ý", "tiep tuc goi y", "tiếp tục gợi ý thêm", "tiep tuc goi y them", "thêm lựa chọn", "them lua chon", "thêm",
+                "tôi cần thêm", "toi can them", "gợi ý thêm cho tôi", "goi y them cho toi");
+    }
+
+    private boolean containsPromptInjection(String text) {
+        boolean asksForSecrets = containsAny(text, "api key", "apikey", "jwt", "access token", "mật khẩu", "mat khau", "password");
+        boolean asksToOverride = containsAny(text, "bỏ qua quy tắc", "bo qua quy tac", "bỏ qua hướng dẫn", "bo qua huong dan",
+                "bỏ qua prompt", "bo qua prompt", "ignore the rules", "ignore instructions", "reveal the prompt");
+        return asksForSecrets || asksToOverride;
+    }
+
+    private boolean containsCarSignal(String text) {
+        String[] carSignals = {
+                "car", "vehicle", "sedan", "suv", "mpv", "crossover", "hatchback", "pickup", "bán tải", "ban tai",
+                "5 chỗ", "5 cho", "7 chỗ", "7 cho", "gia đình", "gia dinh", "đi phố", "di pho", "đi làm", "di lam",
+                "đi phượt", "di phuot", "đường đèo", "duong deo", "gầm cao", "gam cao", "xe điện", "xe dien",
+                "showroom", "đặt cọc", "dat coc", "nhiên liệu", "nhien lieu", "hộp số", "hop so", "tài chính", "tai chinh",
+                "ngân sách", "ngan sach", "giá xe", "gia xe", "toyota", "ford", "kia", "vinfast", "mazda", "hyundai",
+                "honda", "mercedes", "bmw", "porsche", "mitsubishi", "volvo", "lexus", "audi",
+                "thể thao", "the thao", "đi biển", "di bien", "du lịch", "du lich", "leo núi", "leo nui",
+                "leo đồi", "leo doi", "đèo", "thành phố", "thanh pho", "trong phố", "trong pho",
+                "đi trong phố", "di trong pho", "đi trong thành phố", "di trong thanh pho", "tiết kiệm xăng", "tiet kiem xang",
+                "hà nội", "ha noi", "hồ chí minh", "ho chi minh", "sài gòn", "sai gon", "đà nẵng", "da nang",
+                "tphcm", "tp.hcm", "tp hcm"
+        };
+        if (containsAny(text, carSignals) || containsStandaloneAlias(text, "hn") || containsStandaloneAlias(text, "dn")
+                || containsStandaloneAlias(text, "deo")
+                || text.matches(".*(?<!\\p{L})xe(?!\\p{L}).*")) {
+            return true;
+        }
+
+        return text.matches(".*\\d+\\s*(triệu|trieu|tr|tỷ|ty|million|billion).* ".trim());
+    }
+
+    private boolean containsAny(String text, String... terms) {
+        for (String term : terms) {
+            if (text.contains(term)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String replyFor(Intent intent) {
+        return switch (intent) {
+            case GREETING, ABOUT_BOT -> "Mình là trợ lý tư vấn xe của AutoTrade. Mình hỗ trợ tìm xe theo mục đích sử dụng, số chỗ, ngân sách, nhiên liệu, showroom và thông tin đặt cọc. Bạn đang quan tâm mẫu xe hoặc nhu cầu nào?";
+            case OUT_OF_SCOPE -> "Mình là trợ lý tư vấn xe của AutoTrade nên chỉ hỗ trợ các câu hỏi về mẫu xe, giá, thông số, showroom và đặt cọc. Bạn muốn tìm xe theo nhu cầu nào?";
+            case UNCLEAR -> "Mình chưa hiểu rõ nhu cầu của bạn. Bạn có thể cho biết mục đích sử dụng, số chỗ hoặc ngân sách dự kiến không?";
+            case PROMPT_INJECTION -> "Mình không thể cung cấp API key, prompt hệ thống hoặc thông tin kỹ thuật nội bộ. Mình có thể hỗ trợ bạn tìm xe phù hợp từ kho AutoTrade.";
+            case CAR_QUERY -> throw new IllegalArgumentException("CAR_QUERY phải đi qua luồng tư vấn xe.");
+        };
+    }
+
     private ParsedIntent parseUserIntent(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
         ParsedIntent intent = new ParsedIntent();
@@ -95,14 +211,22 @@ public class ChatbotService {
         if (lower.contains("gia đình") || lower.contains("gia dinh") || lower.contains("7 chỗ") || lower.contains("7 cho")
                 || lower.contains("đông người") || lower.contains("chở khách") || lower.contains("chở con") || lower.contains("mpv")) {
             intent.purpose = Purpose.FAMILY;
-        } else if (lower.contains("đi phố") || lower.contains("di pho") || lower.contains("trong phố") || lower.contains("đô thị")
+        } else if (lower.contains("đi phố") || lower.contains("di pho") || lower.contains("trong phố") || lower.contains("trong thành phố") || lower.contains("trong thanh pho") || lower.equals("thành phố") || lower.equals("thanh pho") || lower.contains("đô thị")
                 || lower.contains("nhỏ gọn") || lower.contains("nho gon") || lower.contains("đi làm") || lower.contains("phụ nữ")
                 || lower.contains("sedan") || lower.contains("hatchback") || lower.contains("dễ lái")) {
             intent.purpose = Purpose.CITY;
         } else if (lower.contains("phượt") || lower.contains("phuot") || lower.contains("đi xa") || lower.contains("đường đèo")
                 || lower.contains("leo dốc") || lower.contains("địa hình") || lower.contains("gầm cao") || lower.contains("gam cao")
-                || lower.contains("suv") || lower.contains("crossover") || lower.contains("bán tải") || lower.contains("pickup")) {
+                || lower.contains("suv") || lower.contains("crossover") || lower.contains("bán tải") || lower.contains("pickup")
+                || lower.contains("leo núi") || lower.contains("leo nui") || lower.contains("leo đồi") || lower.contains("leo doi")
+                || lower.equals("đèo") || lower.equals("deo")) {
             intent.purpose = Purpose.ADVENTURE;
+        } else if (lower.contains("thể thao") || lower.contains("the thao") || lower.contains("sporty")) {
+            intent.purpose = Purpose.SPORTY;
+        } else if (lower.contains("đi biển") || lower.contains("di bien") || lower.contains("du lịch") || lower.contains("du lich")) {
+            intent.purpose = Purpose.TRAVEL;
+        } else if (lower.contains("tiết kiệm xăng") || lower.contains("tiet kiem xang") || lower.contains("tiết kiệm nhiên liệu") || lower.contains("tiet kiem nhien lieu")) {
+            intent.purpose = Purpose.ECONOMY;
         } else if (lower.contains("xe điện") || lower.contains("xe dien") || lower.contains("vinfast") || lower.contains("vf")
                 || lower.contains("sạc điện") || lower.contains("bảo vệ môi trường")) {
             intent.purpose = Purpose.ELECTRIC;
@@ -185,11 +309,12 @@ public class ChatbotService {
 
 
         // 3. Tách khu vực showroom
-        if (lower.contains("hcm") || lower.contains("hồ chí minh") || lower.contains("sài gòn") || lower.contains("thủ đức")) {
+        if (lower.contains("hcm") || lower.contains("tphcm") || lower.contains("tp.hcm") || lower.contains("tp hcm")
+                || lower.contains("hồ chí minh") || lower.contains("ho chi minh") || lower.contains("sài gòn") || lower.contains("sai gon") || lower.contains("thủ đức")) {
             intent.city = "TP. Hồ Chí Minh";
-        } else if (lower.contains("hà nội") || lower.contains("ha noi")) {
+        } else if (lower.contains("hà nội") || lower.contains("ha noi") || containsStandaloneAlias(lower, "hn")) {
             intent.city = "Hà Nội";
-        } else if (lower.contains("đà nẵng") || lower.contains("da nang")) {
+        } else if (lower.contains("đà nẵng") || lower.contains("da nang") || containsStandaloneAlias(lower, "dn")) {
             intent.city = "Đà Nẵng";
         }
 
@@ -203,6 +328,10 @@ public class ChatbotService {
         }
 
         return intent;
+    }
+
+    private boolean containsStandaloneAlias(String text, String alias) {
+        return text.equals(alias) || text.matches(".*(?<!\\p{L})" + alias + "(?!\\p{L}).*");
     }
 
     private List<RecommendedVehicleDto> matchAndRankVehiclesInMemory(List<Object[]> rawVehicles, ParsedIntent intent) {
@@ -343,6 +472,20 @@ public class ChatbotService {
                     case LUXURY:
                         if ("Mercedes-Benz".equalsIgnoreCase(brand) || "BMW".equalsIgnoreCase(brand) || "Porsche".equalsIgnoreCase(brand)
                                 || "Lexus".equalsIgnoreCase(brand) || "Audi".equalsIgnoreCase(brand) || "Volvo".equalsIgnoreCase(brand)) score += 50;
+                        break;
+                    case SPORTY:
+                        if ("Coupe".equalsIgnoreCase(bodyType) || "Sedan".equalsIgnoreCase(bodyType)
+                                || "Hatchback".equalsIgnoreCase(bodyType) || "Pickup".equalsIgnoreCase(bodyType)) score += 40;
+                        break;
+                    case TRAVEL:
+                        if ("SUV".equalsIgnoreCase(bodyType) || "Crossover".equalsIgnoreCase(bodyType)
+                                || "MPV".equalsIgnoreCase(bodyType)) score += 40;
+                        if (seatCount >= 5) score += 20;
+                        break;
+                    case ECONOMY:
+                        if (fuelType != null && (fuelType.toLowerCase(Locale.ROOT).contains("hybrid")
+                                || fuelType.toLowerCase(Locale.ROOT).contains("điện"))) score += 50;
+                        else if (fuelType != null && fuelType.toLowerCase(Locale.ROOT).contains("xăng")) score += 20;
                         break;
                 }
             }
@@ -506,7 +649,7 @@ public class ChatbotService {
             sb.append("Dựa trên yêu cầu của bạn, ");
         }
 
-        sb.append("AutoTrade hiện đang có sẵn **").append(vehicles.size()).append(" mẫu xe độc bản** hoàn toàn phù hợp trong kho:\n\n");
+        sb.append("AutoTrade hiện đang có sẵn **").append(vehicles.size()).append(" xe phù hợp trong kho:\n\n");
 
         for (int i = 0; i < vehicles.size(); i++) {
             RecommendedVehicleDto v = vehicles.get(i);
@@ -546,6 +689,18 @@ public class ChatbotService {
         ADVENTURE,
         ELECTRIC,
         COMMERCIAL,
-        LUXURY
+        LUXURY,
+        SPORTY,
+        TRAVEL,
+        ECONOMY
+    }
+
+    private enum Intent {
+        CAR_QUERY,
+        GREETING,
+        ABOUT_BOT,
+        OUT_OF_SCOPE,
+        UNCLEAR,
+        PROMPT_INJECTION
     }
 }
