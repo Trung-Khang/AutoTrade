@@ -11,7 +11,11 @@ import {
   FaCity,
   FaMountain,
   FaMoneyBillWave,
-  FaExternalLinkAlt
+  FaExternalLinkAlt,
+  FaBalanceScale,
+  FaCheck,
+  FaTimesCircle,
+  FaRegSquare
 } from 'react-icons/fa';
 import chatbotApi from '../../services/chatbotApi';
 import { formatFullPrice } from '../../utils/formatters';
@@ -38,8 +42,30 @@ const ChatbotWidget = () => {
   const [messages, setMessages] = useState([INITIAL_MESSAGE]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCompareIds, setSelectedCompareIds] = useState([]);
+  const [lastCarQuery, setLastCarQuery] = useState('');
+  const [lastRecommendationQuery, setLastRecommendationQuery] = useState('');
+  const [shownListingIds, setShownListingIds] = useState([]);
+  const [panelSize, setPanelSize] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('autotrade_chatbot_size')) || { width: 380, height: 580 }; }
+    catch { return { width: 380, height: 580 }; }
+  });
+  const resizeRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const listingIdOf = (vehicle) => vehicle.id ?? vehicle.listingId;
+  const isMoreRecommendationQuery = (query) => {
+    const lower = query.toLowerCase();
+    return ['còn option nào', 'con option nao', 'còn mẫu xe nào', 'con mau xe nao',
+      'còn mẫu nào khác', 'con mau nao khac', 'còn không', 'con khong',
+      'gợi ý thêm', 'goi y them', 'tham khảo thêm', 'tham khao them',
+      'còn lựa chọn nào', 'con lua chon nao', 'còn xe nào nữa', 'con xe nao nua',
+      'hết rồi à', 'het roi a', 'hết rồi hả', 'het roi ha', 'nhiêu đó thôi hả', 'nhieu do thoi ha',
+      'nhiêu đó thôi à', 'nhieu do thoi a', 'trong kho còn mẫu nào khác', 'trong kho con mau nao khac',
+      'hệ thống chỉ có nhiêu đó thôi', 'he thong chi co nhieu do thoi', 'thêm nữa đi', 'them nua di', 'thêm đi', 'them di',
+      'tiếp tục gợi ý', 'tiep tuc goi y', 'tiếp tục gợi ý thêm', 'tiep tuc goi y them', 'thêm lựa chọn', 'them lua chon', 'thêm',
+      'tôi cần thêm', 'toi can them'].some((phrase) => lower.includes(phrase));
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -55,6 +81,9 @@ const ChatbotWidget = () => {
   const handleSendMessage = async (textToSend) => {
     const query = (textToSend || inputValue).trim();
     if (!query || isLoading) return;
+    const requestingMore = isMoreRecommendationQuery(query) && Boolean(lastRecommendationQuery);
+    const previousQuery = requestingMore ? lastRecommendationQuery : null;
+    const excludedIds = requestingMore ? shownListingIds : [];
 
     const userMsg = {
       id: 'user-' + Date.now(),
@@ -65,15 +94,26 @@ const ChatbotWidget = () => {
 
     setMessages((prev) => [...prev, userMsg]);
     setInputValue('');
+    setLastCarQuery(requestingMore ? lastRecommendationQuery : query);
     setIsLoading(true);
 
     try {
-      const response = await chatbotApi.sendMessage(query);
+      const response = await chatbotApi.sendMessage(query, null, previousQuery, excludedIds);
+      const responseVehicles = response.recommendedVehicles || [];
+      const responseIds = responseVehicles.map(listingIdOf).filter((id) => id !== undefined && id !== null);
+      if (responseVehicles.length > 0) {
+        if (requestingMore) {
+          setShownListingIds((current) => [...new Set([...current, ...responseIds])]);
+        } else {
+          setLastRecommendationQuery(query);
+          setShownListingIds(responseIds);
+        }
+      }
       const botMsg = {
         id: 'bot-' + Date.now(),
         sender: 'bot',
         text: response.reply || 'Dạ AutoTrade xin gửi bạn thông tin các mẫu xe phù hợp đang có sẵn trong kho:',
-        vehicles: response.recommendedVehicles || [],
+        vehicles: responseVehicles,
         timestamp: new Date()
       };
       setMessages((prev) => [...prev, botMsg]);
@@ -92,11 +132,75 @@ const ChatbotWidget = () => {
     }
   };
 
+  const toggleCompareVehicle = (listingId) => {
+    setSelectedCompareIds((current) => {
+      if (current.includes(listingId)) return current.filter((id) => id !== listingId);
+      if (current.length >= 2) return current;
+      return [...current, listingId];
+    });
+  };
+
+  const handleCompare = async () => {
+    if (selectedCompareIds.length !== 2 || isLoading) return;
+    setIsLoading(true);
+    try {
+      const comparison = await chatbotApi.compare(selectedCompareIds, lastCarQuery || null);
+      setMessages((prev) => [...prev, {
+        id: 'comparison-' + Date.now(),
+        sender: 'bot',
+        text: 'Dạ, đây là kết quả so sánh dựa trên dữ liệu thực tế của các tin đăng bạn đã chọn:',
+        vehicles: [],
+        comparison,
+        timestamp: new Date()
+      }]);
+      setSelectedCompareIds([]);
+    } catch (err) {
+      console.error('Chatbot comparison error:', err);
+      setMessages((prev) => [...prev, {
+        id: 'comparison-error-' + Date.now(),
+        sender: 'bot',
+        text: 'Chưa thể so sánh hai xe lúc này. Thông tin tư vấn xe hiện tại vẫn hoạt động bình thường, bạn hãy thử lại sau.',
+        vehicles: [],
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const startResize = (event, edge = 'bottom-right') => {
+    event.preventDefault();
+    resizeRef.current = { startX: event.clientX, startY: event.clientY, edge, ...panelSize };
+    const move = (moveEvent) => {
+      const start = resizeRef.current;
+      if (!start) return;
+      const next = {
+        width: Math.min(760, Math.max(380, start.width + (start.edge.includes('left') ? start.startX - moveEvent.clientX : moveEvent.clientX - start.startX))),
+        height: Math.min(850, Math.max(500, start.height + (start.edge.includes('top') ? start.startY - moveEvent.clientY : moveEvent.clientY - start.startY)))
+      };
+      setPanelSize(next);
+      localStorage.setItem('autotrade_chatbot_size', JSON.stringify(next));
+    };
+    const stop = () => {
+      resizeRef.current = null;
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', stop);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', stop);
+  };
+
+  const resetPanelSize = () => {
+    const defaultSize = { width: 380, height: 580 };
+    setPanelSize(defaultSize);
+    localStorage.setItem('autotrade_chatbot_size', JSON.stringify(defaultSize));
   };
 
   // Helper format markdown bold đơn giản (**text**)
@@ -128,6 +232,48 @@ const ChatbotWidget = () => {
     });
   };
 
+  const displayValue = (value) => value === null || value === undefined || value === '' ? 'Chưa cập nhật' : value;
+  const formatComparisonPrice = (value) => value ? formatFullPrice(value) : 'Chưa cập nhật';
+  const renderComparison = (comparison) => {
+    if (!comparison) return null;
+    const comparedVehicles = comparison.vehicles || [];
+    const rows = [
+      ['Giá', (vehicle) => formatComparisonPrice(vehicle.price)],
+      ['Năm sản xuất', (vehicle) => displayValue(vehicle.manufactureYear)],
+      ['Số km đã đi', (vehicle) => displayValue(vehicle.mileage)],
+      ['Nhiên liệu', (vehicle) => displayValue(vehicle.fuelType)],
+      ['Hộp số', (vehicle) => displayValue(vehicle.transmission)],
+      ['Số chỗ', (vehicle) => displayValue(vehicle.seatCount)],
+      ['Kiểu dáng', (vehicle) => displayValue(vehicle.bodyType)],
+      ['Dung tích động cơ', (vehicle) => displayValue(vehicle.engineSize)],
+      ['Showroom', (vehicle) => displayValue(vehicle.showroomCity)],
+      ['Trạng thái', (vehicle) => displayValue(vehicle.status)]
+    ];
+    const list = (items) => items && items.length ? items.map((item, index) => <li key={index}>{item}</li>) : <li>Chưa có ưu điểm nổi bật từ dữ liệu hiện có.</li>;
+    return (
+      <div className="chat-comparison">
+        <div className="chat-comparison-score">
+          <strong>Điểm phù hợp theo nhu cầu</strong>
+          {comparedVehicles.map((item) => (
+            <span className="chat-comparison-score-item" key={item.vehicle.listingId}>
+              <span>{item.vehicle.title}: <b>{Number(item.score).toFixed(1)}%</b></span>
+              <small>{item.scoreExplanation}</small>
+            </span>
+          ))}
+        </div>
+        <div className="chat-comparison-table-wrap">
+          <table className="chat-comparison-table">
+            <thead><tr><th>Thông số</th>{comparedVehicles.map((item) => <th key={item.vehicle.listingId}>{item.vehicle.title}</th>)}</tr></thead>
+            <tbody>{rows.map((row) => <tr key={row[0]}><th>{row[0]}</th>{comparedVehicles.map((item) => <td key={item.vehicle.listingId}>{row[1](item.vehicle)}</td>)}</tr>)}</tbody>
+          </table>
+        </div>
+        <div className="chat-comparison-columns">
+          {comparedVehicles.map((item) => <div key={item.vehicle.listingId}><strong>{item.vehicle.title}</strong><ul>{list(item.advantages)}</ul></div>)}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="chatbot-widget-container no-print">
       {/* Nút bấm nổi bật (Floating Action Button) */}
@@ -147,7 +293,7 @@ const ChatbotWidget = () => {
 
       {/* Cửa sổ Chatbot */}
       {isOpen && (
-        <div className="chatbot-panel">
+        <div className="chatbot-panel" style={{ width: panelSize.width, height: panelSize.height }}>
           {/* Header */}
           <div className="chatbot-header">
             <div className="chatbot-header-info">
@@ -159,15 +305,17 @@ const ChatbotWidget = () => {
                 <span className="chatbot-status-online">● Trực tuyến · Phân tích xe thời gian thực</span>
               </div>
             </div>
-            <button
-              type="button"
-              className="chatbot-close-btn"
-              onClick={() => setIsOpen(false)}
-              title="Đóng cửa sổ"
-            >
-              <FaTimes />
-            </button>
+            <div className="chatbot-header-actions">
+              <button type="button" className="chatbot-reset-size-btn" onClick={resetPanelSize} title="Khôi phục kích thước mặc định" aria-label="Khôi phục kích thước mặc định"><FaRegSquare /></button>
+              <button type="button" className="chatbot-close-btn" onClick={() => setIsOpen(false)} title="Đóng cửa sổ" aria-label="Đóng cửa sổ">
+                <FaTimes />
+              </button>
+            </div>
           </div>
+          <div className="chatbot-resize-handle chatbot-resize-left" onPointerDown={(event) => startResize(event, 'left')} />
+          <div className="chatbot-resize-handle chatbot-resize-top" onPointerDown={(event) => startResize(event, 'top')} />
+          <div className="chatbot-resize-handle chatbot-resize-top-left" onPointerDown={(event) => startResize(event, 'top-left')} />
+          <div className="chatbot-resize-handle chatbot-resize-bottom-right" onPointerDown={(event) => startResize(event, 'bottom-right')} title="Kéo để thay đổi kích thước" />
 
           {/* Gợi ý nhanh (Quick suggestion pills) */}
           <div className="chatbot-quick-chips">
@@ -199,6 +347,8 @@ const ChatbotWidget = () => {
                 )}
                 <div className={`chat-bubble ${msg.sender}`}>
                   <div className="chat-text-content">{renderFormattedText(msg.text)}</div>
+
+                  {msg.comparison && renderComparison(msg.comparison)}
 
                   {/* Danh sách thẻ xe gợi ý */}
                   {msg.vehicles && msg.vehicles.length > 0 && (
@@ -234,6 +384,15 @@ const ChatbotWidget = () => {
                               <span>Xem xe & Đặt cọc</span>
                               <FaExternalLinkAlt />
                             </Link>
+                            <button
+                              type="button"
+                              className={`chat-compare-select ${selectedCompareIds.includes(listingIdOf(v)) ? 'selected' : ''}`}
+                              onClick={() => toggleCompareVehicle(listingIdOf(v))}
+                              disabled={!selectedCompareIds.includes(listingIdOf(v)) && selectedCompareIds.length >= 2}
+                            >
+                              {selectedCompareIds.includes(listingIdOf(v)) ? <FaCheck /> : <FaBalanceScale />}
+                              {selectedCompareIds.includes(listingIdOf(v)) ? 'Đã chọn' : 'Chọn so sánh'}
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -261,6 +420,18 @@ const ChatbotWidget = () => {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {selectedCompareIds.length > 0 && (
+            <div className="chat-compare-bar">
+              <span><FaBalanceScale /> Đã chọn {selectedCompareIds.length}/2 xe</span>
+              <button type="button" onClick={handleCompare} disabled={selectedCompareIds.length !== 2 || isLoading}>
+                So sánh 2 xe
+              </button>
+              <button type="button" className="chat-compare-clear" onClick={() => setSelectedCompareIds([])} title="Bỏ chọn xe">
+                <FaTimesCircle />
+              </button>
+            </div>
+          )}
 
           {/* Ô nhập tin nhắn */}
           <div className="chatbot-input-bar">
