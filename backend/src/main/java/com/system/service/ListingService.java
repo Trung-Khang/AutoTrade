@@ -4,6 +4,7 @@ import com.system.dto.ListingFilterRequest;
 import com.system.dto.ListingResponseDto;
 import com.system.dto.PageResponse;
 import com.system.entity.Listing;
+import com.system.entity.Vehicle;
 import com.system.exception.ResourceNotFoundException;
 import com.system.repository.ListingRepository;
 import com.system.repository.VehicleRepository;
@@ -39,20 +40,61 @@ public class ListingService {
 
     /**
      * Lấy chi tiết một tin đăng dưới dạng DTO phẳng kèm thông số dòng xe và nguồn.
+     * Hỗ trợ tìm kiếm thông minh theo cả Listing ID hoặc Vehicle ID.
      */
     public ListingResponseDto getListingDtoById(Long id) {
-        Listing listing = getListingById(id);
-        return ListingResponseDto.fromEntity(listing);
+        // 1. Thử tìm theo listing ID trước
+        java.util.Optional<Listing> listingOpt = listingRepository.findById(id);
+        if (listingOpt.isPresent()) {
+            return ListingResponseDto.fromEntity(listingOpt.get());
+        }
+
+        // 2. Thử tìm theo vehicle ID xem có tin đăng nào liên kết không
+        List<Listing> byVehicle = listingRepository.findByVehicleId(id);
+        if (byVehicle != null && !byVehicle.isEmpty()) {
+            return ListingResponseDto.fromEntity(byVehicle.get(0));
+        }
+
+        // 3. Nếu là xe trong bảng vehicles nhưng chưa có listing (ví dụ xe demo)
+        Vehicle v = vehicleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy tin đăng hoặc xe với ID: " + id));
+
+        ListingResponseDto dto = new ListingResponseDto();
+        dto.setId(v.getId());
+        dto.setVehicleId(v.getId());
+        dto.setBrand(v.getBrand());
+        dto.setModel(v.getModel());
+        dto.setVariant(v.getVariant());
+        dto.setManufactureYear(v.getManufactureYear());
+        dto.setFuelType(v.getFuelType());
+        dto.setTransmission(v.getTransmission());
+        dto.setEngineSize(v.getEngineSize());
+        dto.setSeatCount(v.getSeatCount());
+        dto.setOrigin(v.getOrigin());
+        dto.setBodyType(v.getBodyType());
+        dto.setStatus(v.getStatus());
+        dto.setPrice(v.getPrice());
+        dto.setImageUrl(v.getImageUrl());
+        dto.setShowroomId(v.getShowroomId());
+        dto.setDepositEligible("AVAILABLE".equalsIgnoreCase(v.getStatus()) && v.getShowroomId() != null);
+        return dto;
     }
 
     //Lấy toàn bộ danh sách tin đăng rao bán xe (Legacy)
     public List<Listing> getAllListings() {
         return listingRepository.findAll();
     }
-    //Lấy chi tiết một tin đăng theo ID
+    //Lấy chi tiết một tin đăng theo ID (hỗ trợ cả vehicleId fallback)
     public Listing getListingById(Long id) {
-        return listingRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Khong tim thay tin dang voi ID: " + id));
+        java.util.Optional<Listing> opt = listingRepository.findById(id);
+        if (opt.isPresent()) {
+            return opt.get();
+        }
+        List<Listing> byVehicle = listingRepository.findByVehicleId(id);
+        if (byVehicle != null && !byVehicle.isEmpty()) {
+            return byVehicle.get(0);
+        }
+        throw new ResourceNotFoundException("Không tìm thấy tin đăng với ID: " + id);
     }
     //Thêm mới một tin đăng bán xe
     public Listing createListing(Listing listing) {

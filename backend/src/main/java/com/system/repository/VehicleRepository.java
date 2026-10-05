@@ -37,6 +37,33 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
     @Query("SELECT v FROM Vehicle v WHERE UPPER(v.status) = 'AVAILABLE' AND v.showroomId IS NOT NULL")
     List<Vehicle> findAvailableVehiclesWithShowroom();
 
+    @Query(value = "SELECT " +
+            "l.id as card_id, " +
+            "v.id as vehicle_id, " +
+            "v.brand, " +
+            "v.model, " +
+            "v.variant, " +
+            "v.manufacture_year, " +
+            "v.fuel_type, " +
+            "v.transmission, " +
+            "v.seat_count, " +
+            "v.body_type, " +
+            "l.price as real_price, " +
+            "l.image_url as real_image, " +
+            "s.id as showroom_id, " +
+            "s.name as showroom_name, " +
+            "s.city as showroom_city " +
+            "FROM listings l " +
+            "JOIN vehicles v ON l.vehicle_id = v.id " +
+            "JOIN showrooms s ON v.showroom_id = s.id " +
+            "WHERE UPPER(v.status) = 'AVAILABLE' " +
+            "  AND v.showroom_id IS NOT NULL " +
+            "  AND (v.variant IS NULL OR v.variant NOT ILIKE '%DEMO%') " +
+            "  AND v.demo_key IS NULL " +
+            "  AND l.price >= 50000000",
+            nativeQuery = true)
+    List<Object[]> findAvailableChatbotVehiclesNative();
+
     /**
      * Phương thức cập nhật trạng thái xe nguyên tử (Atomic Update)
      * Đảm bảo chống đặt cọc trùng xe 100% tại tầng Database (FR-09 & NFR-02)
