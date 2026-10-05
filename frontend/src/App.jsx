@@ -6,6 +6,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import CustomerOnlyRoute from './components/common/CustomerOnlyRoute';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
+import ChatbotWidget from './components/chatbot/ChatbotWidget';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -129,6 +130,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <ChatbotWidget />
         </div>
       </Router>
       </FavoritesProvider>

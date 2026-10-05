@@ -34,6 +34,9 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
 
     List<Vehicle> findByShowroomIdAndStatus(Long showroomId, String status);
 
+    @Query("SELECT v FROM Vehicle v WHERE UPPER(v.status) = 'AVAILABLE' AND v.showroomId IS NOT NULL")
+    List<Vehicle> findAvailableVehiclesWithShowroom();
+
     /**
      * Phương thức cập nhật trạng thái xe nguyên tử (Atomic Update)
      * Đảm bảo chống đặt cọc trùng xe 100% tại tầng Database (FR-09 & NFR-02)
