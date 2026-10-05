@@ -36,7 +36,7 @@ Tiếp tục trong cùng cửa sổ PowerShell:
 
 ```powershell
 cd backend
-$env:GEMINI_API_KEY = 'liên hệ TV2 để được cung cấp API nhé'
+$env:GEMINI_API_KEY = 'liên hệ leader để biết api key'
 $env:GEMINI_MODEL = 'gemini-flash-latest'
 
 $env:DB_HOST = '26.181.182.25'

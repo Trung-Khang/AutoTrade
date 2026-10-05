@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.text.Normalizer;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -173,10 +174,10 @@ public class ChatbotService {
                 "leo đồi", "leo doi", "đèo", "thành phố", "thanh pho", "trong phố", "trong pho",
                 "đi trong phố", "di trong pho", "đi trong thành phố", "di trong thanh pho", "tiết kiệm xăng", "tiet kiem xang",
                 "hà nội", "ha noi", "hồ chí minh", "ho chi minh", "sài gòn", "sai gon", "đà nẵng", "da nang",
-                "tphcm", "tp.hcm", "tp hcm"
+                "thành phố hồ chí minh", "thanh pho ho chi minh", "tphcm", "tp.hcm", "tp hcm"
         };
         if (containsAny(text, carSignals) || containsStandaloneAlias(text, "hn") || containsStandaloneAlias(text, "dn")
-                || containsStandaloneAlias(text, "deo")
+                || containsStandaloneAlias(text, "hcm") || containsStandaloneAlias(text, "deo")
                 || text.matches(".*(?<!\\p{L})xe(?!\\p{L}).*")) {
             return true;
         }
@@ -309,7 +310,7 @@ public class ChatbotService {
 
 
         // 3. Tách khu vực showroom
-        if (lower.contains("hcm") || lower.contains("tphcm") || lower.contains("tp.hcm") || lower.contains("tp hcm")
+        if (containsStandaloneAlias(lower, "hcm") || lower.contains("tphcm") || lower.contains("tp.hcm") || lower.contains("tp hcm")
                 || lower.contains("hồ chí minh") || lower.contains("ho chi minh") || lower.contains("sài gòn") || lower.contains("sai gon") || lower.contains("thủ đức")) {
             intent.city = "TP. Hồ Chí Minh";
         } else if (lower.contains("hà nội") || lower.contains("ha noi") || containsStandaloneAlias(lower, "hn")) {
@@ -492,7 +493,7 @@ public class ChatbotService {
 
             // --- 3. Lọc theo Thành phố Showroom ---
             if (intent.city != null && showroomCity != null) {
-                if (showroomCity.toLowerCase(Locale.ROOT).contains(intent.city.toLowerCase(Locale.ROOT))) {
+                if (normalizeCityKey(showroomCity).equals(normalizeCityKey(intent.city))) {
                     score += 50;
                 } else {
                     score -= 100;
@@ -530,6 +531,32 @@ public class ChatbotService {
                 .filter(s -> s.score > 0)
                 .map(s -> s.dto)
                 .collect(Collectors.toList());
+    }
+
+    /** Chuẩn hóa các cách ghi địa điểm trong câu hỏi và dữ liệu showroom về cùng mã nội bộ. */
+    private String normalizeCityKey(String city) {
+        if (city == null || city.isBlank()) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(city, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", "");
+
+        if (normalized.equals("hcm") || normalized.equals("tphcm")
+                || normalized.equals("hochiminh") || normalized.equals("tphochiminh")
+                || normalized.equals("thanhphohochiminh")
+                || normalized.equals("saigon") || normalized.equals("thuduc")) {
+            return "hcm";
+        }
+        if (normalized.equals("hn") || normalized.equals("hanoi")) {
+            return "hn";
+        }
+        if (normalized.equals("dn") || normalized.equals("danang")) {
+            return "dn";
+        }
+        return normalized;
     }
 
     private String generateReplyText(String userMsg, ParsedIntent intent, List<RecommendedVehicleDto> vehicles) {

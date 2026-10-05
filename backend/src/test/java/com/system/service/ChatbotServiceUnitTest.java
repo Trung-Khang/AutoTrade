@@ -115,6 +115,33 @@ class ChatbotServiceUnitTest {
     }
 
     @Test
+    void hoChiMinhLocationAliasesMatchHoChiMinhShowroom() {
+        when(vehicleRepository.findAvailableChatbotVehiclesNative()).thenReturn(List.<Object[]>of(
+                new Object[]{
+                        101L, 201L, "Toyota", "Innova", null, 2024,
+                        "Xăng", "Tự động", 7, "MPV", new BigDecimal("770000000"),
+                        "https://example.test/hcm.jpg", 1L, "Showroom HCM", "TP. Hồ Chí Minh"
+                },
+                new Object[]{
+                        102L, 202L, "Toyota", "Corolla", null, 2024,
+                        "Xăng", "Tự động", 5, "Sedan", new BigDecimal("700000000"),
+                        "https://example.test/hanoi.jpg", 2L, "Showroom Hà Nội", "Hà Nội"
+                }
+        ));
+        ChatbotService service = new ChatbotService(vehicleRepository);
+
+        for (String query : List.of(
+                "TPHCM", "Thành phố Hồ Chí Minh", "HCM", "Hồ Chí Minh", "Sài Gòn",
+                "xe ở Thành Phố Hồ Chí Minh", "xe thuộc khu vực TPHCM")) {
+            ChatMessageResponse response = service.processChat(new ChatMessageRequest(query, null));
+
+            assertFalse(response.getRecommendedVehicles().isEmpty(), "Không nhận diện được: " + query);
+            assertEquals("TP. Hồ Chí Minh", response.getRecommendedVehicles().get(0).getShowroomCity(),
+                    "Không ưu tiên đúng showroom HCM cho: " + query);
+        }
+    }
+
+    @Test
     void moreRecommendationsReusePreviousQueryAndExcludeShownListings() {
         when(vehicleRepository.findAvailableChatbotVehiclesNative()).thenReturn(List.<Object[]>of(
                 new Object[]{
