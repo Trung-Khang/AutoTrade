@@ -192,7 +192,7 @@ class ChatbotServiceUnitTest {
         ));
         ChatbotService service = new ChatbotService(vehicleRepository);
 
-        ChatMessageResponse response = service.processChat(new ChatMessageRequest("Chủ tịch", null));
+        ChatMessageResponse response = service.processChat(new ChatMessageRequest("Ghen tị", null));
 
         assertEquals(List.of(205L), response.getRecommendedVehicles().stream()
                 .map(vehicle -> vehicle.getId()).toList());
