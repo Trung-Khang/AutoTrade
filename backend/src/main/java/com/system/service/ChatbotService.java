@@ -219,7 +219,7 @@ public class ChatbotService {
                 "lấy le với gái", "lay le voi gai", "lấy le", "lay le", "sĩ diện", "si dien", "ngầu ngầu", "ngau ngau",
                 "ngầu với gái", "ngau voi gai", "ngầu", "ngau", "cua các em gái", "cua cac em gai", "tổng tài", "tong tai",
                 "doanh nhân", "doanh nhan", "sếp", "sep", "ông chủ", "ong chu", "chủ tịch", "chu tich", "boss", "wow", "đỉnh", "dinh",
-                "bá đạo", "ba dao", "ghen tỵ", "ghen ty")
+                "ghệ", "ghe", "bồ", "bo", "ganh tị", "ganh ti", "ghen tị", "ghen ti", "bá đạo", "ba dao", "ghen tỵ", "ghen ty")
                 || containsStandaloneAlias(text, "sĩ")
                 || containsStandaloneAlias(text, "si");
     }
