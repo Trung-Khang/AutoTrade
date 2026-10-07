@@ -56,6 +56,13 @@ const ChatbotWidget = () => {
   const listingIdOf = (vehicle) => vehicle.id ?? vehicle.listingId;
   const isMoreRecommendationQuery = (query) => {
     const lower = query.toLowerCase();
+    if (['còn xe nào không', 'con xe nao khong', 'còn xe nào khác', 'con xe nao khac',
+      'còn xe nào nữa không', 'con xe nao nua khong', 'còn mẫu nào không', 'con mau nao khong',
+      'còn mẫu nào khác không', 'con mau nao khac khong', 'còn mẫu nào nữa', 'con mau nao nua',
+      'còn mẫu xe nào không', 'con mau xe nao khong', 'còn nữa không', 'con nua khong',
+      'còn option nào khác không', 'con option nao khac khong'].some((phrase) => lower.includes(phrase))) {
+      return true;
+    }
     return ['còn option nào', 'con option nao', 'còn mẫu xe nào', 'con mau xe nao',
       'còn mẫu nào khác', 'con mau nao khac', 'còn không', 'con khong',
       'gợi ý thêm', 'goi y them', 'tham khảo thêm', 'tham khao them',
