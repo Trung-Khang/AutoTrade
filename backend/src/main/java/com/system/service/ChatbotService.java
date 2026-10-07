@@ -25,6 +25,10 @@ import java.util.stream.Collectors;
 public class ChatbotService {
 
     private static final Logger log = LoggerFactory.getLogger(ChatbotService.class);
+    private static final BigDecimal LUXURY_STATUS_MIN_PRICE = new BigDecimal("1000000000");
+    private static final Set<String> LUXURY_STATUS_BRANDS = Set.of(
+            "audi", "mercedesbenz", "bmw", "lexus", "porsche", "volvo", "jaguar", "landrover"
+    );
 
     private final VehicleRepository vehicleRepository;
     private final RestTemplate restTemplate;
@@ -71,7 +75,14 @@ public class ChatbotService {
             String previousQuery = request != null && request.getPreviousQuery() != null
                     ? request.getPreviousQuery().trim() : "";
             if (previousQuery.length() > 300) previousQuery = previousQuery.substring(0, 300).trim();
-            boolean moreRecommendations = isMoreRecommendations(userMsg) && !previousQuery.isBlank();
+            boolean moreRequest = isMoreRecommendations(userMsg);
+            if (moreRequest && previousQuery.isBlank()) {
+                return new ChatMessageResponse(
+                        "Mình chưa còn đủ ngữ cảnh của yêu cầu trước để tìm tiếp. Bạn vui lòng gửi lại yêu cầu ban đầu, ví dụ: xe Sedan dưới 800 triệu ở Đà Nẵng.",
+                        Collections.emptyList()
+                );
+            }
+            boolean moreRecommendations = moreRequest;
             String recommendationQuery = moreRecommendations ? previousQuery : userMsg;
 
             Intent intentType = classifyIntent(recommendationQuery);
@@ -143,6 +154,14 @@ public class ChatbotService {
 
     private boolean isMoreRecommendations(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
+        if (containsAny(lower,
+                "còn xe nào không", "con xe nao khong", "còn xe nào khác", "con xe nao khac",
+                "còn xe nào nữa không", "con xe nao nua khong", "còn mẫu nào không", "con mau nao khong",
+                "còn mẫu nào khác không", "con mau nao khac khong", "còn mẫu nào nữa", "con mau nao nua",
+                "còn mẫu xe nào không", "con mau xe nao khong", "còn nữa không", "con nua khong",
+                "còn option nào khác không", "con option nao khac khong")) {
+            return true;
+        }
         return containsAny(lower,
                 "còn option nào", "con option nao", "còn mẫu xe nào", "con mau xe nao",
                 "còn mẫu nào khác", "con mau nao khac", "còn không", "con khong",
@@ -176,7 +195,8 @@ public class ChatbotService {
                 "hà nội", "ha noi", "hồ chí minh", "ho chi minh", "sài gòn", "sai gon", "đà nẵng", "da nang",
                 "thành phố hồ chí minh", "thanh pho ho chi minh", "tphcm", "tp.hcm", "tp hcm"
         };
-        if (containsAny(text, carSignals) || containsStandaloneAlias(text, "hn") || containsStandaloneAlias(text, "dn")
+        if (containsAny(text, carSignals) || containsLuxuryStatusSignal(text)
+                || containsStandaloneAlias(text, "hn") || containsStandaloneAlias(text, "dn")
                 || containsStandaloneAlias(text, "hcm") || containsStandaloneAlias(text, "deo")
                 || text.matches(".*(?<!\\p{L})xe(?!\\p{L}).*")) {
             return true;
@@ -194,6 +214,16 @@ public class ChatbotService {
         return false;
     }
 
+    private boolean containsLuxuryStatusSignal(String text) {
+        return containsAny(text,
+                "lấy le với gái", "lay le voi gai", "lấy le", "lay le", "sĩ diện", "si dien", "ngầu ngầu", "ngau ngau",
+                "ngầu với gái", "ngau voi gai", "ngầu", "ngau", "cua các em gái", "cua cac em gai", "tổng tài", "tong tai",
+                "doanh nhân", "doanh nhan", "sếp", "sep", "ông chủ", "ong chu", "chủ tịch", "chu tich", "boss", "wow", "đỉnh", "dinh",
+                "bá đạo", "ba dao", "ghen tỵ", "ghen ty")
+                || containsStandaloneAlias(text, "sĩ")
+                || containsStandaloneAlias(text, "si");
+    }
+
     private String replyFor(Intent intent) {
         return switch (intent) {
             case GREETING, ABOUT_BOT -> "Mình là trợ lý tư vấn xe của AutoTrade. Mình hỗ trợ tìm xe theo mục đích sử dụng, số chỗ, ngân sách, nhiên liệu, showroom và thông tin đặt cọc. Bạn đang quan tâm mẫu xe hoặc nhu cầu nào?";
@@ -207,6 +237,7 @@ public class ChatbotService {
     private ParsedIntent parseUserIntent(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
         ParsedIntent intent = new ParsedIntent();
+        intent.luxuryStatus = containsLuxuryStatusSignal(lower);
 
         // 1. Phân loại mục đích sử dụng
         if (lower.contains("gia đình") || lower.contains("gia dinh") || lower.contains("7 chỗ") || lower.contains("7 cho")
@@ -237,6 +268,11 @@ public class ChatbotService {
         } else if (lower.contains("sang") || lower.contains("doanh nhân") || lower.contains("gặp đối tác")
                 || lower.contains("mercedes") || lower.contains("bmw") || lower.contains("audi") || lower.contains("lexus") || lower.contains("porsche")) {
             intent.purpose = Purpose.LUXURY;
+        }
+
+        // Giữ LUXURY_STATUS độc lập khi khách kết hợp với Sedan, số chỗ hoặc địa điểm.
+        if (intent.luxuryStatus && intent.purpose == null) {
+            intent.purpose = Purpose.LUXURY_STATUS;
         }
 
         // 2. Tách khoảng giá chính xác (Xử lý các case: 300-400 triệu, 3-400 triệu, 300 đến 400tr, 1-1.5 tỷ...)
@@ -328,6 +364,25 @@ public class ChatbotService {
             }
         }
 
+        if (lower.contains("sedan")) {
+            intent.bodyType = "Sedan";
+        } else if (lower.contains("suv")) {
+            intent.bodyType = "SUV";
+        } else if (lower.contains("crossover")) {
+            intent.bodyType = "Crossover";
+        } else if (lower.contains("mpv")) {
+            intent.bodyType = "MPV";
+        } else if (lower.contains("hatchback")) {
+            intent.bodyType = "Hatchback";
+        } else if (lower.contains("pickup") || lower.contains("bán tải") || lower.contains("ban tai")) {
+            intent.bodyType = "Pickup";
+        }
+        if (lower.contains("7 chỗ") || lower.contains("7 cho")) {
+            intent.requestedSeatCount = 7;
+        } else if (lower.contains("5 chỗ") || lower.contains("5 cho")) {
+            intent.requestedSeatCount = 5;
+        }
+
         return intent;
     }
 
@@ -379,6 +434,19 @@ public class ChatbotService {
 
             // Quy tắc 2 & 3: Bỏ qua xe có giá rác hoặc dưới 50 triệu (VD: 2 triệu là dữ liệu lỗi/test)
             if (price == null || price.compareTo(new BigDecimal("50000000")) < 0) {
+                continue;
+            }
+
+            // LUXURY_STATUS là bộ lọc bắt buộc: chỉ giữ xe hạng sang trong kho và có giá trên 1 tỷ.
+            // Các điều kiện khác như kiểu dáng, số chỗ và showroom vẫn được áp dụng tiếp bên dưới.
+            if (intent.luxuryStatus
+                    && (price.compareTo(LUXURY_STATUS_MIN_PRICE) <= 0 || !isLuxuryStatusBrand(brand))) {
+                continue;
+            }
+            if (intent.luxuryStatus && intent.bodyType != null && !intent.bodyType.equalsIgnoreCase(bodyType)) {
+                continue;
+            }
+            if (intent.luxuryStatus && intent.requestedSeatCount != null && !intent.requestedSeatCount.equals(seatCount)) {
                 continue;
             }
 
@@ -474,6 +542,9 @@ public class ChatbotService {
                         if ("Mercedes-Benz".equalsIgnoreCase(brand) || "BMW".equalsIgnoreCase(brand) || "Porsche".equalsIgnoreCase(brand)
                                 || "Lexus".equalsIgnoreCase(brand) || "Audi".equalsIgnoreCase(brand) || "Volvo".equalsIgnoreCase(brand)) score += 50;
                         break;
+                    case LUXURY_STATUS:
+                        score += 70;
+                        break;
                     case SPORTY:
                         if ("Coupe".equalsIgnoreCase(bodyType) || "Sedan".equalsIgnoreCase(bodyType)
                                 || "Hatchback".equalsIgnoreCase(bodyType) || "Pickup".equalsIgnoreCase(bodyType)) score += 40;
@@ -496,8 +567,13 @@ public class ChatbotService {
                 if (normalizeCityKey(showroomCity).equals(normalizeCityKey(intent.city))) {
                     score += 50;
                 } else {
+                    if (intent.luxuryStatus) {
+                        continue;
+                    }
                     score -= 100;
                 }
+            } else if (intent.luxuryStatus && intent.city != null) {
+                continue;
             }
 
             // --- 4. Lọc theo Thương hiệu xe ---
@@ -639,6 +715,10 @@ public class ChatbotService {
 
     private String generateSmartTemplateReply(ParsedIntent intent, List<RecommendedVehicleDto> vehicles) {
         if (vehicles.isEmpty()) {
+            if (intent.luxuryStatus && intent.maxBudget != null
+                    && intent.maxBudget.compareTo(LUXURY_STATUS_MIN_PRICE) <= 0) {
+                return "Tiêu chí xe cao cấp thường cần ngân sách trên 1 tỷ, nhưng ngân sách bạn đưa ra đang thấp hơn mức này. Bạn muốn giữ ngân sách hiện tại hay ưu tiên xe hạng sang?";
+            }
             return "Dạ chào bạn! Hiện tại AutoTrade chưa có mẫu xe nào đang mở bán phù hợp chính xác với tiêu chí này trong kho. Bạn có thể thử tìm kiếm với tầm giá linh hoạt hơn hoặc duyệt toàn bộ kho xe tại showroom nhé!";
         }
 
@@ -665,6 +745,9 @@ public class ChatbotService {
                     break;
                 case LUXURY:
                     sb.append("Với tiêu chí **xe sang trọng, lịch lãm để đi làm hoặc gặp gỡ đối tác**, các dòng xe cao cấp dưới đây sẽ mang lại sự đẳng cấp và tiện nghi vượt trội. ");
+                    break;
+                case LUXURY_STATUS:
+                    sb.append("Với tiêu chí **xe cao cấp, nổi bật**, AutoTrade ưu tiên các xe hạng sang có giá trên 1 tỷ đang có trong kho. ");
                     break;
             }
         } else if (intent.minBudget != null && intent.maxBudget != null) {
@@ -708,6 +791,17 @@ public class ChatbotService {
         BigDecimal targetBudget;
         String city;
         String brand;
+        String bodyType;
+        Integer requestedSeatCount;
+        boolean luxuryStatus;
+    }
+
+    private boolean isLuxuryStatusBrand(String brand) {
+        if (brand == null || brand.isBlank()) {
+            return false;
+        }
+        String normalized = brand.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        return LUXURY_STATUS_BRANDS.contains(normalized);
     }
 
     private enum Purpose {
@@ -717,6 +811,7 @@ public class ChatbotService {
         ELECTRIC,
         COMMERCIAL,
         LUXURY,
+        LUXURY_STATUS,
         SPORTY,
         TRAVEL,
         ECONOMY
