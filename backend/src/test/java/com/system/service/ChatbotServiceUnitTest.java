@@ -142,6 +142,39 @@ class ChatbotServiceUnitTest {
     }
 
     @Test
+    void cheapestRankingFiltersBeforeSortingAndHonorsCityAndBodyType() {
+        when(vehicleRepository.findAvailableChatbotVehiclesNative()).thenReturn(List.<Object[]>of(
+                new Object[]{301L, 401L, "Toyota", "Raize", null, 2022, "Xăng", "Tự động", 5, "SUV", new BigDecimal("489000000"), "img", 3L, "Showroom Đà Nẵng", "Đà Nẵng", 45000},
+                new Object[]{302L, 402L, "Kia", "Seltos", null, 2023, "Xăng", "Tự động", 5, "SUV", new BigDecimal("559000000"), "img", 3L, "Showroom Đà Nẵng", "Đà Nẵng", 30000},
+                new Object[]{303L, 403L, "Hyundai", "Accent", null, 2024, "Xăng", "Tự động", 5, "Sedan", new BigDecimal("385000000"), "img", 3L, "Showroom Đà Nẵng", "Đà Nẵng", 15000},
+                new Object[]{304L, 404L, "Toyota", "Innova", null, 2024, "Xăng", "Tự động", 7, "MPV", new BigDecimal("349000000"), "img", 1L, "Showroom HCM", "TP. Hồ Chí Minh", 10000}
+        ));
+
+        ChatMessageResponse response = new ChatbotService(vehicleRepository)
+                .processChat(new ChatMessageRequest("Top 2 xe SUV rẻ nhất ở Đà Nẵng", null));
+
+        assertEquals(List.of(301L, 302L), response.getRecommendedVehicles().stream()
+                .map(vehicle -> vehicle.getId()).toList());
+        assertTrue(response.getReply().contains("giá tăng dần"));
+    }
+
+    @Test
+    void expensiveRankingFiltersBySeatCountAndSortsDescending() {
+        when(vehicleRepository.findAvailableChatbotVehiclesNative()).thenReturn(List.<Object[]>of(
+                new Object[]{401L, 501L, "BMW", "520i", null, 2024, "Xăng", "Tự động", 5, "Sedan", new BigDecimal("2100000000"), "img", 2L, "Showroom Hà Nội", "Hà Nội", 12000},
+                new Object[]{402L, 502L, "Audi", "A6", null, 2023, "Xăng", "Tự động", 5, "Sedan", new BigDecimal("1800000000"), "img", 1L, "Showroom HCM", "TP. Hồ Chí Minh", 20000},
+                new Object[]{403L, 503L, "Toyota", "Innova", null, 2024, "Xăng", "Tự động", 7, "MPV", new BigDecimal("2200000000"), "img", 1L, "Showroom HCM", "TP. Hồ Chí Minh", 15000}
+        ));
+
+        ChatMessageResponse response = new ChatbotService(vehicleRepository)
+                .processChat(new ChatMessageRequest("Top 2 xe 5 chỗ đắt nhất", null));
+
+        assertEquals(List.of(401L, 402L), response.getRecommendedVehicles().stream()
+                .map(vehicle -> vehicle.getId()).toList());
+        assertTrue(response.getReply().contains("giá giảm dần"));
+    }
+
+    @Test
     void luxuryStatusCombinesPriceBrandBodyTypeAndCityFilters() {
         when(vehicleRepository.findAvailableChatbotVehiclesNative()).thenReturn(List.<Object[]>of(
                 new Object[]{

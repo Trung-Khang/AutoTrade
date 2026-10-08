@@ -96,16 +96,20 @@ public class ChatbotService {
             // 2. Lấy danh sách xe AVAILABLE thật từ Database (chỉ 1 query native nối bảng listings để lấy giá thật >= 50 triệu)
             List<Object[]> rawVehicles = vehicleRepository.findAvailableChatbotVehiclesNative();
 
-            // 3. Lọc và xếp hạng xe theo tiêu chí người dùng
-            List<RecommendedVehicleDto> matchedCandidates = matchAndRankVehiclesInMemory(rawVehicles, intent);
+            // 3. Ranking là luồng riêng: lọc cứng trước, sắp xếp theo giá thật sau.
+            boolean rankingRequest = intent.rankingMode != RankingMode.NONE;
+            List<RecommendedVehicleDto> matchedCandidates = rankingRequest
+                    ? rankVehiclesInMemory(rawVehicles, intent)
+                    : matchAndRankVehiclesInMemory(rawVehicles, intent);
 
             // Giữ nguyên giới hạn gợi ý hiện tại; luồng "gợi ý thêm" chỉ loại listing đã hiển thị.
             Set<Long> excludedListingIds = request != null && request.getExcludedListingIds() != null
                     ? request.getExcludedListingIds().stream().filter(Objects::nonNull).limit(100).collect(Collectors.toSet())
                     : Collections.emptySet();
+            int resultLimit = rankingRequest ? intent.rankingLimit : 4;
             List<RecommendedVehicleDto> topRecommendations = matchedCandidates.stream()
                     .filter(vehicle -> !excludedListingIds.contains(vehicle.getId()))
-                    .limit(4)
+                    .limit(resultLimit)
                     .toList();
 
             // 4. Sinh lời thoại tư vấn (gọi Gemini AI hoặc dùng Fallback Template thông minh)
@@ -238,6 +242,7 @@ public class ChatbotService {
         String lower = text.toLowerCase(Locale.ROOT);
         ParsedIntent intent = new ParsedIntent();
         intent.luxuryStatus = containsLuxuryStatusSignal(lower);
+        parseRankingIntent(lower, intent);
 
         // 1. Phân loại mục đích sử dụng
         if (lower.contains("gia đình") || lower.contains("gia dinh") || lower.contains("7 chỗ") || lower.contains("7 cho")
@@ -356,7 +361,7 @@ public class ChatbotService {
         }
 
         // 4. Tách thương hiệu (nếu có nhắc rõ)
-        List<String> commonBrands = List.of("VinFast", "Toyota", "Mazda", "Hyundai", "Kia", "Honda", "Ford", "Mercedes-Benz", "BMW", "Porsche", "Mitsubishi", "Volvo", "Lexus");
+        List<String> commonBrands = List.of("VinFast", "Toyota", "Mazda", "Hyundai", "Kia", "Honda", "Ford", "Mercedes-Benz", "BMW", "Porsche", "Mitsubishi", "Volvo", "Lexus", "Audi", "Jaguar", "Land Rover");
         for (String b : commonBrands) {
             if (lower.contains(b.toLowerCase(Locale.ROOT))) {
                 intent.brand = b;
@@ -382,8 +387,111 @@ public class ChatbotService {
         } else if (lower.contains("5 chỗ") || lower.contains("5 cho")) {
             intent.requestedSeatCount = 5;
         }
+        if (lower.contains("hybrid") || lower.contains("lai")) {
+            intent.fuelTypeFilter = "hybrid";
+        } else if (lower.contains("xe điện") || lower.contains("xe dien") || lower.contains("electric")) {
+            intent.fuelTypeFilter = "electric";
+        } else if (lower.contains("diesel") || lower.contains("dầu") || lower.contains("dau")) {
+            intent.fuelTypeFilter = "diesel";
+        } else if (lower.contains("xăng") || lower.contains("xang") || lower.contains("gasoline")) {
+            intent.fuelTypeFilter = "gasoline";
+        }
 
         return intent;
+    }
+
+    private void parseRankingIntent(String lower, ParsedIntent intent) {
+        boolean cheapest = containsAny(lower, "rẻ nhất", "re nhat", "giá thấp nhất", "gia thap nhat", "thấp nhất", "thap nhat");
+        boolean mostExpensive = containsAny(lower, "đắt nhất", "dat nhat", "giá cao nhất", "gia cao nhat", "cao nhất", "cao nhat");
+        if (cheapest == mostExpensive) {
+            intent.rankingMode = RankingMode.NONE;
+            return;
+        }
+
+        intent.rankingMode = cheapest ? RankingMode.CHEAPEST : RankingMode.MOST_EXPENSIVE;
+        Matcher countMatcher = Pattern.compile("(?:top\\s*)?(\\d+)\\s*(?:xe|mẫu|mau|chiếc|chiec)").matcher(lower);
+        int requestedLimit = countMatcher.find() ? Integer.parseInt(countMatcher.group(1)) : 5;
+        intent.rankingLimit = Math.max(1, Math.min(requestedLimit, 10));
+    }
+
+    private List<RecommendedVehicleDto> rankVehiclesInMemory(List<Object[]> rawVehicles, ParsedIntent intent) {
+        if (rawVehicles == null || rawVehicles.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<RankingCandidate> candidates = new ArrayList<>();
+        for (Object[] row : rawVehicles) {
+            Long cardId = ((Number) row[0]).longValue();
+            String brand = (String) row[2];
+            String model = (String) row[3];
+            String variant = (String) row[4];
+            Integer year = row[5] != null ? ((Number) row[5]).intValue() : null;
+            String fuelType = (String) row[6];
+            String transmission = (String) row[7];
+            Integer seatCount = row[8] != null ? ((Number) row[8]).intValue() : null;
+            String bodyType = row[9] != null ? (String) row[9] : "Sedan";
+            BigDecimal price = row[10] != null ? new BigDecimal(row[10].toString()) : null;
+            Long showroomId = row[12] != null ? ((Number) row[12]).longValue() : null;
+            String showroomName = (String) row[13];
+            String showroomCity = (String) row[14];
+            Integer mileage = row.length > 15 && row[15] != null ? ((Number) row[15]).intValue() : null;
+
+            if (price == null || price.compareTo(new BigDecimal("50000000")) < 0) continue;
+            if (intent.city != null && (showroomCity == null
+                    || !normalizeCityKey(showroomCity).equals(normalizeCityKey(intent.city)))) continue;
+            if (intent.bodyType != null && !intent.bodyType.equalsIgnoreCase(bodyType)) continue;
+            if (intent.requestedSeatCount != null && !intent.requestedSeatCount.equals(seatCount)) continue;
+            if (intent.brand != null && !normalizeBrandKey(intent.brand).equals(normalizeBrandKey(brand))) continue;
+            if (intent.fuelTypeFilter != null && !matchesFuelFilter(fuelType, intent.fuelTypeFilter)) continue;
+            if (intent.minBudget != null && price.compareTo(intent.minBudget) < 0) continue;
+            if (intent.maxBudget != null && price.compareTo(intent.maxBudget) > 0) continue;
+
+            String title = (brand + " " + model + (variant != null && !variant.isBlank() ? " " + variant : "")).trim();
+            String image = (String) row[11];
+            if (image == null || image.isBlank()) {
+                image = "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80";
+            }
+            RecommendedVehicleDto dto = new RecommendedVehicleDto(
+                    cardId,
+                    title,
+                    price,
+                    bodyType,
+                    seatCount,
+                    fuelType != null ? fuelType : "Xăng",
+                    transmission != null ? transmission : "Tự động",
+                    image,
+                    showroomName != null ? showroomName : "Showroom AutoTrade TP.HCM",
+                    showroomCity != null ? showroomCity : "TP. Hồ Chí Minh"
+            );
+            candidates.add(new RankingCandidate(dto, price, year, mileage, cardId));
+        }
+
+        Comparator<RankingCandidate> comparator = Comparator.comparing(RankingCandidate::price);
+        if (intent.rankingMode == RankingMode.MOST_EXPENSIVE) {
+            comparator = comparator.reversed();
+        }
+        comparator = comparator
+                .thenComparing(RankingCandidate::year, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(RankingCandidate::mileage, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(RankingCandidate::listingId);
+        candidates.sort(comparator);
+        return candidates.stream().map(RankingCandidate::dto).toList();
+    }
+
+    private boolean matchesFuelFilter(String fuelType, String filter) {
+        if (fuelType == null) return false;
+        String normalized = fuelType.toLowerCase(Locale.ROOT);
+        return switch (filter) {
+            case "electric" -> normalized.contains("điện") || normalized.contains("dien") || normalized.contains("electric");
+            case "hybrid" -> normalized.contains("hybrid") || normalized.contains("lai");
+            case "diesel" -> normalized.contains("diesel") || normalized.contains("dầu") || normalized.contains("dau");
+            case "gasoline" -> normalized.contains("xăng") || normalized.contains("xang") || normalized.contains("gasoline") || normalized.contains("petrol");
+            default -> true;
+        };
+    }
+
+    private String normalizeBrandKey(String brand) {
+        return brand == null ? "" : brand.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
     }
 
     private boolean containsStandaloneAlias(String text, String alias) {
@@ -636,6 +744,9 @@ public class ChatbotService {
     }
 
     private String generateReplyText(String userMsg, ParsedIntent intent, List<RecommendedVehicleDto> vehicles) {
+        if (intent.rankingMode != RankingMode.NONE) {
+            return generateSmartTemplateReply(intent, vehicles);
+        }
         // Cố gắng gọi Gemini AI nếu có key hợp lệ (Rule 1 & 9)
         if (geminiApiKey != null && !geminiApiKey.trim().isBlank()) {
             try {
@@ -726,7 +837,16 @@ public class ChatbotService {
         StringBuilder sb = new StringBuilder();
         sb.append("Dạ chào bạn! ");
 
-        if (intent.purpose != null) {
+        if (intent.rankingMode != RankingMode.NONE) {
+            sb.append("Đây là top ").append(intent.rankingLimit).append(" xe ");
+            if (intent.bodyType != null) sb.append(intent.bodyType).append(" ");
+            if (intent.requestedSeatCount != null) sb.append(intent.requestedSeatCount).append(" chỗ ");
+            if (intent.brand != null) sb.append(intent.brand).append(" ");
+            sb.append(intent.rankingMode == RankingMode.CHEAPEST ? "rẻ nhất" : "đắt nhất");
+            if (intent.city != null) sb.append(" tại ").append(intent.city);
+            sb.append(", chỉ gồm xe AVAILABLE và được sắp xếp theo giá ")
+                    .append(intent.rankingMode == RankingMode.CHEAPEST ? "tăng dần" : "giảm dần").append(". ");
+        } else if (intent.purpose != null) {
             switch (intent.purpose) {
                 case FAMILY:
                     sb.append("Với nhu cầu **xe phục vụ gia đình**, không gian rộng rãi (từ 5 - 7 chỗ) và sự thoải mái cho các thành viên là ưu tiên hàng đầu. ");
@@ -759,7 +879,8 @@ public class ChatbotService {
             sb.append("Dựa trên yêu cầu của bạn, ");
         }
 
-        sb.append("AutoTrade hiện đang có sẵn **").append(vehicles.size()).append(" xe phù hợp trong kho:\n\n");
+        sb.append("AutoTrade hiện đang có sẵn **").append(vehicles.size())
+                .append(intent.rankingMode == RankingMode.NONE ? " xe phù hợp trong kho:\n\n" : " xe trong kho:\n\n");
 
         for (int i = 0; i < vehicles.size(); i++) {
             RecommendedVehicleDto v = vehicles.get(i);
@@ -784,6 +905,9 @@ public class ChatbotService {
         }
     }
 
+    private record RankingCandidate(RecommendedVehicleDto dto, BigDecimal price, Integer year,
+                                    Integer mileage, Long listingId) { }
+
     private static class ParsedIntent {
         Purpose purpose;
         BigDecimal minBudget;
@@ -793,7 +917,10 @@ public class ChatbotService {
         String brand;
         String bodyType;
         Integer requestedSeatCount;
+        String fuelTypeFilter;
         boolean luxuryStatus;
+        RankingMode rankingMode = RankingMode.NONE;
+        int rankingLimit = 5;
     }
 
     private boolean isLuxuryStatusBrand(String brand) {
@@ -815,6 +942,12 @@ public class ChatbotService {
         SPORTY,
         TRAVEL,
         ECONOMY
+    }
+
+    private enum RankingMode {
+        NONE,
+        CHEAPEST,
+        MOST_EXPENSIVE
     }
 
     private enum Intent {

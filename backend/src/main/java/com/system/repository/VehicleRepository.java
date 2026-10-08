@@ -52,7 +52,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long>, JpaSpec
             "l.image_url as real_image, " +
             "s.id as showroom_id, " +
             "s.name as showroom_name, " +
-            "s.city as showroom_city " +
+            "s.city as showroom_city, " +
+            "v.mileage as mileage " +
             "FROM listings l " +
             "JOIN vehicles v ON l.vehicle_id = v.id " +
             "JOIN showrooms s ON v.showroom_id = s.id " +
